@@ -1,0 +1,16 @@
+"filename", "language", "Python", "HTML", "XML", "comment", "blank", "total"
+"c:\Users\Jolan\Desktop\proximitylinked\friendsearch\templates\friendsearch\test.html", "HTML", 0, -106, 0, 0, -11, -117
+"c:\Users\Jolan\Desktop\proximitylinked\friendsearch\templates\friendsearch\your_friends.html", "HTML", 0, 313, 0, 3, 44, 360
+"c:\Users\Jolan\Desktop\proximitylinked\friendsearch\views.py", "Python", 63, 0, 0, 8, 11, 82
+"c:\Users\Jolan\Desktop\proximitylinked\notifications\migrations\0002_friendrequest_friendship.py", "Python", 37, 0, 0, 1, 6, 44
+"c:\Users\Jolan\Desktop\proximitylinked\notifications\models.py", "Python", 54, 0, 0, 3, 12, 69
+"c:\Users\Jolan\Desktop\proximitylinked\notifications\templates\notifications\notifications_dropdown.html", "HTML", 0, 47, 0, 0, 3, 50
+"c:\Users\Jolan\Desktop\proximitylinked\notifications\urls.py", "Python", 8, 0, 0, 0, 1, 9
+"c:\Users\Jolan\Desktop\proximitylinked\notifications\views.py", "Python", 60, 0, 0, 4, 14, 78
+"c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\admin.py", "Python", 1, 0, 0, 0, 0, 1
+"c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\migrations\0002_delete_friendship.py", "Python", 10, 0, 0, 1, 6, 17
+"c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\models.py", "Python", -11, 0, 0, 0, -3, -14
+"c:\Users\Jolan\Desktop\proximitylinked\static\maps\europe.svg", "XML", 0, 0, -396, 0, -3, -399
+"c:\Users\Jolan\Desktop\proximitylinked\templates\base.html", "HTML", 0, 162, 0, 0, 17, 179
+"c:\Users\Jolan\Desktop\proximitylinked\userprofile\templates\userprofile\profile.html", "HTML", 0, -1, 0, 0, 0, -1
+"Total", "-", 222, 415, -396, 20, 97, 358

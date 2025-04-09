@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ProximityLinked{% endblock %}</title>
+    <style>
+        :root {
+            --primary-color: #2c2f33;
+            --secondary-color: #5865f2;
+            --text-color: #ffffff;
+            --hover-color: #40444b;
+            --notification-bg: #ffffff;
+            --notification-border: #e0e0e0;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        nav {
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            padding: 0.8rem 2rem;
+            display: flex;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: var(--shadow);
+        }
+        
+        .nav-left, .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        
+        .nav-right {
+            margin-left: auto;
+        }
+        
+        nav a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+            padding: 0.5rem 0;
+        }
+        
+        nav a:hover {
+            color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+        
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Notification styles */
+        #notification-container {
+            display: none;
+            position: absolute;
+            right: 20px;
+            top: 60px;
+            z-index: 1000;
+            width: 350px;
+            max-height: 500px;
+            overflow-y: auto;
+            background: var(--notification-bg);
+            border: 1px solid var(--notification-border);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+        
+        .notification-badge {
+            position: relative;
+        }
+        
+        .notification-badge::after {
+            content: attr(data-count);
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #f04747;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            nav {
+                padding: 0.8rem 1rem;
+            }
+            
+            .nav-left, .nav-right {
+                gap: 1rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            #notification-container {
+                width: 280px;
+                right: 10px;
+            }
+        }
+    </style>
+    {% load static %}
+    <script src="{% static 'friendsearch/wordlist.js' %}"></script>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+</head>
+<body>
+    <nav>
+        <div class="nav-left">
+            <a href="/profile/">
+                <span>👤</span>
+                <span class="nav-text">Profile</span>
+            </a>
+            <a href="/friendsearch/your-friends/">
+                <span>👥</span>
+                <span class="nav-text">Friends</span>
+            </a>
+            <a href="/friendsearch/">
+                <span>🔍</span>
+                <span class="nav-text">Search</span>
+            </a>
+            <a href="/posts/">
+                <span>📰</span>
+                <span class="nav-text">Posts</span>
+            </a>
+            <a href="/chat/">
+                <span>💬</span>
+                <span class="nav-text">Chat</span>
+            </a>
+        </div>
+        
+        <div class="nav-right">
+            <a href="#" onclick="toggleNotifications()" class="notification-badge" id="notification-icon" 
+               data-count="{{ request.user.notifications.unread.count|default:0 }}">
+                <span>🔔</span>
+            </a>
+            <a href="/settings/">
+                <span>⚙️</span>
+                <span class="nav-text">Settings</span>
+            </a>
+            <a href="/logout/">
+                <span>🚪</span>
+                <span class="nav-text">Logout</span>
+            </a>
+        </div>
+    </nav>
+    
+    <!-- Notification dropdown container -->
+    <div id="notification-container"></div>
+
+    <div class="main-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        // Notification system
+        function toggleNotifications() {
+            const container = document.getElementById('notification-container');
+            const icon = document.getElementById('notification-icon');
+            
+            if (container.style.display === 'none' || !container.style.display) {
+                fetch('/notifications/dropdown/')
+                    .then(res => res.text())
+                    .then(html => {
+                        container.innerHTML = html;
+                        container.style.display = 'block';
+                        // Mark notifications as seen (not necessarily read)
+                        if (icon.dataset.count > 0) {
+                            fetch('/notifications/mark-as-seen/', {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRFToken': getCookie('csrftoken'),
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+                            icon.dataset.count = 0;
+                            icon.classList.remove('notification-badge');
+                        }
+                    })
+                    .catch(err => console.error('Error loading notifications:', err));
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        // Close notifications when clicking outside
+        document.addEventListener('click', function(event) {
+            const container = document.getElementById('notification-container');
+            const icon = document.getElementById('notification-icon');
+            
+            if (container.style.display === 'block' && 
+                !container.contains(event.target) && 
+                !icon.contains(event.target)) {
+                container.style.display = 'none';
+            }
+        });
+
+        // Get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Function to toggle reply forms
+        function toggleReplyForm(commentId) {
+            const form = document.getElementById(`reply-form-${commentId}`);
+            form.classList.toggle('hidden');
+        }
+
+        // HTMX configuration
+        document.body.addEventListener('htmx:afterRequest', function(evt) {
+            // Clear forms after successful submission
+            if (evt.detail.successful && evt.detail.elt.tagName === 'FORM') {
+                const form = evt.detail.elt;
+                if (form.id.includes('reply-form') || form.id.includes('comment-form')) {
+                    form.reset();
+                    if (form.id.includes('reply-form')) {
+                        form.classList.add('hidden');
+                    }
+                }
+            }
+            
+            // Update notification count after actions
+            if (evt.detail.path.includes('/notifications/')) {
+                updateNotificationCount();
+            }
+        });
+
+        // Periodically update notification count
+        function updateNotificationCount() {
+            fetch('/notifications/unread-count/')
+                .then(res => res.json())
+                .then(data => {
+                    const icon = document.getElementById('notification-icon');
+                    if (data.count > 0) {
+                        icon.dataset.count = data.count;
+                        icon.classList.add('notification-badge');
+                    } else {
+                        icon.dataset.count = 0;
+                        icon.classList.remove('notification-badge');
+                    }
+                });
+        }
+
+        // Update notification count every 30 seconds
+        setInterval(updateNotificationCount, 30000);
+    </script>
+    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+</body>
+</html>

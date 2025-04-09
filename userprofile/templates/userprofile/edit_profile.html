@@ -1,0 +1,119 @@
+<h2>Edit Your Profile</h2>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+
+  <p>
+    <label for="{{ profile_form.profile_picture.id_for_label }}">Profile Picture:</label><br>
+    {{ profile_form.profile_picture }}
+  </p>
+
+  <p>
+    <label for="first_name">First Name:</label>
+    <input type="text" value="{{ user.first_name }}" disabled>
+  </p>
+
+  <p>
+    <label for="last_name">Last Name:</label>
+    <input type="text" value="{{ user.last_name }}" disabled>
+  </p>
+
+  <p>
+    <label for="{{ profile_form.email.id_for_label }}">Email:</label><br>
+    {{ profile_form.email }}
+    {{ profile_form.show_email.label_tag }} {{ profile_form.show_email }}
+  </p>
+
+  {% if profile_form.age_display %}
+  <p>
+    {{ profile_form.age_display.label_tag }}
+    {{ profile_form.age_display }}
+    {{ profile_form.show_date_of_birth.label_tag }} {{ profile_form.show_date_of_birth }}
+  </p>
+  {% endif %}
+
+  {% if profile_form.gender_display %}
+  <p>
+    {{ profile_form.gender_display.label_tag }}
+    {{ profile_form.gender_display }}
+    {{ profile_form.show_gender.label_tag }} {{ profile_form.show_gender }}
+  </p>
+  {% endif %}
+
+  {% if profile_form.show_pronouns_field %}
+  <p>
+    {{ profile_form.pronouns.label_tag }}
+    {{ profile_form.pronouns }}
+    {{ profile_form.show_pronouns.label_tag }} {{ profile_form.show_pronouns }}
+  </p>
+  {% endif %}
+
+  <p>
+    <label for="{{ profile_form.phone_number.id_for_label }}">Phone Number:</label><br>
+    {{ profile_form.phone_number }}
+    {{ profile_form.show_phone_number.label_tag }} {{ profile_form.show_phone_number }}
+  </p>
+
+  <p>
+    <label for="{{ profile_form.main_language.id_for_label }}">Main Language:</label><br>
+    {{ profile_form.main_language }}
+    {{ profile_form.show_main_language.label_tag }} {{ profile_form.show_main_language }}
+  </p>
+
+  <p>
+    <label for="{{ profile_form.sublanguage.id_for_label }}">Sublanguage:</label><br>
+    {{ profile_form.sublanguage }}
+    {{ profile_form.show_sublanguage.label_tag }} {{ profile_form.show_sublanguage }}
+  </p>
+
+  <p>
+    <label for="{{ profile_form.bio.id_for_label }}">About Me:</label><br>
+    {{ profile_form.bio }}
+    {{ profile_form.show_bio.label_tag }} {{ profile_form.show_bio }}
+  </p>
+
+  <button type="submit" name="save_profile">Save Changes ✅</button>
+</form>
+
+<hr>
+
+<h2>Add Content Item</h2>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ content_form.as_p }}
+  <button type="submit" name="add_content">Add Content</button>
+</form>
+
+<hr>
+
+<h2>Your Uploaded Content</h2>
+
+{% if user.content_items.all %}
+  <div class="content-items-list">
+    {% for item in user.content_items.all %}
+      <div class="content-item" style="margin-bottom: 30px; border: 1px solid #ccc; padding: 15px; border-radius: 8px;">
+        <h4>{{ item.title }}</h4>
+
+        {% if item.image %}
+          <img src="{{ item.image.url }}" width="100%" style="max-width: 500px;" alt="{{ item.title }}">
+        {% elif item.get_youtube_embed_url %}
+        <iframe 
+        width="560" height="315"
+        style="max-width: 100%; border-radius: 6px;"
+        src="{{ item.get_youtube_embed_url }}"
+        frameborder="0"
+        allowfullscreen>
+      </iframe>
+      
+        {% endif %}
+
+        <p>{{ item.description }}</p>
+
+        <p><a href="{% url 'delete_content' item.id %}">🗑️ Delete</a></p>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <p>No content added yet.</p>
+{% endif %}

@@ -1,0 +1,168 @@
+Date : 2025-04-08 22:07:10
+Directory : c:\Users\Jolan\Desktop\proximitylinked
+Total : 100 files,  3677 codes, 90 comments, 715 blanks, all 4482 lines
+
+Languages
++-------------------------+------------+------------+------------+------------+------------+
+| language                | files      | code       | comment    | blank      | total      |
++-------------------------+------------+------------+------------+------------+------------+
+| Python                  |         75 |      1,737 |         62 |        468 |      2,267 |
+| HTML                    |         22 |      1,445 |         28 |        241 |      1,714 |
+| XML                     |          1 |        396 |          0 |          3 |        399 |
+| sqlite3-editor-database |          1 |         86 |          0 |          2 |         88 |
+| JavaScript              |          1 |         13 |          0 |          1 |         14 |
++-------------------------+------------+------------+------------+------------+------------+
+
+Directories
++------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                                   | files      | code       | comment    | blank      | total      |
++------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                                      |        100 |      3,677 |         90 |        715 |      4,482 |
+| . (Files)                                                                                                              |          2 |        105 |          1 |          9 |        115 |
+| chat                                                                                                                   |         11 |        224 |          6 |         65 |        295 |
+| chat (Files)                                                                                                           |          7 |        129 |          5 |         42 |        176 |
+| chat\migrations                                                                                                        |          2 |         42 |          1 |          8 |         51 |
+| chat\templates                                                                                                         |          2 |         53 |          0 |         15 |         68 |
+| chat\templates\chat                                                                                                    |          2 |         53 |          0 |         15 |         68 |
+| config                                                                                                                 |          5 |        161 |         17 |         74 |        252 |
+| friendsearch                                                                                                           |         12 |        751 |         27 |        142 |        920 |
+| friendsearch (Files)                                                                                                   |          9 |        185 |         13 |         63 |        261 |
+| friendsearch\templates                                                                                                 |          3 |        566 |         14 |         79 |        659 |
+| friendsearch\templates\friendsearch                                                                                    |          3 |        566 |         14 |         79 |        659 |
+| notifications                                                                                                          |         10 |         90 |          2 |         26 |        118 |
+| notifications (Files)                                                                                                  |          7 |         46 |          1 |         17 |         64 |
+| notifications\migrations                                                                                               |          2 |         27 |          1 |          8 |         36 |
+| notifications\templates                                                                                                |          1 |         17 |          0 |          1 |         18 |
+| notifications\templates\notifications                                                                                  |          1 |         17 |          0 |          1 |         18 |
+| posts                                                                                                                  |         13 |        749 |         17 |        103 |        869 |
+| posts (Files)                                                                                                          |          8 |        314 |          2 |         63 |        379 |
+| posts\migrations                                                                                                       |          4 |        134 |          3 |         20 |        157 |
+| posts\templates                                                                                                        |          1 |        301 |         12 |         20 |        333 |
+| posts\templates\posts                                                                                                  |          1 |        301 |         12 |         20 |        333 |
+| registerandlogin                                                                                                       |         22 |        660 |          8 |        149 |        817 |
+| registerandlogin (Files)                                                                                               |          9 |        442 |          7 |         94 |        543 |
+| registerandlogin\migrations                                                                                            |          2 |         62 |          1 |          8 |         71 |
+| registerandlogin\templates                                                                                             |         11 |        156 |          0 |         47 |        203 |
+| registerandlogin\templates\registerandlogin                                                                            |         11 |        156 |          0 |         47 |        203 |
+| sitesettings                                                                                                           |         10 |         44 |          5 |         26 |         75 |
+| sitesettings (Files)                                                                                                   |          7 |         19 |          3 |         13 |         35 |
+| sitesettings\migrations                                                                                                |          2 |         14 |          1 |          8 |         23 |
+| sitesettings\templates                                                                                                 |          1 |         11 |          1 |          5 |         17 |
+| sitesettings\templates\sitesettings                                                                                    |          1 |         11 |          1 |          5 |         17 |
+| static                                                                                                                 |          2 |        409 |          0 |          4 |        413 |
+| static\js                                                                                                              |          1 |         13 |          0 |          1 |         14 |
+| static\maps                                                                                                            |          1 |        396 |          0 |          3 |        399 |
+| templates                                                                                                              |          1 |         92 |          1 |         11 |        104 |
+| userprofile                                                                                                            |         12 |        392 |          6 |        106 |        504 |
+| userprofile (Files)                                                                                                    |          8 |        121 |          5 |         35 |        161 |
+| userprofile\migrations                                                                                                 |          2 |         22 |          1 |          8 |         31 |
+| userprofile\templates                                                                                                  |          2 |        249 |          0 |         63 |        312 |
+| userprofile\templates\userprofile                                                                                      |          2 |        249 |          0 |         63 |        312 |
++------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++------------------------------------------------------------------------------------------------------------------------+-------------------------+------------+------------+------------+------------+
+| filename                                                                                                               | language                | code       | comment    | blank      | total      |
++------------------------------------------------------------------------------------------------------------------------+-------------------------+------------+------------+------------+------------+
+| c:\Users\Jolan\Desktop\proximitylinked\chat\__init__.py                                                                | Python                  |          0 |          0 |          1 |          1 |
+| c:\Users\Jolan\Desktop\proximitylinked\chat\admin.py                                                                   | Python                  |         17 |          0 |          4 |         21 |
+| c:\Users\Jolan\Desktop\proximitylinked\chat\apps.py                                                                    | Python                  |          4 |          0 |          3 |          7 |
+| c:\Users\Jolan\Desktop\proximitylinked\chat\migrations\0001_initial.py                                                 | Python                  |         42 |          1 |          7 |         50 |
+| c:\Users\Jolan\Desktop\proximitylinked\chat\migrations\__init__.py                                                     | Python                  |          0 |          0 |          1 |          1 |
+| c:\Users\Jolan\Desktop\proximitylinked\chat\models.py                                                                  | Python                  |         42 |          1 |         11 |         54 |
+| c:\Users\Jolan\Desktop\proximitylinked\chat\templates\chat\chat.html                                                   | HTML                    |         24 |          0 |          9 |         33 |
+| c:\Users\Jolan\Desktop\proximitylinked\chat\templates\chat\index.html                                                  | HTML                    |         29 |          0 |          6 |         35 |
+| c:\Users\Jolan\Desktop\proximitylinked\chat\tests.py                                                                   | Python                  |          1 |          1 |          2 |          4 |
+| c:\Users\Jolan\Desktop\proximitylinked\chat\urls.py                                                                    | Python                  |          7 |          0 |          3 |         10 |
+| c:\Users\Jolan\Desktop\proximitylinked\chat\views.py                                                                   | Python                  |         58 |          3 |         18 |         79 |
+| c:\Users\Jolan\Desktop\proximitylinked\config\__init__.py                                                              | Python                  |          0 |          0 |          1 |          1 |
+| c:\Users\Jolan\Desktop\proximitylinked\config\asgi.py                                                                  | Python                  |         10 |          0 |          7 |         17 |
+| c:\Users\Jolan\Desktop\proximitylinked\config\settings.py                                                              | Python                  |        106 |         17 |         52 |        175 |
+| c:\Users\Jolan\Desktop\proximitylinked\config\urls.py                                                                  | Python                  |         33 |          0 |          5 |         38 |
+| c:\Users\Jolan\Desktop\proximitylinked\config\wsgi.py                                                                  | Python                  |         12 |          0 |          9 |         21 |
+| c:\Users\Jolan\Desktop\proximitylinked\db.sqlite3                                                                      | sqlite3-editor-database |         86 |          0 |          2 |         88 |
+| c:\Users\Jolan\Desktop\proximitylinked\friendsearch\__init__.py                                                        | Python                  |          0 |          0 |          1 |          1 |
+| c:\Users\Jolan\Desktop\proximitylinked\friendsearch\admin.py                                                           | Python                  |          1 |          1 |          2 |          4 |
+| c:\Users\Jolan\Desktop\proximitylinked\friendsearch\apps.py                                                            | Python                  |          4 |          0 |          3 |          7 |
+| c:\Users\Jolan\Desktop\proximitylinked\friendsearch\forms.py                                                           | Python                  |         11 |          0 |          3 |         14 |
+| c:\Users\Jolan\Desktop\proximitylinked\friendsearch\models.py                                                          | Python                  |          0 |          0 |          1 |          1 |
+| c:\Users\Jolan\Desktop\proximitylinked\friendsearch\templates\friendsearch\friend_search.html                          | HTML                    |        444 |         13 |         64 |        521 |
+| c:\Users\Jolan\Desktop\proximitylinked\friendsearch\templates\friendsearch\test.html                                   | HTML                    |        106 |          0 |         11 |        117 |
+| c:\Users\Jolan\Desktop\proximitylinked\friendsearch\templates\friendsearch\your_friends.html                           | HTML                    |         16 |          1 |          4 |         21 |
+| c:\Users\Jolan\Desktop\proximitylinked\friendsearch\tests.py                                                           | Python                  |          1 |          1 |          2 |          4 |
+| c:\Users\Jolan\Desktop\proximitylinked\friendsearch\urls.py                                                            | Python                  |         10 |          0 |          2 |         12 |
+| c:\Users\Jolan\Desktop\proximitylinked\friendsearch\views.py                                                           | Python                  |        111 |         11 |         42 |        164 |
+| c:\Users\Jolan\Desktop\proximitylinked\friendsearch\wordlist.py                                                        | Python                  |         47 |          0 |          7 |         54 |
+| c:\Users\Jolan\Desktop\proximitylinked\manage.py                                                                       | Python                  |         19 |          1 |          7 |         27 |
+| c:\Users\Jolan\Desktop\proximitylinked\notifications\__init__.py                                                       | Python                  |          0 |          0 |          1 |          1 |
+| c:\Users\Jolan\Desktop\proximitylinked\notifications\admin.py                                                          | Python                  |          7 |          0 |          2 |          9 |
+| c:\Users\Jolan\Desktop\proximitylinked\notifications\apps.py                                                           | Python                  |          4 |          0 |          3 |          7 |
+| c:\Users\Jolan\Desktop\proximitylinked\notifications\migrations\0001_initial.py                                        | Python                  |         27 |          1 |          7 |         35 |
+| c:\Users\Jolan\Desktop\proximitylinked\notifications\migrations\__init__.py                                            | Python                  |          0 |          0 |          1 |          1 |
+| c:\Users\Jolan\Desktop\proximitylinked\notifications\models.py                                                         | Python                  |         20 |          0 |          5 |         25 |
+| c:\Users\Jolan\Desktop\proximitylinked\notifications\templates\notifications\notifications_dropdown.html               | HTML                    |         17 |          0 |          1 |         18 |
+| c:\Users\Jolan\Desktop\proximitylinked\notifications\tests.py                                                          | Python                  |          1 |          1 |          2 |          4 |
+| c:\Users\Jolan\Desktop\proximitylinked\notifications\urls.py                                                           | Python                  |          5 |          0 |          2 |          7 |
+| c:\Users\Jolan\Desktop\proximitylinked\notifications\views.py                                                          | Python                  |          9 |          0 |          2 |         11 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\__init__.py                                                               | Python                  |          0 |          0 |          1 |          1 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\admin.py                                                                  | Python                  |          5 |          0 |          2 |          7 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\apps.py                                                                   | Python                  |          4 |          0 |          3 |          7 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\forms.py                                                                  | Python                  |         35 |          0 |          4 |         39 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\migrations\0001_initial.py                                                | Python                  |         52 |          1 |          7 |         60 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\migrations\0002_comment_comment_post_created_idx_and_more.py              | Python                  |         21 |          1 |          6 |         28 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\migrations\0003_commentlike_comment_likes_postlike_post_likes_and_more.py | Python                  |         61 |          1 |          6 |         68 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\migrations\__init__.py                                                    | Python                  |          0 |          0 |          1 |          1 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\models.py                                                                 | Python                  |        139 |          0 |         32 |        171 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\templates\posts\feed.html                                                 | HTML                    |        301 |         12 |         20 |        333 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\tests.py                                                                  | Python                  |          1 |          1 |          2 |          4 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\urls.py                                                                   | Python                  |         15 |          0 |          2 |         17 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\views.py                                                                  | Python                  |        115 |          1 |         17 |        133 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\__init__.py                                                    | Python                  |          0 |          0 |          1 |          1 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\admin.py                                                       | Python                  |         99 |          1 |         22 |        122 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\apps.py                                                        | Python                  |          4 |          0 |          3 |          7 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\choices.py                                                     | Python                  |         27 |          0 |          1 |         28 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\forms.py                                                       | Python                  |         71 |          4 |         15 |         90 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\migrations\0001_initial.py                                     | Python                  |         62 |          1 |          7 |         70 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\migrations\__init__.py                                         | Python                  |          0 |          0 |          1 |          1 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\models.py                                                      | Python                  |        128 |          1 |         25 |        154 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\templates\registerandlogin\activation_email.html               | HTML                    |          4 |          0 |          4 |          8 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\templates\registerandlogin\activation_failed.html              | HTML                    |          2 |          0 |          1 |          3 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\templates\registerandlogin\activation_success.html             | HTML                    |          2 |          0 |          1 |          3 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\templates\registerandlogin\email_verification_sent.html        | HTML                    |          2 |          0 |          1 |          3 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\templates\registerandlogin\forgot_password.html                | HTML                    |         12 |          0 |          3 |         15 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\templates\registerandlogin\login.html                          | HTML                    |         18 |          0 |          8 |         26 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\templates\registerandlogin\password_reset_complete.html        | HTML                    |          4 |          0 |          1 |          5 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\templates\registerandlogin\password_reset_confirm.html         | HTML                    |          8 |          0 |          2 |         10 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\templates\registerandlogin\password_reset_done.html            | HTML                    |          5 |          0 |          1 |          6 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\templates\registerandlogin\password_reset_email.html           | HTML                    |          7 |          0 |          5 |         12 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\templates\registerandlogin\register.html                       | HTML                    |         92 |          0 |         20 |        112 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\tests.py                                                       | Python                  |          1 |          1 |          2 |          4 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\urls.py                                                        | Python                  |         13 |          0 |          3 |         16 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\views.py                                                       | Python                  |         99 |          0 |         22 |        121 |
+| c:\Users\Jolan\Desktop\proximitylinked\sitesettings\__init__.py                                                        | Python                  |          0 |          0 |          1 |          1 |
+| c:\Users\Jolan\Desktop\proximitylinked\sitesettings\admin.py                                                           | Python                  |          1 |          1 |          2 |          4 |
+| c:\Users\Jolan\Desktop\proximitylinked\sitesettings\apps.py                                                            | Python                  |          4 |          0 |          2 |          6 |
+| c:\Users\Jolan\Desktop\proximitylinked\sitesettings\migrations\0001_initial.py                                         | Python                  |         14 |          1 |          7 |         22 |
+| c:\Users\Jolan\Desktop\proximitylinked\sitesettings\migrations\__init__.py                                             | Python                  |          0 |          0 |          1 |          1 |
+| c:\Users\Jolan\Desktop\proximitylinked\sitesettings\models.py                                                          | Python                  |          3 |          1 |          2 |          6 |
+| c:\Users\Jolan\Desktop\proximitylinked\sitesettings\templates\sitesettings\sitesettings.html                           | HTML                    |         11 |          1 |          5 |         17 |
+| c:\Users\Jolan\Desktop\proximitylinked\sitesettings\tests.py                                                           | Python                  |          1 |          1 |          2 |          4 |
+| c:\Users\Jolan\Desktop\proximitylinked\sitesettings\urls.py                                                            | Python                  |          5 |          0 |          2 |          7 |
+| c:\Users\Jolan\Desktop\proximitylinked\sitesettings\views.py                                                           | Python                  |          5 |          0 |          2 |          7 |
+| c:\Users\Jolan\Desktop\proximitylinked\static\js\admin_clear_buttons.js                                                | JavaScript              |         13 |          0 |          1 |         14 |
+| c:\Users\Jolan\Desktop\proximitylinked\static\maps\europe.svg                                                          | XML                     |        396 |          0 |          3 |        399 |
+| c:\Users\Jolan\Desktop\proximitylinked\templates\base.html                                                             | HTML                    |         92 |          1 |         11 |        104 |
+| c:\Users\Jolan\Desktop\proximitylinked\userprofile\__init__.py                                                         | Python                  |          0 |          0 |          1 |          1 |
+| c:\Users\Jolan\Desktop\proximitylinked\userprofile\admin.py                                                            | Python                  |          1 |          1 |          2 |          4 |
+| c:\Users\Jolan\Desktop\proximitylinked\userprofile\apps.py                                                             | Python                  |          4 |          0 |          3 |          7 |
+| c:\Users\Jolan\Desktop\proximitylinked\userprofile\forms.py                                                            | Python                  |         45 |          1 |          7 |         53 |
+| c:\Users\Jolan\Desktop\proximitylinked\userprofile\migrations\0001_initial.py                                          | Python                  |         22 |          1 |          7 |         30 |
+| c:\Users\Jolan\Desktop\proximitylinked\userprofile\migrations\__init__.py                                              | Python                  |          0 |          0 |          1 |          1 |
+| c:\Users\Jolan\Desktop\proximitylinked\userprofile\models.py                                                           | Python                  |         19 |          1 |          7 |         27 |
+| c:\Users\Jolan\Desktop\proximitylinked\userprofile\templates\userprofile\edit_profile.html                             | HTML                    |         96 |          0 |         24 |        120 |
+| c:\Users\Jolan\Desktop\proximitylinked\userprofile\templates\userprofile\profile.html                                  | HTML                    |        153 |          0 |         39 |        192 |
+| c:\Users\Jolan\Desktop\proximitylinked\userprofile\tests.py                                                            | Python                  |          1 |          1 |          2 |          4 |
+| c:\Users\Jolan\Desktop\proximitylinked\userprofile\urls.py                                                             | Python                  |          8 |          0 |          2 |         10 |
+| c:\Users\Jolan\Desktop\proximitylinked\userprofile\views.py                                                            | Python                  |         43 |          1 |         11 |         55 |
+| Total                                                                                                                  |                         |      3,677 |         90 |        715 |      4,482 |
++------------------------------------------------------------------------------------------------------------------------+-------------------------+------------+------------+------------+------------+

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat Room{% endblock %}
+{% block content %}
+
+<h2>{{ chat_title }}</h2>
+
+<form method="POST">
+    {% csrf_token %}
+    <textarea name="content" rows="3" cols="50" placeholder="Type your message..."></textarea><br>
+    <button type="submit">Send</button>
+</form>
+
+<hr>
+
+<h3>Messages</h3>
+<div style="max-height: 400px; overflow-y: auto;">
+    {% for message in messages %}
+        <p>
+            <strong>{{ message.sender.full_name }}</strong>: {{ message.content }} <br>
+            <small>{{ message.timestamp }}</small>
+        </p>
+    {% empty %}
+        <p>No messages yet.</p>
+    {% endfor %}
+</div>
+
+<hr>
+
+<a href="{% url 'chat:chat_index' %}">⬅ Back to Chat Overview</a>
+
+{% endblock %}

@@ -1,0 +1,67 @@
+<div id="notifications-dropdown" style="background:#fff; border:1px solid #ccc; padding:10px; width:300px; max-height:400px; overflow-y:auto;">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h4 style="margin:0;">🔔 Notifications</h4>
+        <small>
+            <a href="{% url 'notifications:friend_requests' %}" style="color:#666;">View All</a>
+        </small>
+    </div>
+    
+    {% if notifications %}
+        <ul style="list-style:none; padding:0; margin:0;">
+        {% for note in notifications %}
+            <li style="padding:8px 0; border-bottom:1px solid #eee;">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div style="flex:1;">
+                        {% if note.from_user.profile_picture %}
+                            <img src="{{ note.from_user.profile_picture.url }}" alt="{{ note.from_user.full_name }}" 
+                                 style="width:30px; height:30px; border-radius:50%; margin-right:8px;">
+                        {% endif %}
+                        <strong>{{ note.from_user.full_name }}</strong>
+                        <div>{{ note.message }}</div>
+                        <small class="text-muted">{{ note.timestamp|timesince }} ago</small>
+                    </div>
+                    {% if note.link %}
+                        <a href="{{ note.link }}" 
+                           class="mark-as-read" 
+                           data-notification-id="{{ note.id }}"
+                           style="margin-left:10px; white-space:nowrap;">
+                            View
+                        </a>
+                    {% endif %}
+                </div>
+                
+                {% if note.type == 'friend_request' and not note.is_read %}
+                <div class="mt-2">
+                    <a href="{% url 'notifications:accept_friend_request' note.id %}" 
+                       class="btn btn-sm btn-success">Accept</a>
+                    <a href="{% url 'notifications:reject_friend_request' note.id %}" 
+                       class="btn btn-sm btn-danger">Decline</a>
+                </div>
+                {% endif %}
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p style="margin:0; padding:8px 0; color:#666;">No new notifications.</p>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mark notification as read when clicking "View"
+    document.querySelectorAll('.mark-as-read').forEach(link => {
+        link.addEventListener('click', function(e) {
+            const notificationId = this.dataset.notificationId;
+            // Send AJAX request to mark as read
+            fetch(`/notifications/mark-as-read/${notificationId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin'
+            }).catch(error => console.error('Error:', error));
+        });
+    });
+});
+</script>

@@ -1,0 +1,69 @@
+Date : 2025-04-08 22:07:10
+Directory : c:\Users\Jolan\Desktop\proximitylinked
+Total : 30 files,  -99 codes, -13 comments, -94 blanks, all -206 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| HTML     |          3 |         31 |          9 |        -17 |         23 |
+| Python   |         27 |       -130 |        -22 |        -77 |       -229 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++-----------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                                                    | files      | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                                                       |         30 |        -99 |        -13 |        -94 |       -206 |
+| config                                                                                                                                  |          1 |          1 |          0 |          0 |          1 |
+| friendsearch                                                                                                                            |          3 |        -46 |         -2 |        -14 |        -62 |
+| friendsearch\migrations                                                                                                                 |          3 |        -46 |         -2 |        -14 |        -62 |
+| posts                                                                                                                                   |         11 |         88 |         -1 |        -26 |         61 |
+| posts (Files)                                                                                                                           |          5 |         20 |        -11 |        -10 |         -1 |
+| posts\migrations                                                                                                                        |          4 |         56 |          1 |          6 |         63 |
+| posts\templates                                                                                                                         |          2 |         12 |          9 |        -22 |         -1 |
+| posts\templates\posts                                                                                                                   |          2 |         12 |          9 |        -22 |         -1 |
+| registerandlogin                                                                                                                        |         12 |       -177 |        -11 |        -66 |       -254 |
+| registerandlogin\migrations                                                                                                             |         12 |       -177 |        -11 |        -66 |       -254 |
+| sitesettings                                                                                                                            |          2 |         16 |          1 |          7 |         24 |
+| sitesettings (Files)                                                                                                                    |          1 |          2 |          0 |          0 |          2 |
+| sitesettings\migrations                                                                                                                 |          1 |         14 |          1 |          7 |         22 |
+| templates                                                                                                                               |          1 |         19 |          0 |          5 |         24 |
++-----------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-----------------------------------------------------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                                                                                                | language | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| c:\Users\Jolan\Desktop\proximitylinked\config\settings.py                                                                               | Python   |          1 |          0 |          0 |          1 |
+| c:\Users\Jolan\Desktop\proximitylinked\friendsearch\migrations\0001_initial.py                                                          | Python   |        -25 |         -1 |         -7 |        -33 |
+| c:\Users\Jolan\Desktop\proximitylinked\friendsearch\migrations\0002_remove_userinterest_interest_and_more.py                            | Python   |        -21 |         -1 |         -6 |        -28 |
+| c:\Users\Jolan\Desktop\proximitylinked\friendsearch\migrations\__init__.py                                                              | Python   |          0 |          0 |         -1 |         -1 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\admin.py                                                                                   | Python   |        -37 |         -4 |        -15 |        -56 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\forms.py                                                                                   | Python   |         -1 |          0 |         -6 |         -7 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\migrations\0001_initial.py                                                                 | Python   |        -13 |          0 |          0 |        -13 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\migrations\0002_comment_comment_post_created_idx_and_more.py                               | Python   |         21 |          1 |          6 |         28 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\migrations\0002_post_title.py                                                              | Python   |        -13 |         -1 |         -6 |        -20 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\migrations\0003_commentlike_comment_likes_postlike_post_likes_and_more.py                  | Python   |         61 |          1 |          6 |         68 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\models.py                                                                                  | Python   |         95 |         -3 |         18 |        110 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\templates\posts\feed.html                                                                  | HTML     |        301 |         12 |         20 |        333 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\templates\posts\post.html                                                                  | HTML     |       -289 |         -3 |        -42 |       -334 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\urls.py                                                                                    | Python   |          6 |         -1 |         -1 |          4 |
+| c:\Users\Jolan\Desktop\proximitylinked\posts\views.py                                                                                   | Python   |        -43 |         -3 |         -6 |        -52 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\migrations\0001_initial.py                                                      | Python   |         31 |          0 |          0 |         31 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\migrations\0002_alter_customuser_birth_year.py                                  | Python   |        -12 |         -1 |         -6 |        -19 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\migrations\0003_remove_customuser_birth_year_and_more.py                        | Python   |        -21 |         -1 |         -6 |        -28 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\migrations\0004_alter_customuser_phone_number.py                                | Python   |        -13 |         -1 |         -6 |        -20 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\migrations\0005_customuser_main_language_customuser_profile_picture_and_more.py | Python   |        -22 |         -1 |         -6 |        -29 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\migrations\0006_customuser_show_date_of_birth_customuser_show_email_and_more.py | Python   |        -42 |         -1 |         -6 |        -49 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\migrations\0007_alter_customuser_pronouns.py                                    | Python   |        -12 |         -1 |         -6 |        -19 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\migrations\0008_customuser_bio_customuser_show_bio.py                           | Python   |        -17 |         -1 |         -6 |        -24 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\migrations\0009_alter_customuser_main_language_and_more.py                      | Python   |        -17 |         -1 |         -6 |        -24 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\migrations\0010_customuser_interests_customuser_location.py                     | Python   |        -18 |         -1 |         -6 |        -25 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\migrations\0011_alter_customuser_interests.py                                   | Python   |        -12 |         -1 |         -6 |        -19 |
+| c:\Users\Jolan\Desktop\proximitylinked\registerandlogin\migrations\0012_friendship.py                                                   | Python   |        -22 |         -1 |         -6 |        -29 |
+| c:\Users\Jolan\Desktop\proximitylinked\sitesettings\migrations\0001_initial.py                                                          | Python   |         14 |          1 |          7 |         22 |
+| c:\Users\Jolan\Desktop\proximitylinked\sitesettings\models.py                                                                           | Python   |          2 |          0 |          0 |          2 |
+| c:\Users\Jolan\Desktop\proximitylinked\templates\base.html                                                                              | HTML     |         19 |          0 |          5 |         24 |
+| Total                                                                                                                                   |          |        -99 |        -13 |        -94 |       -206 |
++-----------------------------------------------------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
