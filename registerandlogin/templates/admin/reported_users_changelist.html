@@ -1,0 +1,90 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block content_title %}
+    <h1>{{ title }}</h1>
+    <div style="margin-bottom: 20px; padding: 10px; background: #fff3cd; border-radius: 4px; border: 1px solid #ffeaa7;">
+        <strong>Note:</strong> Users with 5 or more reports are automatically banned for 7 days.
+    </div>
+{% endblock %}
+
+{% block result_list %}
+<div class="results">
+    <table id="result_list">
+        <thead>
+            <tr>
+                <th scope="col">User</th>
+                <th scope="col">Total Reports</th>
+                <th scope="col">Unreviewed</th>
+                <th scope="col">Recent Reports</th>
+                <th scope="col">Ban Status</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in reported_users %}
+            <tr>
+                <td>
+                    <strong>{{ item.user.first_name }} {{ item.user.last_name }}</strong><br>
+                    <small style="color: #666;">{{ item.user.email }}</small><br>
+                    <small>ID: {{ item.user.id }}</small>
+                </td>
+                <td>
+                    <span style="color: #dc3545; font-weight: bold; font-size: 14px;">{{ item.report_count }}</span>
+                </td>
+                <td>
+                    {% if item.unreviewed_count > 0 %}
+                        <span style="color: #fd7e14; font-weight: bold;">{{ item.unreviewed_count }}</span>
+                    {% else %}
+                        <span style="color: #28a745;">0</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% for report in item.recent_reports %}
+                        <div style="margin-bottom: 5px; padding: 3px; background: #f8f9fa; border-radius: 3px;">
+                            <small>
+                                <strong>{{ report.reason }}</strong><br>
+                                {{ report.timestamp|date:"M d, Y" }} - 
+                                {% if report.approval_status == 'approved' %}
+                                    <span style="color: #dc3545;">Approved</span>
+                                {% elif report.approval_status == 'dismissed' %}
+                                    <span style="color: #28a745;">Dismissed</span>
+                                {% else %}
+                                    <span style="color: #fd7e14;">Pending</span>
+                                {% endif %}
+                            </small>
+                        </div>
+                    {% endfor %}
+                </td>
+                <td>
+                    {% if item.user.is_temporarily_banned %}
+                        <span style="color: #dc3545; font-weight: bold;"><i class="fas fa-ban"></i> BANNED</span><br>
+                        <small>Until: {{ item.user.ban_until|date:"M d, Y H:i" }}</small>
+                    {% else %}
+                        <span style="color: #fd7e14; font-weight: bold;">⚠️ HIGH RISK</span><br>
+                        <small>{{ item.user.approved_reports_count }}/5 reports</small>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="/admin/registerandlogin/customuser/{{ item.user.id }}/change/" 
+                       class="button" style="background: #007cba; color: white; padding: 4px 8px; text-decoration: none; border-radius: 3px; font-size: 11px;">
+                        Edit User
+                    </a>
+                    <br><br>
+                    <a href="/admin/registerandlogin/report/?reported_user__id__exact={{ item.user.id }}" 
+                       class="button" style="background: #6c757d; color: white; padding: 4px 8px; text-decoration: none; border-radius: 3px; font-size: 11px;">
+                        View Reports
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" style="text-align: center; padding: 20px; color: #666;">
+                    🎉 No users have 5+ reports!
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

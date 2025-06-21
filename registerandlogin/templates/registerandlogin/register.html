@@ -1,55 +1,54 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'registerandlogin/css/register.css' %}">
 {% block content %}
-<h2>Register</h2>
+<div class="register-container">
+  <h2>Register</h2>
 
-<form method="post">
+  <form method="post" class="register-form">
     {% csrf_token %}
 
     {# Show all non-field (global) form errors #}
     {% if form.non_field_errors %}
-        <ul style="color:red;">
-            {% for error in form.non_field_errors %}
-                <li>{{ error }}</li>
-            {% endfor %}
-        </ul>
+      <div class="register-message">{{ form.non_field_errors.0 }}</div>
     {% endif %}
 
-    <label>First Name:</label> {{ form.first_name }}<br>
+    <label>First Name:</label> {{ form.first_name }}
     {% if form.first_name.errors %}
-        <div style="color:red;">{{ form.first_name.errors.0 }}</div>
+      <div class="register-message">{{ form.first_name.errors.0 }}</div>
     {% endif %}
 
-    <label>Last Name:</label> {{ form.last_name }}<br>
+    <label>Last Name:</label> {{ form.last_name }}
     {% if form.last_name.errors %}
-        <div style="color:red;">{{ form.last_name.errors.0 }}</div>
+      <div class="register-message">{{ form.last_name.errors.0 }}</div>
     {% endif %}
 
-    <label>Email:</label> {{ form.email }}<br>
+    <label>Email:</label> {{ form.email }}
     {% if form.email.errors %}
-        <div style="color:red;">{{ form.email.errors.0 }}</div>
+      <div class="register-message">{{ form.email.errors.0 }}</div>
     {% endif %}
 
-    <label>Date of Birth:</label> {{ form.date_of_birth }}<br>
+    <label>Date of Birth:</label> {{ form.date_of_birth }}
     {% if form.date_of_birth.errors %}
-        <div style="color:red;">{{ form.date_of_birth.errors.0 }}</div>
+      <div class="register-message">{{ form.date_of_birth.errors.0 }}</div>
     {% endif %}
 
-    <label>Gender:</label> {{ form.gender }}<br>
+    <label>Gender:</label> {{ form.gender }}
     {% if form.gender.errors %}
-        <div style="color:red;">{{ form.gender.errors.0 }}</div>
+      <div class="register-message">{{ form.gender.errors.0 }}</div>
     {% endif %}
 
     <div id="pronouns-wrapper" style="display: none;">
-        <label>Preferred Pronouns:</label> {{ form.pronouns }}<br>
-        {% if form.pronouns.errors %}
-            <div style="color:red;">{{ form.pronouns.errors.0 }}</div>
-        {% endif %}
+      <label>Preferred Pronouns:</label> {{ form.pronouns }}
+      {% if form.pronouns.errors %}
+        <div class="register-message">{{ form.pronouns.errors.0 }}</div>
+      {% endif %}
     </div>
     
     <div id="custom-pronouns-wrapper" style="display: none;">
-        <label>Your Custom Pronouns:</label> {{ form.custom_pronouns }}<br>
-        {% if form.custom_pronouns.errors %}
-            <div style="color:red;">{{ form.custom_pronouns.errors.0 }}</div>
-        {% endif %}
+      <label>Your Custom Pronouns:</label> {{ form.custom_pronouns }}
+      {% if form.custom_pronouns.errors %}
+        <div class="register-message">{{ form.custom_pronouns.errors.0 }}</div>
+      {% endif %}
     </div>
 
     <label>Phone Number:</label> {{ form.phone_number }}<br>
@@ -58,24 +57,25 @@
         <div style="color:red;">{{ form.phone_number.errors.0 }}</div>
     {% endif %}
 
-    <label>Password:</label> {{ form.password }}<br>
+    <label>Password:</label> {{ form.password }}
     {% if form.password.errors %}
-        <div style="color:red;">{{ form.password.errors.0 }}</div>
+      <div class="register-message">{{ form.password.errors.0 }}</div>
     {% endif %}
 
-    <label>Confirm Password:</label> {{ form.confirm_password }}<br>
+    <label>Confirm Password:</label> {{ form.confirm_password }}
     {% if form.confirm_password.errors %}
-        <div style="color:red;">{{ form.confirm_password.errors.0 }}</div>
+      <div class="register-message">{{ form.confirm_password.errors.0 }}</div>
     {% endif %}
 
-    <label>{{ form.captcha.label }}</label> {{ form.captcha }}<br>
+    <label>{{ form.captcha.label }}</label> {{ form.captcha }}
     {% if form.captcha.errors %}
-        <div style="color:red;">{{ form.captcha.errors.0 }}</div>
+      <div class="register-message">{{ form.captcha.errors.0 }}</div>
     {% endif %}
 
-    <button type="submit">Sign up</button>
-</form>
-<a href="{% url 'login' %}">Back to login</a>
+    <button type="submit">Register</button>
+  </form>
+  <a class="register-link" href="{% url 'login' %}">Already have an account? Log in</a>
+</div>
 
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 <script>

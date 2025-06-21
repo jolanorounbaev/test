@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'events/events.css' %}">
+<style>
+  .back-link-styled {
+    display: inline-block;
+    padding: 8px 15px;
+    margin-bottom: 15px;
+    background-color: #6c757d;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+  }
+  .back-link-styled:hover {
+    background-color: #5a6268;
+    color: white;
+    text-decoration: none;
+  }
+  /* Ensure form elements have some margin */
+  #event-create-form p {
+    margin-bottom: 1rem;
+  }
+  #event-create-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+</style>
+
+<a href="{% url 'events:events_home' %}" class="back-link-styled">Back</a>
+<form method="post" enctype="multipart/form-data" id="event-create-form">
+    {% csrf_token %}
+    
+    {{ form.non_field_errors }}
+
+    <p>
+        <label for="{{ form.title.id_for_label }}">Title:</label>
+        {{ form.title }}
+        {{ form.title.errors }}
+    </p>
+    <p>
+        <label for="{{ form.image.id_for_label }}">Image:</label>
+        {{ form.image }}
+        {{ form.image.errors }}
+    </p>
+    <p>
+        <label for="{{ form.description.id_for_label }}">Description:</label>
+        {{ form.description }}
+        {{ form.description.errors }}
+    </p>
+
+    <!-- Map will be here, above address -->
+    <div id="map" style="height: 300px; margin-bottom: 1em;"></div>
+    
+    <p>
+        <label for="{{ form.address.id_for_label }}">Address:</label>
+        {{ form.address }}
+        {{ form.address.errors }}
+    </p>    <p>
+        <label for="{{ form.open_slots.id_for_label }}">Open slots:</label>
+        {{ form.open_slots }}
+        {{ form.open_slots.errors }}
+    </p>
+    <p>
+        <label for="{{ form.duration_minutes.id_for_label }}">Event Duration:</label>
+        {{ form.duration_minutes }}
+        {{ form.duration_minutes.errors }}
+        <small class="form-text text-muted">How long will your event last?</small>
+    </p>
+    <p>
+        <label for="{{ form.visibility.id_for_label }}">Visibility:</label>
+        {{ form.visibility }}
+        {{ form.visibility.errors }}
+    </p>
+    <p>
+        <label for="{{ form.time.id_for_label }}">Event Start Time:</label>
+        {{ form.time }}
+        {{ form.time.errors }}
+    </p>
+    
+    <label for="radius-select" class="form-label-ce">Event location must be within:</label>
+    <select id="radius-select" class="form-select-ce" style="margin-bottom: 0.5em;">
+        <option value="10">10 km</option>
+        <option value="20">20 km</option>
+        <option value="30">30 km</option>
+    </select>
+    <span id="radius-warning" style="color: #d9363e; display: none; margin-left: 10px;">Selected location is outside the allowed radius!</span>
+    
+    <p><small>Planned events are open for 1 hour from the selected start time.</small></p>
+    
+    <p style="display:none;">
+        <input type="hidden" name="latitude" id="id_latitude" value="">
+        <input type="hidden" name="longitude" id="id_longitude" value="">
+    </p>
+      <button type="submit" class="submit-button-ce">Create Event</button>
+</form>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+
+<script>
+// Function to update minimum datetime to current time
+function updateMinDateTime() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    
+    const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+    const timeInput = document.querySelector('input[name="time"]');
+    if (timeInput) {
+        timeInput.setAttribute('min', minDateTime);
+    }
+}
+
+// Update minimum datetime immediately and then every minute
+updateMinDateTime();
+setInterval(updateMinDateTime, 60000); // Update every minute
+
+// Also update when user focuses on the time input
+document.addEventListener('DOMContentLoaded', function() {
+    const timeInput = document.querySelector('input[name="time"]');
+    if (timeInput) {
+        timeInput.addEventListener('focus', updateMinDateTime);
+    }
+});
+</script>
+
+<script src="{% static 'events/events.js' %}"></script>
+{% endblock %}

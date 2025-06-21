@@ -3,136 +3,690 @@
 {% block title %}Profile{% endblock %}
 {% block content %}
 {% load static %}
-
-<!DOCTYPE html>
-<html>
-<head>
-  <title>User Profile</title>
-</head>
-<body>
-
-<style>
-  .carousel-container-wrapper {
-    position: relative;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 30px;
-  }
-
-  .carousel-container {
-    width: 400px;
-    overflow: hidden;
-  }
-
-  .carousel {
-    display: flex;
-    transition: transform 0.5s ease-in-out;
-    will-change: transform;
-  }
-
-  .carousel-item {
-    flex: 0 0 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background: #f9f9f9;
-    text-align: center;
-  }
-
-  .carousel-nav {
-    position: absolute;
-    width: 100%;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    justify-content: space-between;
-    padding: 0 20px;
-    box-sizing: border-box;
-    pointer-events: none;
-  }
-
-  .carousel-nav button {
-    pointer-events: all;
-    background: white;
-    border: 1px solid #ccc;
-    font-size: 1.5rem;
-    padding: 8px 16px;
-    cursor: pointer;
-    border-radius: 5px;
-    box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
-  }
-</style>
-
-{% if user.profile_picture %}
-  <img src="{{ user.profile_picture.url }}" alt="Profile Picture" width="200" height="200">
-{% else %}
-  <p>No profile picture uploaded.</p>
-{% endif %}
-
-<h2>{{ user.full_name }}</h2>
-
-{% if user.show_email %}
-  <p>Email: {{ user.email }}</p>
-{% endif %}
-
-{% if user.show_date_of_birth %}
-  <p>Age: {{ user.get_age }}</p>
-{% endif %}
-
-{% if user.gender != 'other' and user.show_gender %}
-  <p>Gender: {{ user.gender }}</p>
-{% endif %}
-
-{% if user.show_pronouns %}
-  <p>Pronouns: {{ user.pronouns }}</p>
-{% endif %}
-
-{% if user.show_phone_number %}
-  <p>Phone Number: {{ user.phone_number }}</p>
-{% endif %}
-
-<p>Main Language: {{ user.get_main_language_display }}</p>
-<p>Sublanguage: {{ user.get_sublanguage_display }}</p>
+{% load custom_filters %} 
+<link rel="stylesheet" href="{% static 'userprofile/css/profile.css' %}">
+<script src="{% static 'userprofile/js/profile.js' %}" defer></script>
 
 
-{% if user.show_bio and user.bio %}
+
+<div class="profile-header">
+  {% if profile_user.profile_picture %}
+    <img src="{{ profile_user.profile_picture.url }}" alt="Profile Picture" class="profile-picture">
+  {% else %}
+    <div class="profile-picture placeholder"></div>
+  {% endif %}
+
+  <div class="profile-info">
+    <h1 class="profile-name">{{ profile_user.full_name }}</h1>
+
+    {% if profile_user.show_email %}
+      <p>Email: {{ profile_user.email }}</p>
+    {% endif %}
+
+    {% if profile_user.show_date_of_birth %}
+      <p>Age: {{ profile_user.get_age }}</p>
+    {% endif %}
+
+    {% if profile_user.gender != 'other' and profile_user.show_gender %}
+      <p>Gender: {{ profile_user.gender }}</p>
+    {% endif %}
+
+    {% if profile_user.show_pronouns %}
+      <p>Pronouns: {{ profile_user.pronouns }}</p>
+    {% endif %}
+
+    {% if profile_user.show_phone_number %}
+      <p>Phone Number: {{ profile_user.phone_number }}</p>
+    {% endif %}
+
+    <p>Main Language: {{ profile_user.main_language_flag }} {{ profile_user.get_main_language_display }}</p>
+    <p>Sublanguage: {{ profile_user.sublanguage_flag }} {{ profile_user.get_sublanguage_display }}</p>
+
+    {% if profile_user.show_bio and profile_user.bio %}
   <h3>About Me</h3>
-  <p>{{ user.bio }}</p>
+  <p>{{ profile_user.bio }}</p>
 {% endif %}
-
-{% if user.content_items.all %}
-  <h2>Content I Would Like to Show</h2>
-
-  <div class="carousel-container-wrapper">
-    <div class="carousel-nav">
-      <button onclick="changeSlide(-1)">←</button>
-      <button onclick="changeSlide(1)">→</button>
-    </div>
-
-    <div class="carousel-container">
-      <div class="carousel" id="carousel">
-        {% for item in user.content_items.all %}
-          <div class="carousel-item">
-            <h4>{{ item.title }}</h4>
-
-            {% if item.image %}
-              <img src="{{ item.image.url }}" width="100%" alt="{{ item.title }}">
-            {% elif item.get_youtube_embed_url %}
-              <iframe width="100%" height="200"
-                      src="{{ item.get_youtube_embed_url }}"
-                      frameborder="0" allowfullscreen></iframe>
-            {% endif %}
-
-            <p>{{ item.description }}</p>
-          </div>
-        {% endfor %}
+  </div>  {% if is_own_profile %}
+  <div class="profile-edit-button">
+    <button class="edit-profile-btn" id="openEditProfileModal" type="button">Edit Profile <i class="fas fa-edit"></i></button>
+  </div>  {% else %}
+  <div class="profile-action-buttons">
+    {% if not is_blocked_by_viewer %}
+      <a href="/chat/{{ chat_room_id }}/" class="chat-btn"><i class="fas fa-comments"></i> Chat</a>
+      {% if is_friend %}
+        <button class="add-friend-btn" type="button" disabled style="background-color: #28a745;"><i class="fas fa-check"></i> Friends</button>
+      {% elif pending_request %}
+        <button class="add-friend-btn" type="button" disabled style="background-color: #ffc107;"><i class="fas fa-clock"></i> Request Sent</button>
+      {% else %}
+        <button class="add-friend-btn" id="addFriendButton" type="button" data-user-id="{{ profile_user.id }}"><i class="fas fa-user-plus"></i> Add Friend</button>
+      {% endif %}    {% else %}
+      <div style="color: #dc3545; font-weight: bold; margin-bottom: 10px;">
+        <i class="fas fa-ban"></i> You have blocked this user
+      </div>
+    {% endif %}
+    
+    <!-- Three dots menu -->
+    <div class="dropdown-menu-container">
+      <button class="three-dots-btn" id="threeDots" type="button">⋯</button>      <div class="dropdown-menu" id="dropdownMenu">
+        {% if not is_blocked_by_viewer %}
+          <button class="dropdown-item" id="reportUser" data-user-id="{{ profile_user.id }}"><i class="fas fa-flag"></i> Report</button>
+          <button class="dropdown-item" id="blockUser" data-user-id="{{ profile_user.id }}"><i class="fas fa-ban"></i> Block Account</button>
+        {% else %}
+          <button class="dropdown-item" onclick="unblockUser({{ profile_user.id }}, this)"><i class="fas fa-check"></i> Unblock User</button>
+        {% endif %}
       </div>
     </div>
   </div>
+  {% endif %}
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="editProfileModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeEditProfileModal">&times;</span>
+    <iframe src="{% url 'edit_profile' %}" frameborder="0" style="width:100%;height:90vh;min-height:600px;background:transparent;"></iframe>
+  </div>
+</div>
+
+<script>
+// Modal open/close logic
+const modal = document.getElementById('editProfileModal');
+const btn = document.getElementById('openEditProfileModal');
+const span = document.getElementById('closeEditProfileModal');
+
+// Only add event listeners if elements exist
+if (btn && modal) {
+  btn.onclick = function() { modal.style.display = 'block'; }
+}
+if (span && modal) {
+  span.onclick = function() { modal.style.display = 'none'; }
+}
+if (modal) {
+  window.onclick = function(event) { if (event.target == modal) { modal.style.display = 'none'; } }
+}
+
+function showProfileSuccessMessage() {
+  // Check if jQuery is available
+  if (typeof $ !== 'undefined' && $('#profile-success-msg').length === 0) {
+    $('body').append('<div id="profile-success-msg" style="position:fixed;top:32px;left:50%;transform:translateX(-50%);background:#4fd18b;color:#fff;padding:18px 32px;border-radius:8px;z-index:2000;font-size:1.2em;box-shadow:0 2px 12px rgba(0,0,0,0.12);">Profile updated successfully!</div>');
+    setTimeout(function() { $('#profile-success-msg').fadeOut(400, function() { $(this).remove(); }); }, 2500);
+  }
+}
+window.showProfileSuccessMessage = showProfileSuccessMessage;
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+// Add Friend button functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const addFriendButton = document.getElementById('addFriendButton');
+  
+  if (addFriendButton) {
+    addFriendButton.addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      const userId = this.getAttribute('data-user-id');
+      const csrfToken = getCookie('csrftoken');
+      
+      if (!csrfToken) {
+        alert('CSRF token not found. Please refresh the page.');
+        return;
+      }
+      
+      // Disable button to prevent double-clicking
+      this.disabled = true;
+      this.textContent = 'Sending...';
+      
+      fetch('/friendsearch/send-friend-request/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken,
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: new URLSearchParams({
+          'user_id': userId
+        }),
+        credentials: 'same-origin'
+      })
+      .then(response => response.text())      .then(text => {
+        try {
+          const data = JSON.parse(text);
+            if (data.success) {
+            this.innerHTML = '<i class="fas fa-check"></i> Request Sent';
+            this.style.background = '#28a745';
+            this.style.color = 'white';
+          } else {
+            // Re-enable button on failure
+            this.disabled = false;
+            this.innerHTML = '<i class="fas fa-user-plus"></i> Add Friend';
+            this.style.background = '';
+            this.style.color = '';
+            alert('Error: ' + data.message);
+          }
+        } catch (e) {
+          // Re-enable button on error
+          this.disabled = false;
+          this.innerHTML = '<i class="fas fa-user-plus"></i> Add Friend';
+          this.style.background = '';
+          this.style.color = '';
+          alert('Server error occurred. Please try again.');
+        }
+      })
+      .catch(error => {
+        // Re-enable button on error
+        this.disabled = false;
+        this.innerHTML = '<i class="fas fa-user-plus"></i> Add Friend';
+        this.style.background = '';
+        this.style.color = '';
+        alert('Failed to send friend request. Please try again.');
+      });
+    });  }
+});
+
+// Three dots dropdown menu functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const threeDotsBtn = document.getElementById('threeDots');
+  const dropdownMenu = document.getElementById('dropdownMenu');
+  const reportBtn = document.getElementById('reportUser');
+  const blockBtn = document.getElementById('blockUser');
+
+  if (threeDotsBtn && dropdownMenu) {
+    // Toggle dropdown when clicking three dots
+    threeDotsBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      dropdownMenu.classList.toggle('show');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function() {
+      dropdownMenu.classList.remove('show');
+    });
+
+    // Prevent dropdown from closing when clicking inside it
+    dropdownMenu.addEventListener('click', function(e) {
+      e.stopPropagation();
+    });
+  }
+  <!-- Report user functionality (placeholder) -->
+  if (reportBtn) {
+    reportBtn.addEventListener('click', function() {
+      const userId = this.getAttribute('data-user-id');
+      // Show report modal
+      document.getElementById('reportModal').style.display = 'block';
+      document.getElementById('reportUserId').value = userId;
+      dropdownMenu.classList.remove('show');
+    });
+  }
+  // Block user functionality
+  if (blockBtn) {
+    blockBtn.addEventListener('click', function() {
+      const userId = this.getAttribute('data-user-id');
+      if (confirm('Are you sure you want to block this user? This will prevent them from contacting you and remove any friend connections.')) {
+        // Show loading state
+        const originalText = this.innerHTML;
+        this.innerHTML = '⏳ Blocking...';
+        this.disabled = true;
+        
+        // Make AJAX request to block user
+        fetch('/block-user/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+          },
+          body: new URLSearchParams({
+            'user_id': userId,
+            'action': 'block'
+          })
+        })
+        .then(response => response.json())        .then(data => {
+          if (data.success) {
+            // Reload the page to show the blocked state
+            window.location.reload();
+          } else {
+            alert('Error: ' + data.message);
+            this.innerHTML = originalText;
+            this.disabled = false;
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('An error occurred while blocking the user.');
+          this.innerHTML = originalText;
+          this.disabled = false;
+        });
+      }      dropdownMenu.classList.remove('show');
+    });
+  }
+});
+
+// Function to unblock a user
+function unblockUser(userId, button) {
+  if (confirm('Are you sure you want to unblock this user?')) {
+    // Show loading state
+    const originalText = button.innerHTML;
+    button.innerHTML = '⏳ Unblocking...';
+    button.disabled = true;
+    
+    // Make AJAX request to unblock user
+    fetch('/block-user/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+      },
+      body: new URLSearchParams({
+        'user_id': userId,
+        'action': 'unblock'
+      })
+    })
+    .then(response => response.json())    .then(data => {
+      if (data.success) {
+        // Reload the page to update the UI
+        window.location.reload();
+      } else {
+        alert('Error: ' + data.message);
+        button.innerHTML = originalText;
+        button.disabled = false;
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('An error occurred while unblocking the user.');
+      button.innerHTML = originalText;
+      button.disabled = false;
+    });
+  }
+}
+</script>
+
+<style>
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.4);
+}
+.modal-content {
+  background-color: #fff;
+  margin: 4vh auto;
+  padding: 0;
+  border-radius: 18px;
+  width: 90vw;
+  max-width: 900px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  position: relative;
+}
+.close {
+  color: #aaa;
+  position: absolute;
+  right: 24px;
+  top: 18px;
+  font-size: 32px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 10;
+}
+.close:hover, .close:focus { color: #ef7741; text-decoration: none; cursor: pointer; }
+.modal iframe {
+  border: none;
+  border-radius: 0 0 18px 18px;
+  width: 100%;
+  min-height: 600px;
+  background: transparent;
+}
+
+.profile-action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.chat-btn {
+  background: #007bff;
+  color: white !important;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  min-width: 120px;
+  text-decoration: none !important;
+  display: inline-block;
+  text-align: center;
+}
+
+.chat-btn:hover {
+  background: #0056b3;
+  color: white !important;
+}
+
+.add-friend-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  min-width: 120px;
+}
+
+.add-friend-btn:hover {
+  background: #218838;
+}
+
+.add-friend-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Three dots dropdown menu */
+.dropdown-menu-container {
+  position: relative;
+  display: inline-block;
+}
+
+.three-dots-btn {
+  background: var(--highlight-bg);
+  color: var(--text-main);
+  border: 2px solid var(--accent-bg);
+  padding: 12px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  min-width: 50px;
+  text-align: center;
+}
+
+.three-dots-btn:hover {
+  background: var(--accent-bg);
+  transform: translateY(-2px);
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--accent-bg);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 150px;
+  margin-top: 5px;
+}
+
+.dropdown-menu.show {
+  display: block;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text-main);
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background: var(--highlight-bg);
+}
+
+.dropdown-item:first-child {
+  border-radius: 8px 8px 0 0;
+}
+
+.dropdown-item:last-child {
+  border-radius: 0 0 8px 8px;
+}
+
+/* Report Modal Styles */
+#reportModal .modal-content {
+  max-width: 500px;
+  margin: 10% auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 20px 0 20px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: var(--text-main);
+}
+
+.close {
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  color: var(--text-main);
+}
+
+.close:hover {
+  color: #ff4444;
+}
+
+.form-group {
+  margin-bottom: 20px;
+  padding: 0 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: var(--text-main);
+}
+
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--accent-bg);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--text-main);
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--button-color);
+}
+
+.form-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 20px;
+  border-top: 1px solid var(--accent-bg);
+}
+
+.btn-cancel {
+  background: var(--accent-bg);
+  color: var(--text-main);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-cancel:hover {
+  background: var(--highlight-bg);
+}
+
+.btn-submit {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-submit:hover {
+  background: #c82333;
+}
+
+.btn-submit:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+</style>
+
+<div class="interests-display">
+  <h2 class="section-title">
+    {% if is_own_profile %}
+      My 3 Main Interests
+    {% else %}
+      {{ profile_user.full_name|default:profile_user.username }}'s 3 Main Interests
+    {% endif %}
+  </h2>
+
+  <div class="interest-cards">
+    {% for interest in profile_user.interests %}
+      {% if interest %}
+        {% with profile_user.interest_descriptions|get_item:interest as data %}
+          <div class="interest-card">
+            <h3 class="interest-title">{{ interest }}</h3>
+            {% if data.image %}
+              <img src="/media/{{ data.image }}" alt="{{ interest }} image" />
+            {% endif %}
+            <p class="interest-description">{{ data.description }}</p>
+          </div>
+        {% endwith %}
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+
+
+{% if visited_places %}
+<div class="interests-display">
+  <h3 class="section-title">Places I’ve Visited</h3>
+  <div class="interest-cards">
+    {% for place in visited_places %}
+      <div class="interest-card hover-zoom">
+        {% if place.image %}
+          <img class="edit-place-preview" src="{{ place.image.url }}" alt="{{ place.name }}">
+
+        {% endif %}
+        <p>{{ place.name }}</p>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+
+
+<div class="extras-row-wrapper">
+  {% if achievements %}
+  <div class="profile-extras-card">
+    <h3 class="section-title">Achievements</h3>
+    <div class="extras-grid">
+      {% for a in achievements %}
+        <div class="achievement-item">
+          {% if a.icon %}
+            <img src="{{ a.icon.url }}" alt="{{ a.title }}">
+          {% endif %}
+          <p>{{ a.title }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+
+  {% if quotes %}
+  <div class="profile-extras-card">
+    <h3 class="section-title">Quotes I Live By</h3>
+    <div class="quotes-section">
+      {% for quote in quotes %}
+        <blockquote>{{ quote.text }}</blockquote>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+
+
+
+
+
+
+{% if profile_user.content_items.all %}
+<div class="content-carousel-card">
+  <h2 class="section-title">Content I Would Like to Show</h2>
+
+  <div class="carousel-nav">
+    <button onclick="changeSlide(-1)">←</button>
+    <button onclick="changeSlide(1)">→</button>
+  </div>
+
+  <div class="carousel-container">
+    <div class="carousel" id="carousel">
+      {% for item in profile_user.content_items.all %}
+        <div class="carousel-item">
+          <h4 class="content-title">{{ item.title }}</h4>
+
+          {% if item.image %}
+            <img src="{{ item.image.url }}" class="content-image" alt="{{ item.title }}">
+          {% elif item.get_youtube_embed_url %}
+            <iframe class="content-iframe"
+                    src="{{ item.get_youtube_embed_url }}"
+                    frameborder="0"
+                    allowfullscreen></iframe>
+          {% endif %}
+
+          <p class="content-description">{{ item.description }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
 {% endif %}
 
 
@@ -141,50 +695,121 @@
 
 
 
-<a href="{% url 'edit_profile' %}">
-  <button>Edit Profile ✏️</button>
-</a>
+
+
+
+  
+
+
+
+<!-- Report Modal -->
+<div id="reportModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2><i class="fas fa-flag"></i> Report User</h2>
+      <span class="close" id="closeReportModal">&times;</span>
+    </div>
+    <form id="reportForm">
+      {% csrf_token %}
+      <input type="hidden" id="reportUserId" name="reported_user_id">
+      
+      <div class="form-group">
+        <label for="reportReason">Reason for reporting:</label>
+        <select id="reportReason" name="reason" required>
+          <option value="">Select a reason</option>
+          <option value="toxic_behavior">Toxic Behavior</option>
+          <option value="spam">Spam</option>
+          <option value="racism_homophobia">Racism or Homophobia</option>
+          <option value="harassment">Harassment</option>
+          <option value="inappropriate_content">Inappropriate Content</option>
+          <option value="fake_profile">Fake Profile</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="reportDescription">Additional details (optional):</label>
+        <textarea id="reportDescription" name="description" rows="4" placeholder="Provide more details about the issue..."></textarea>
+      </div>
+      
+      <div class="form-buttons">
+        <button type="button" id="cancelReport" class="btn-cancel">Cancel</button>
+        <button type="submit" class="btn-submit">Submit Report</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <script>
-  let currentSlide = 0;
-  const carousel = document.getElementById('carousel');
-  const items = document.querySelectorAll('.carousel-item');
-  const totalSlides = items.length;
+// Report modal functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const reportModal = document.getElementById('reportModal');
+  const closeReportModal = document.getElementById('closeReportModal');
+  const cancelReport = document.getElementById('cancelReport');
+  const reportForm = document.getElementById('reportForm');
 
-  function updateCarousel() {
-    const offset = -currentSlide * 100;
-    carousel.style.transform = `translateX(${offset}%)`;
+  // Close modal handlers
+  if (closeReportModal) {
+    closeReportModal.onclick = function() {
+      reportModal.style.display = 'none';
+    }
+  }
+  
+  if (cancelReport) {
+    cancelReport.onclick = function() {
+      reportModal.style.display = 'none';
+    }
   }
 
-  function changeSlide(direction) {
-    currentSlide = (currentSlide + direction + totalSlides) % totalSlides;
-    updateCarousel();
-  }
-
-  updateCarousel();
-
-
-  window.addEventListener('DOMContentLoaded', function () {
-    fetch('/static/maps/europe.svg')
-      .then(response => response.text())
-      .then(svgText => {
-        const container = document.getElementById('svgMapContainer');
-        container.innerHTML = svgText;
-
-        // Now you can access the SVG directly
-        const svg = container.querySelector('svg');
-        if (svg) {
-          console.log("SVG loaded!");
-          const belgium = svg.querySelector('#belgium'); // or whatever the ID is
-          if (belgium) {
-            belgium.style.fill = 'red';
-          }
+  // Handle form submission
+  if (reportForm) {    reportForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const submitBtn = document.querySelector('.btn-submit');
+      
+      // Debug: Log form data
+      console.log('Form data:');
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
+      
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+        fetch('/report-user/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          reportModal.style.display = 'none';
+          reportForm.reset();
+          alert('Report submitted successfully. Thank you for helping keep our community safe.');
+        } else {
+          alert('Error: ' + data.message);
         }
       })
-      .catch(err => console.error('Failed to load SVG:', err));
-  });
+      .catch(error => {
+        console.error('Report submission error:', error);
+        alert('Failed to submit report. Error: ' + error.message);
+      })
+      .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Report';
+      });
+    });
+  }
+});
 </script>
 
-</body>
-</html>
 {% endblock %}

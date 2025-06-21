@@ -1,20 +1,25 @@
 from django.contrib import admin
-from .models import ChatMessage, GroupChat, GroupMember
+from .models import ChatRoom, Message
 
-class GroupMemberInline(admin.TabularInline):  # or use StackedInline if you prefer
-    model = GroupMember
-    extra = 1  # how many empty fields to show
+class MessageInline(admin.TabularInline):
+    model = Message
+    extra = 0
+    fields = ('sender', 'content', 'timestamp')
+    readonly_fields = ('timestamp',)
 
-@admin.register(GroupChat)
-class GroupChatAdmin(admin.ModelAdmin):
-    list_display = ('name', 'created_by', 'created_at')
-    search_fields = ('name', 'created_by__email')
-    ordering = ('-created_at',)
-    inlines = [GroupMemberInline]  # <-- nested here
+@admin.register(ChatRoom)
+class ChatRoomAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'is_group', 'participant_list')
+    search_fields = ('name',)
+    filter_horizontal = ('participants',)
+    inlines = [MessageInline]
 
-@admin.register(ChatMessage)
-class ChatMessageAdmin(admin.ModelAdmin):
-    list_display = ('sender', 'receiver', 'group', 'content', 'timestamp')
-    list_filter = ('group', 'timestamp')
-    search_fields = ('sender__email', 'receiver__email', 'content')
-    ordering = ('-timestamp',)
+    def participant_list(self, obj):
+        return ", ".join([u.get_full_name() for u in obj.participants.all()])
+
+@admin.register(Message)
+class MessageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'room', 'sender', 'content', 'timestamp')
+    list_filter = ('room', 'sender')
+    search_fields = ('content', 'sender__first_name', 'sender__last_name')
+    readonly_fields = ('timestamp',)

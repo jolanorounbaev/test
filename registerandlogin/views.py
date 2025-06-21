@@ -7,7 +7,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model
 from django.shortcuts import render
 from .forms import RegisterForm
-
+import sys
 
 def register_view(request):
     if request.method == 'POST':
@@ -86,7 +86,7 @@ def login_view(request):
                 error_message = "Please activate your account first."
             else:
                 login(request, user)
-                return redirect('/')  # or dashboard/home
+                return redirect('/moments/feed/')  # Redirect to moments feed page
 
     return render(request, 'registerandlogin/login.html', {'form': form, 'error_message': error_message})
 

@@ -59,29 +59,31 @@ class RegisterForm(forms.ModelForm):
         confirm = cleaned_data.get("confirm_password")
         gender = cleaned_data.get("gender")
         pronouns = cleaned_data.get("pronouns")
-
+        
         if password and confirm and password != confirm:
             raise ValidationError("Passwords do not match.")
-
+        
         if gender == 'other' and not pronouns:
             raise ValidationError("Please select your preferred pronouns.")
+        
+        return cleaned_data
 
-def save(self, commit=True):
-    user = super().save(commit=False)
-    user.set_password(self.cleaned_data["password"])
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data["password"])
 
-    # Set smart default visibility options
-    user.show_email = True
-    user.show_date_of_birth = True
-    user.show_gender = True
-    user.show_pronouns = True
-    user.show_phone_number = False
-    user.show_main_language = True
-    user.show_sublanguage = True
+        # Set smart default visibility options
+        user.show_email = True
+        user.show_date_of_birth = True
+        user.show_gender = True
+        user.show_pronouns = True
+        user.show_phone_number = False
+        user.show_main_language = True
+        user.show_sublanguage = True
 
-    if commit:
-        user.save()
-    return user
+        if commit:
+            user.save()
+        return user
 
 
 class LoginForm(forms.Form):

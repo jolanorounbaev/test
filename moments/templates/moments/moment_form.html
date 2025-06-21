@@ -1,0 +1,376 @@
+
+{% load static %}
+
+
+
+<script src="//unpkg.com/alpinejs" defer></script>
+
+<!-- moment_form.html -->
+<div class="w-full">
+  <form action="{% url 'moments:create' %}" method="post" enctype="multipart/form-data"
+        class="moment_form" x-data="momentForm">
+    {% csrf_token %}
+    <div class="moment_form-main">
+      <!-- Title -->
+      <div>
+        <label for="id_title">Title</label>
+        <input type="text" id="id_title" name="title" placeholder="Enter a title" autocomplete="off">
+      </div>
+      <!-- Description + Post Button in one row -->
+      <div style="display: flex; align-items: flex-end; gap: 0.5rem;">
+        <div style="flex: 1; display: flex; flex-direction: column;">
+          <label for="id_content">Description</label>
+          <textarea id="id_content" name="content" rows="2" placeholder="Enter a description or paste a YouTube link..." @paste="handleContentPaste($event)" x-model="descriptionContent" autocomplete="off"></textarea>
+        </div>
+        <button id="postMomentBtn" type="submit">Post</button>
+      </div>
+      <!-- Preview (Moved Here) -->
+      <template x-if="previewType">
+          <div class="preview-container">
+              <template x-if="previewType === 'image' && previewUrl">
+                  <img :src="previewUrl" alt="Image preview">
+              </template>
+              <template x-if="previewType === 'video' && previewUrl">
+                  <video :src="previewUrl" controls></video>
+              </template>
+              <template x-if="previewType === 'youtube' && youtubeEmbedUrl">
+                  <iframe :src="youtubeEmbedUrl" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width: 560px; height: 315px;"></iframe>
+              </template>
+              <button type="button" @click="clearPreview()" class="clear-preview-btn">&times; Clear Preview</button>
+          </div>
+      </template>      <!-- Media Actions Bar (New) -->
+      <div class="media-actions-bar">
+        <button type="button" @click="$refs.fileInput.click()" class="icon-btn media-upload-btn" title="Upload Image/Video">
+          <i class="fas fa-image"></i>
+        </button>
+        <input type="file" name="media_file" @change="handleFile($event)" accept="image/*,video/*" x-ref="fileInput" style="display: none;">
+        <input type="hidden" name="youtube_link" :value="youtubeLink"> {# Added hidden input for submission #}
+      </div>
+    </div>
+    <div class="moment_form-interests">
+      <label for="interest-input">Interests (max 3)</label>
+      <input type="text" id="interest-input" placeholder="Start typing an interest..." autocomplete="off">
+      <div id="selected-interests" class="selected-interests mt-2 flex flex-wrap gap-2">
+          <!-- Selected interests will be populated here by moment_feed.js -->
+      </div>
+      <div id="interest-hidden-inputs" style="display: none;">
+          <!-- Hidden input fields for selected interests will be added here by moment_feed.js -->
+      </div>
+      <div id="interest-error" class="text-red-500 text-sm mt-1 hidden"></div>
+    </div>
+  </form>
+</div>
+
+<script>
+  function momentForm() {
+    return {
+      content: '',
+      // media related properties
+      previewType: null, 
+      previewUrl: null,
+      youtubeLink: '',
+      imageFile: null, 
+      videoFile: null,
+      // wordlist: {{ wordlist_json|safe }}, // If this was solely for Alpine-based interest suggestions, it might be removable too. Keeping for now if other parts of Alpine use it.
+
+      // START: Interest-related Alpine.js properties and methods have been removed.
+      // These are now handled by static/moments/js/moment_feed.js
+      // END: Interest-related Alpine.js properties and methods removed.
+
+      init() {
+        // console.log('Moment form Alpine component initialized.');
+        // If wordlist was fetched here for Alpine suggestions, that part can be removed.
+        // Example: this.interests = {{ wordlist_json|safe }}; // This line would be removed
+
+        // Enable drag-and-drop of YouTube links, images, and videos into the description textarea
+        const desc = document.getElementById('id_content');
+        if (desc) {
+          desc.addEventListener('dragover', (event) => {
+            event.preventDefault(); // Allow drop
+          });
+          desc.addEventListener('drop', (event) => {
+            event.preventDefault();
+            const files = event.dataTransfer.files;
+            if (files && files.length > 0) {
+              const file = files[0];
+              this.youtubeLink = '';
+              if (file.type.startsWith('image/')) {
+                this.previewType = 'image';
+                this.previewUrl = URL.createObjectURL(file);
+                this.$refs.fileInput.files = files;
+              } else if (file.type.startsWith('video/')) {
+                this.previewType = 'video';
+                this.previewUrl = URL.createObjectURL(file);
+                this.$refs.fileInput.files = files;
+              } else {
+                this.clearPreview();
+              }
+            } else {
+              const droppedText = event.dataTransfer.getData('text');
+              if (droppedText) {
+                const videoId = this.extractYouTubeVideoId(droppedText);
+                if (videoId) {
+                  this.clearMediaFiles();
+                  this.youtubeLink = droppedText;
+                  this.previewType = 'youtube';
+                  this.previewUrl = '';
+                  this.descriptionContent = droppedText;
+                } else {
+                  // If not a YouTube link, just insert the text
+                  this.descriptionContent = droppedText;
+                }
+              }
+            }
+          });
+        }
+      },
+
+      handleFile(event) {
+        const file = event.target.files[0];
+        if (file) {
+          this.youtubeLink = ''; // Clear YouTube link
+          if (file.type.startsWith('image/')) {
+            this.previewType = 'image';
+            this.previewUrl = URL.createObjectURL(file);
+          } else if (file.type.startsWith('video/')) {
+            this.previewType = 'video';
+            this.previewUrl = URL.createObjectURL(file);
+          } else {
+            this.clearPreview(); // Not a supported file type
+          }
+        }
+      },
+
+      handleDrop(event) {
+        const files = event.dataTransfer.files;
+        if (files && files.length > 0) {
+          const file = files[0];
+          this.youtubeLink = ''; 
+          if (file.type.startsWith('image/')) {
+            this.previewType = 'image';
+            this.previewUrl = URL.createObjectURL(file);
+            this.$refs.fileInput.files = files; 
+          } else if (file.type.startsWith('video/')) {
+            this.previewType = 'video';
+            this.previewUrl = URL.createObjectURL(file);
+            this.$refs.fileInput.files = files;
+          } else {
+            this.clearPreview();
+          }
+        } else {
+          const droppedText = event.dataTransfer.getData('text');
+          if (droppedText) {
+            const videoId = this.extractYouTubeVideoId(droppedText);
+            if (videoId) {
+              this.clearMediaFiles();
+              this.youtubeLink = droppedText;
+              this.previewType = 'youtube';
+              this.previewUrl = '';
+            } else {
+                this.clearPreview(); // Dropped text is not a valid youtube link
+            }
+          }
+        }
+      },
+      
+      clearMediaFiles() {
+        this.previewUrl = '';
+        if (this.$refs.fileInput) {
+          this.$refs.fileInput.value = null; 
+        }
+      },
+
+      clearPreview() {
+        this.previewUrl = '';
+        this.youtubeLink = '';
+        this.previewType = '';
+        if (this.$refs.fileInput) {
+          this.$refs.fileInput.value = null; 
+        }
+      },
+
+      handleContentPaste(event) {
+        setTimeout(() => {
+          const value = event.target.value.trim();
+          // Try to extract YouTube video ID
+          const videoId = this.extractYouTubeVideoId ? this.extractYouTubeVideoId(value) : null;
+          if (videoId) {
+            this.clearMediaFiles();
+            this.youtubeLink = value;
+            this.previewType = 'youtube';
+            this.previewUrl = '';
+          } else {
+            // If not a YouTube link, just update the description content
+            this.descriptionContent = value;
+          }
+        }, 0);
+      },
+      // Helper to extract YouTube video ID from a URL
+      extractYouTubeVideoId(url) {
+        // Standard YouTube URL
+        let match = url.match(/(?:youtube\.com\/watch\?v=|youtube\.com\/embed\/)([\w-]{11})/);
+        if (match) return match[1];
+        // Short youtu.be URL
+        match = url.match(/youtu\.be\/([\w-]{11})/);
+        if (match) return match[1];
+        return null;
+      },
+      get youtubeEmbedUrl() {
+        const videoId = this.extractYouTubeVideoId(this.youtubeLink);
+        return videoId ? `https://www.youtube.com/embed/${videoId}` : '';
+      },
+    }};
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('momentForm', momentForm);
+  });
+</script>
+<style>
+/* ... existing autocomplete suggestions CSS ... */
+.moment_form {
+  /* ... your existing .moment_form styles ... */
+  gap: 1.5rem; /* Increased gap slightly */
+}
+
+.drop-zone {
+    border: 2px dashed var(--bg-accent);
+    padding: 20px;
+    text-align: center;
+    border-radius: 10px;
+    background-color: var(--bg-card);
+    margin-bottom: 1rem; /* Space below dropzone */
+}
+
+.preview-container {
+  position: relative;
+  margin-top: 1rem;
+  max-width: 100%; 
+}
+.preview-container img,
+.preview-container video,
+.preview-container iframe {
+  max-width: 100%;
+  max-height: 350px; /* Slightly increased max height */
+  display: block;
+  border-radius: 8px;
+  border: 1px solid var(--bg-accent);
+  margin: 0 auto; /* Center preview content */
+}
+.clear-preview-btn {
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border: none;
+  border-radius: 5px;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  display: block; /* Make it a block to use margin auto for centering */
+  margin: 0.5rem auto 0 auto; /* Center button below preview */
+  font-size: 0.9rem;
+}
+.clear-preview-btn:hover {
+  opacity: 0.9;
+}
+
+/* Styling for selected interests (if you use the example) */
+.selected-interests {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+.selected-interest {
+    background-color: var(--bg-accent);
+    color: var(--text-main);
+    padding: 0.3rem 0.6rem;
+    border-radius: 15px;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+}
+.selected-interest button {
+    background: none;
+    border: none;
+    color: var(--text-heading);
+    margin-left: 0.4rem;
+    cursor: pointer;
+    font-size: 1.1em;
+    padding: 0;
+    line-height: 1;
+}
+.autocomplete-suggestions {
+    border: 1px solid var(--bg-accent);
+    background: var(--bg-card);
+    max-height: 150px;
+    overflow-y: auto;
+    border-radius: 5px;
+    margin-top: 2px;
+}
+.autocomplete-suggestions ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.autocomplete-suggestions li {
+    padding: 0.5rem;
+    cursor: pointer;
+}
+.autocomplete-suggestions li:hover, .autocomplete-suggestions li.highlighted {
+    background-color: var(--bg-hover);
+}
+
+/* Styles for the new media actions bar and icon button */
+.media-actions-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* Space between icons/inputs */
+  padding: 0.5rem 0; /* Padding around the bar */
+  border-top: 1px solid var(--bg-accent); /* Optional separator line */
+  margin-top: 0.5rem; /* Space above the bar */
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: var(--btn-bg); /* Use button background color for icon */
+  font-size: 1.5rem; /* Adjust icon size */
+  padding: 0.25rem;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 36px; /* Fixed width */
+  height: 36px; /* Fixed height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.icon-btn:hover {
+  background-color: var(--bg-hover); /* Use hover background for button */
+  color: var(--text-main);
+}
+
+/* Hide the old drop-zone if not repurposed */
+.drop-zone[style*="display: none"] {
+    display: none !important;
+}
+
+
+.moment_form input[type="url"].youtube-input-field {
+    /* This class was on the old youtube input, we might not need it anymore if .youtube-input-inline covers it */
+    /* If you still have elements with .youtube-input-field, review their styling */
+    margin-top: 0; /* Reset margin if it was previously set */
+}
+
+
+/* Adjustments to preview container if needed after moving */
+.preview-container {
+  position: relative;
+  margin-top: 0.5rem; /* Space below description/textarea */
+  margin-bottom: 0.5rem; /* Space above media actions bar */
+  max-width: 100%; 
+}
+</style>
+</form>
+</div>
+
+
+<script src="{% static 'moments/js/moment_feed.js' %}"></script>

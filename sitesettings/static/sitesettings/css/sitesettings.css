@@ -1,0 +1,257 @@
+:root {
+  /* New Theme Variables */
+  --bg-base: #FFFFFF;
+  --bg-card: #F8F9FA;
+  --bg-accent: #E9ECEF;
+  --bg-hover: #DEE2E6;
+  --text-main: #212529;
+  --text-heading: #343A40;
+  --btn-bg: #007BFF;
+  --btn-text: #FFFFFF;
+  --border-color: #CED4DA;
+  --link-color: #007BFF;
+  --link-hover-color: #0056b3;
+  --success-color: #28a745;
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 8px rgba(0,0,0,0.1);
+  --shadow-lg: 0 8px 16px rgba(0,0,0,0.15);
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+}
+
+/* Site Settings Card Container */
+.site-settings-container {
+    max-width: 560px; /* Increased max-width for better spacing */
+    margin: 40px auto;
+    background: var(--bg-card);
+    border-radius: var(--border-radius-lg); /* Updated to use variable */
+    box-shadow: var(--shadow-md); /* Updated to use variable */
+    padding: 40px 35px 35px 35px; /* Adjusted padding */
+    font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.site-settings-title {
+    display: flex;
+    align-items: center;
+    font-size: 1.8rem; /* Increased font size */
+    font-weight: 700; /* Bolder */
+    margin-bottom: 12px; /* Adjusted margin */
+    color: var(--text-heading);
+}
+
+.site-settings-title svg, .site-settings-title .icon {
+    margin-right: 12px; /* Adjusted margin */
+    font-size: 1.5em; /* Increased icon size */
+    color: var(--btn-bg); /* Use button background color for icon */
+}
+
+.site-settings-desc {
+    color: var(--text-main); /* Use main text color */
+    margin-bottom: 25px; /* Increased margin */
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.site-settings-option {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px; /* Increased margin */
+    font-size: 1.1rem; /* Adjusted font size */
+}
+
+.site-settings-option input[type="checkbox"] {
+    width: 20px; /* Slightly larger checkbox */
+    height: 20px;
+    margin-right: 10px; /* Adjusted margin */
+    accent-color: var(--btn-bg); /* Use button background color */
+    cursor: pointer;
+}
+
+.site-settings-option label {
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.site-settings-action {
+    display: flex;
+    align-items: center;
+    margin-bottom: 18px; /* Adjusted margin */
+    font-size: 1.1rem; /* Consistent font size */
+    color: var(--link-color);
+    font-weight: 500;
+    transition: color 0.2s ease-in-out;
+}
+
+.site-settings-action .icon {
+    margin-right: 10px; /* Adjusted margin */
+    font-size: 1.2em;
+}
+
+.site-settings-action:hover,
+.sitesettings-card a:hover { /* Combined hover for consistency */
+    color: var(--link-hover-color);
+    text-decoration: underline;
+}
+
+.site-settings-delete button[type="submit"] {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: #dc3545; /* Standard delete color */
+    cursor: pointer;
+    font-weight: 500;
+    transition: color 0.2s ease-in-out;
+}
+
+.site-settings-delete button[type="submit"]:hover {
+    color: #a71d2a; /* Darker red on hover */
+    text-decoration: underline;
+}
+
+.site-settings-coming-soon {
+    margin-top: 22px; /* Increased margin */
+    color: #888;
+    font-size: 1.04rem;
+}
+
+.site-settings-coming-soon strong {
+    color: #222;
+    font-weight: 600;
+}
+
+.sitesettings-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: 2rem 2.5rem;
+  margin: 2rem auto;
+  max-width: 600px;
+}
+.sitesettings-card h1 {
+  color: var(--text-heading);
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+.sitesettings-card p {
+  color: var(--text-main);
+  margin-bottom: 1.5rem;
+}
+.sitesettings-card ul {
+  list-style: none;
+  padding: 0;
+}
+.sitesettings-card li {
+  margin-bottom: 1.1rem;
+  color: var(--text-main);
+  font-size: 1.08rem;
+}
+.sitesettings-card a {
+  color: var(--link-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.sitesettings-card a:hover {
+  color: var(--link-hover-color);
+}
+.sitesettings-card button[type="submit"] {
+  background: none;
+  color: #dc3545;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  font-size: 1.08rem;
+  transition: color 0.2s;
+}
+.sitesettings-card button[type="submit"]:hover {
+  color: #a71d2a;
+}
+.sitesettings-card input[type="checkbox"] {
+  accent-color: var(--btn-bg);
+  margin-right: 0.5em;
+  transform: scale(1.1); /* Slightly larger checkbox */
+}
+.sitesettings-card strong {
+  color: var(--text-heading);
+}
+.sitesettings-card .success-message {
+  color: var(--success-color);
+  background: #eafaf1;
+  border: 1px solid #b7eed7;
+  border-radius: var(--border-radius-sm);
+  padding: 0.5em 1em;
+  margin-bottom: 1em;
+  display: inline-block;
+}
+
+/* Count badge for blocked users */
+.count-badge {
+    background: #dc3545;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-left: 8px;
+    display: inline-block;
+    min-width: 18px;
+    text-align: center;
+}
+
+/* --- Blocked Users Special Styling --- */
+.site-settings-action.blocked-users {
+    background: #fff4f4;
+    border: 1px solid #f5c2c7;
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 2px 8px rgba(220,53,69,0.06);
+    padding: 10px 18px;
+    margin-bottom: 20px;
+    color: #dc3545;
+    font-weight: 600;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.site-settings-action.blocked-users .icon {
+    color: #dc3545;
+    font-size: 1.3em;
+}
+.site-settings-action.blocked-users .count-badge {
+    background: #dc3545;
+    color: #fff;
+    border: 1px solid #fff;
+    box-shadow: 0 1px 4px rgba(220,53,69,0.12);
+}
+.site-settings-action.blocked-users:hover {
+    background: #ffe2e6;
+    box-shadow: 0 4px 16px rgba(220,53,69,0.13);
+    color: #a71d2a;
+}
+
+@media (max-width: 768px) { /* Adjusted breakpoint */
+    .site-settings-container {
+        padding: 25px 20px; /* Adjusted padding for smaller screens */
+        margin: 20px auto;
+    }
+    .site-settings-title {
+        font-size: 1.6rem; /* Adjusted for smaller screens */
+    }
+    .site-settings-desc,
+    .site-settings-option,
+    .site-settings-action {
+        font-size: 1rem; /* Adjusted for smaller screens */
+    }
+}
+
+@media (max-width: 600px) {
+    .site-settings-container {
+        padding: 20px 15px; /* Further adjust padding */
+        max-width: 95vw; /* Ensure it doesn't touch screen edges */
+    }
+    .site-settings-title {
+        font-size: 1.4rem; /* Further adjust title size */
+    }
+}

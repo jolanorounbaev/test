@@ -1,3 +1,5 @@
+import bisect
+
 WORDLIST = [
     "Football", "Basketball", "Baseball", "Soccer", "Tennis", "Cricket", "Volleyball", 
     "Badminton", "Table Tennis", "Rugby", "Hockey", "Swimming", "Running", "Track and Field",
@@ -49,5 +51,29 @@ WORDLIST = [
     "Dungeons & Dragons", "Magic: The Gathering", "Poker", "Cardistry", "Juggling",
     "Origami", "Puzzle Solving", "Collecting", "Vinyl Records", "Coin Collecting",
     "Stamp Collecting", "Fashion", "Streetwear", "Sneakers", "Watch Collecting",
-    "Minimalism", "Sustainability", "Volunteering", "Meditation", "Mindfulness"
+    "Minimalism", "Sustainability", "Volunteering", "Meditation", "Mindfulness",
 ]
+
+# Normalize, deduplicate, and sort the wordlist for fast search
+def get_normalized_wordlist():
+    normalized = set(w.strip().lower() for w in WORDLIST if w and isinstance(w, str))
+    return sorted(normalized)
+
+NORMALIZED_WORDLIST = get_normalized_wordlist()
+
+# Fast prefix search (returns up to max_results, prefix match prioritized)
+def autocomplete_suggestions(query, max_results=15):
+    query = query.strip().lower()
+    if not query:
+        return []
+    # Prefix matches
+    prefix_matches = [w for w in NORMALIZED_WORDLIST if w.startswith(query)]
+    # Substring matches (not prefix)
+    substring_matches = [w for w in NORMALIZED_WORDLIST if query in w and not w.startswith(query)]
+    results = prefix_matches + substring_matches
+    return results[:max_results]
+
+# For Django view usage:
+# from .wordlist import autocomplete_suggestions
+# suggestions = autocomplete_suggestions(request.GET.get('q', ''))
+# return JsonResponse(suggestions, safe=False)

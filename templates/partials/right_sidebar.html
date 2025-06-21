@@ -1,0 +1,47 @@
+{% load static %}
+
+<div style="position: sticky; top: 20px;"> 
+    <div class="bg-white p-4 rounded-lg shadow mb-6" style="background-color: var(--bg-card);"> 
+        <h3 class="text-xl font-semibold mb-3 text-center" style="color: var(--text-heading);">On Fire</h3>
+        {% if on_fire_moments %}
+            <ul class="space-y-3">
+                {% for moment in on_fire_moments %}
+                    <li class="flex items-center space-x-3 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700" style="transition: background-color 0.2s ease; background-color: var(--bg-accent);">
+                        {% if moment.image %}
+                            <img src="{{ moment.image.url }}" alt="{{ moment.title|truncatechars:20 }}" class="w-12 h-12 rounded-md object-cover">                        {% elif moment.video %}
+                            <div class="w-12 h-12 rounded-md bg-gray-300 flex items-center justify-center">
+                                <i class="fas fa-video text-2xl"></i>
+                            </div>
+                        {% elif moment.youtube_link %}
+                            <div class="w-12 h-12 rounded-md bg-gray-300 flex items-center justify-center">
+                                <i class="fas fa-play text-2xl"></i>
+                            </div>
+                        {% else %}
+                            <div class="w-12 h-12 rounded-md bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                                <i class="fas fa-file-alt text-gray-500 dark:text-gray-400"></i>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <a href="{% url 'moments:moment_feed' %}#moment-{{ moment.id }}" class="font-semibold hover:underline" style="color: var(--text-main);">{{ moment.title|truncatechars:30 }}</a>                            <div class="text-sm text-gray-600 dark:text-gray-400" style="color: var(--text-main);">
+                                <span><i class="fas fa-fire"></i> {{ moment.fire_count }}</span>
+                                <span class="ml-2"><i class="fas fa-comments"></i> {{ moment.comments.count }}</span>
+                            </div>
+                        </div>
+                        <a href="{% url 'moments:moment_feed' %}#moment-{{ moment.id }}" class="ml-auto px-3 py-1 rounded-full text-sm font-medium" style="background-color: var(--btn-bg); color: var(--btn-text);">View</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-gray-500 dark:text-gray-400 text-center" style="color: var(--text-main);">No moments are on fire right now. Be the first to ignite one!</p>
+        {% endif %}
+    </div>
+
+    <div class="bg-white p-4 rounded-lg shadow" style="background-color: var(--bg-card);"> 
+        <h3 class="text-lg font-semibold mb-3" style="color: var(--text-heading);">Legal</h3>
+        <ul class="space-y-2">
+            <li><a href="{% url 'legal_pages:about' %}" class="hover:underline" style="color: var(--text-main);">About Me</a></li>
+            <li><a href="{% url 'legal_pages:privacy' %}" class="hover:underline" style="color: var(--text-main);">Privacy</a></li>
+            <li><a href="{% url 'legal_pages:more' %}" class="hover:underline" style="color: var(--text-main);">More</a></li>
+        </ul>
+    </div>
+</div>

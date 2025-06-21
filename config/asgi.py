@@ -8,9 +8,27 @@ https://docs.djangoproject.com/en/5.1/howto/deployment/asgi/
 """
 
 import os
-
-from django.core.asgi import get_asgi_application
+import django  # ✅ Must be before importing anything Django-related
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+django.setup()  # ✅ Important: initialize Django settings before imports
 
-application = get_asgi_application()
+from django.core.asgi import get_asgi_application
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.auth import AuthMiddlewareStack
+import chat.routing  # This depends on Django models/settings being loaded
+import notifications.routing
+import events.routing
+import moments.routing
+
+application = ProtocolTypeRouter({
+    "http": get_asgi_application(),
+    "websocket": AuthMiddlewareStack(
+        URLRouter(
+            chat.routing.websocket_urlpatterns +
+            notifications.routing.websocket_urlpatterns +
+            events.routing.websocket_urlpatterns +
+            moments.routing.websocket_urlpatterns
+        )
+    ),
+})

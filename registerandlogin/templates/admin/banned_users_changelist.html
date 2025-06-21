@@ -1,0 +1,112 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block content_title %}
+    <h1>{{ title }} ({{ total_banned }} total)</h1>
+    <div style="margin-bottom: 20px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+        <strong>Summary:</strong> 
+        {{ permanent_count }} permanent ban(s), {{ temporary_count }} temporary ban(s)
+    </div>
+{% endblock %}
+
+{% block result_list %}
+<div class="results">
+    <table id="result_list">
+        <thead>
+            <tr>
+                <th scope="col">User</th>
+                <th scope="col">Ban Type</th>
+                <th scope="col">Ban Until</th>
+                <th scope="col">Days Remaining</th>
+                <th scope="col">Reason</th>
+                <th scope="col">Reports</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in banned_users %}
+            <tr>
+                <td>
+                    <strong>{{ item.user.first_name }} {{ item.user.last_name }}</strong><br>
+                    <small style="color: #666;">{{ item.user.email }}</small><br>
+                    <small>ID: {{ item.user.id }}</small>
+                </td>
+                <td>
+                    {% if item.ban_type == 'Permanent' %}
+                        <span style="color: #dc3545; font-weight: bold;"><i class="fas fa-ban"></i> Permanent</span>
+                    {% else %}
+                        <span style="color: #fd7e14; font-weight: bold;"><i class="fas fa-clock"></i> Temporary</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if item.ban_until %}
+                        {{ item.ban_until|date:"M d, Y H:i" }}
+                    {% else %}
+                        <em>N/A</em>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if item.days_remaining is not None %}
+                        {% if item.days_remaining > 0 %}
+                            {{ item.days_remaining }} day(s)
+                        {% else %}
+                            <strong style="color: #dc3545;">Expired</strong>
+                        {% endif %}
+                    {% else %}
+                        <em>N/A</em>
+                    {% endif %}
+                </td>
+                <td>
+                    <div style="max-width: 200px; word-wrap: break-word;">
+                        {{ item.ban_reason }}
+                    </div>
+                </td>
+                <td>
+                    <span style="color: #dc3545; font-weight: bold;">{{ item.approved_reports_count }}/5</span>
+                </td>
+                <td>
+                    <a href="/admin/registerandlogin/customuser/{{ item.user.id }}/change/" 
+                       class="button" style="background: #007cba; color: white; padding: 4px 8px; text-decoration: none; border-radius: 3px; font-size: 11px;">
+                        Edit User
+                    </a>
+                    <br><br>
+                    <button onclick="unbanUser({{ item.user.id }}, '{{ item.user.first_name }} {{ item.user.last_name }}')" 
+                            style="background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;">
+                        Unban
+                    </button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 20px; color: #666;">
+                    🎉 No users are currently banned!
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+function unbanUser(userId, userName) {
+    if(confirm(`Are you sure you want to unban ${userName}?`)) {
+        fetch(`/admin/registerandlogin/customuser/${userId}/unban/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json()).then(data => {
+            if(data.status === 'success') {
+                alert('User unbanned successfully!');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        }).catch(error => {
+            alert('Error unbanning user: ' + error);
+        });
+    }
+}
+</script>
+{% endblock %}

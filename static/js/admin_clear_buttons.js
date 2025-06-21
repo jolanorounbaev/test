@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const field = document.getElementById(id);
         if (field) {
             const btn = document.createElement('button');
-            btn.innerText = '🧹 Clear';
+            btn.innerText = 'Clear';
             btn.type = 'button';
             btn.style.marginLeft = '8px';
             btn.onclick = () => field.value = '';

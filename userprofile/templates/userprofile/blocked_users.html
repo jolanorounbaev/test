@@ -1,0 +1,215 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Blocked Users - Settings{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'userprofile/css/blocked_users.css' %}">
+<style>
+/* Enhanced card-style design */
+.settings-container {
+    max-width: 800px !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+}
+
+.settings-header {
+    background: rgba(0, 123, 255, 0.02) !important;
+    padding: 20px !important;
+    border-radius: 12px !important;
+    margin: -10px -10px 30px -10px !important;
+    border-bottom: 2px solid rgba(0, 123, 255, 0.1) !important;
+}
+
+.settings-icon {
+    font-size: 36px !important;
+    background: linear-gradient(135deg, #007bff 0%, #6610f2 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+.settings-title {
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    background: linear-gradient(135deg, #007bff 0%, #6610f2 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+.blocked-user-item {
+    background: white !important;
+    border-radius: 12px !important;
+    padding: 20px !important;
+    margin-bottom: 16px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+    border: 1px solid #e0e0e0 !important;
+    transition: all 0.3s ease !important;
+}
+
+.blocked-user-item:hover {
+    background: #fafafa !important;
+    border-color: #007bff !important;
+    box-shadow: 0 4px 16px rgba(0,123,255,0.15) !important;
+    transform: translateY(-2px) !important;
+}
+
+.blocked-user-details h3 {
+    margin: 0 0 6px 0 !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: #007bff !important;
+    padding: 6px 12px !important;
+    border-radius: 6px !important;
+    background: rgba(0, 123, 255, 0.05) !important;
+    border: 1px solid rgba(0, 123, 255, 0.1) !important;
+    display: inline-block !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+.blocked-user-details h3:hover {
+    background: rgba(0, 123, 255, 0.1) !important;
+    border-color: rgba(0, 123, 255, 0.3) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2) !important;
+}
+
+.blocked-user-details p {
+    font-weight: 500 !important;
+    margin: 4px 0 !important;
+}
+
+.blocked-date {
+    font-weight: 500 !important;
+    margin-top: 8px !important;
+}
+
+.unblock-btn {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    padding: 10px 20px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2) !important;
+}
+
+.unblock-btn:hover {
+    background: linear-gradient(135deg, #218838 0%, #1ea080 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3) !important;
+}
+
+.blocked-user-avatar {
+    border: 2px solid transparent !important;
+    transition: all 0.2s ease !important;
+}
+
+.blocked-user-avatar:hover {
+    border-color: #007bff !important;
+    transform: scale(1.05) !important;
+}
+</style>
+{% endblock extra_css %}
+
+{% block content %}
+<div class="settings-container">
+    <a href="{% url 'profile' %}" class="back-link">
+        ← Back to Profile
+    </a>
+      <div class="settings-header">
+        <div class="settings-icon"><i class="fas fa-ban"></i></div>
+        <div>
+            <h1 class="settings-title">Blocked Users</h1>
+            <p style="margin: 5px 0 0 0; color: #666; font-size: 14px;">
+                Manage users you've blocked
+            </p>
+        </div>
+    </div>
+
+    <div class="blocked-users-section">
+        {% if blocked_users %}
+            {% for block in blocked_users %}
+                <div class="blocked-user-item">                    <div class="blocked-user-info" onclick="window.location.href='{% url 'user_profile' block.blocked.id %}'">
+                        {% if block.blocked.profile_picture %}
+                            <img src="{{ block.blocked.profile_picture.url }}" alt="Profile Picture" class="blocked-user-avatar" style="width: 50px !important; height: 50px !important; max-width: 50px !important; max-height: 50px !important; border-radius: 50% !important; object-fit: cover !important;">
+                        {% else %}
+                            <div class="blocked-user-avatar placeholder" style="width: 50px !important; height: 50px !important; max-width: 50px !important; max-height: 50px !important; border-radius: 50% !important; display: flex !important; align-items: center !important; justify-content: center !important; background: #ccc !important; color: white !important; font-weight: bold !important; font-size: 18px !important;">
+                                {{ block.blocked.first_name|first|default:"?" }}
+                            </div>
+                        {% endif %}                          <div class="blocked-user-details">
+                            <h3 onclick="window.location.href='{% url 'user_profile' block.blocked.id %}'"><i class="fas fa-user"></i> {{ block.blocked.full_name|default:block.blocked.email }}</h3>
+                            <p><i class="fas fa-envelope"></i> {{ block.blocked.email }}</p>
+                            {% if block.reason %}
+                                <p><i class="fas fa-comment"></i> <strong>Reason:</strong> {{ block.reason }}</p>
+                            {% endif %}
+                            <div class="blocked-date">
+                                <i class="fas fa-clock"></i> Blocked on {{ block.created_at|date:"M d, Y \a\t H:i" }}
+                            </div>
+                        </div>
+                    </div>
+                      <button class="unblock-btn" onclick="unblockUser({{ block.blocked.id }}, this)">
+                        <i class="fas fa-unlock"></i> Unblock
+                    </button>
+                </div>
+            {% endfor %}        {% else %}
+            <div class="no-blocked-users">
+                <div class="icon"><i class="fas fa-smile"></i></div>
+                <h3>No blocked users</h3>
+                <p>You haven't blocked anyone yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function unblockUser(userId, button) {
+    if (!confirm('Are you sure you want to unblock this user?')) {
+        return;
+    }
+    
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Unblocking...';
+    
+    fetch('{% url "block_user" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: `user_id=${userId}&action=unblock`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the blocked user item from the list
+            button.closest('.blocked-user-item').remove();
+            
+            // Check if no more blocked users
+            const remainingItems = document.querySelectorAll('.blocked-user-item');
+            if (remainingItems.length === 0) {                document.querySelector('.blocked-users-section').innerHTML = `
+                    <div class="no-blocked-users">
+                        <div class="icon"><i class="fas fa-smile"></i></div>
+                        <h3>No blocked users</h3>
+                        <p>You haven't blocked anyone yet.</p>
+                    </div>
+                `;
+            }
+        } else {
+            alert(data.message || 'Failed to unblock user.');
+            button.disabled = false;
+            button.textContent = originalText;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while unblocking the user.');
+        button.disabled = false;
+        button.textContent = originalText;
+    });
+}
+</script>
+{% endblock content %}

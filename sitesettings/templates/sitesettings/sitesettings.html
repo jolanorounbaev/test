@@ -1,16 +1,47 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Site Settings{% endblock %}
 
+{% block extra_head %}
+{# <link rel="stylesheet" href="{% static 'sitesettings/css/sitesettings.css' %}"> #}
+{% endblock %}
+
 {% block content %}
-<h1>⚙️ Site Settings</h1>
-
-<p>Customize your preferences here.</p>
-
-<!-- You can add future toggles, privacy settings, notification prefs, etc. -->
-<ul>
-    <li><strong>Dark mode:</strong> Coming soon</li>
-    <li><strong>Privacy:</strong> Coming soon</li>
-    <li><strong>Language preferences:</strong> Coming soon</li>
-</ul>
+<link rel="stylesheet" href="{% static 'sitesettings/css/sitesettings.css' %}">
+<div class="site-settings-container">
+    <div class="site-settings-title">⚙️ Site Settings</div>
+    <div class="site-settings-desc">Customize your preferences here.</div>
+    <div class="site-settings-option">
+        <form method="post" action="" style="display:inline;">
+            {% csrf_token %}
+            <label>
+                <input type="checkbox" name="show_location" {% if user.show_location %}checked{% endif %} onchange="this.form.submit()">
+                Toggle: Show My Location
+            </label>
+        </form>
+    </div>    <div class="site-settings-action">
+        <span class="icon">🔑</span>
+        <a href="{% url 'password_reset' %}">Change Password</a>
+    </div>
+    <div class="site-settings-action">
+        <span class="icon"><i class="fas fa-ban"></i></span>
+        <a href="{% url 'blocked_users_list' %}">
+            Blocked Users
+            {% if blocked_users_count > 0 %}
+                <span class="count-badge">{{ blocked_users_count }}</span>
+            {% endif %}
+        </a>
+    </div>
+    <div class="site-settings-action site-settings-delete">
+        <form method="post" action="{% url 'delete_account' %}" onsubmit="return confirm('Are you sure you want to delete your account? This action cannot be undone.');" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" style="background:none;border:none;padding:0;color:inherit;cursor:pointer;font:inherit;">
+                <span class="icon">🗑️</span>Delete My Account
+            </button>
+        </form>
+    </div>
+    <div class="site-settings-coming-soon"><strong>Dark mode:</strong> Coming soon</div>
+    <div class="site-settings-coming-soon"><strong>Language preferences:</strong> Coming soon</div>
+</div>
 {% endblock %}

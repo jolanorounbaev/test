@@ -1,185 +1,392 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}ProximityLinked{% endblock %}</title>
-    <style>
-        :root {
-            --primary-color: #2c2f33;
-            --secondary-color: #5865f2;
-            --text-color: #ffffff;
-            --hover-color: #40444b;
-            --notification-bg: #ffffff;
-            --notification-border: #e0e0e0;
-            --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
+<style>    :root {
+        --bg-base: #FFFFFF; 
+        --bg-card: #F8F9FA; 
+        --bg-accent: #E9ECEF; 
+        --bg-hover: #DEE2E6;
+
+        --text-main: #212529; 
+        --text-heading: #343A40; 
+        --btn-bg: #007BFF; 
+        --btn-text: #FFFFFF; 
+
+        /* Aliases for consistency */
+        --brand-bg: var(--bg-card);
+        /* --card-bg is already defined with the new value, no need to redefine unless it was different */
+        --accent-bg: var(--bg-accent); /* Ensure this is used if old class names depend on it */
+        --highlight-bg: var(--bg-hover);  /* Ensure this is used if old class names depend on it */
         
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
-        }
-        
-        nav {
-            background-color: var(--primary-color);
-            color: var(--text-color);
-            padding: 0.8rem 2rem;
-            display: flex;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: var(--shadow);
-        }
-        
-        .nav-left, .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-        
-        .nav-right {
-            margin-left: auto;
-        }
-        
-        nav a {
-            color: var(--text-color);
-            text-decoration: none;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s ease;
-            padding: 0.5rem 0;
-        }
-        
-        nav a:hover {
-            color: var(--secondary-color);
-            transform: translateY(-2px);
-        }
-        
-        .main-content {
-            padding: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        /* Notification styles */
-        #notification-container {
-            display: none;
-            position: absolute;
-            right: 20px;
-            top: 60px;
-            z-index: 1000;
-            width: 350px;
-            max-height: 500px;
-            overflow-y: auto;
-            background: var(--notification-bg);
-            border: 1px solid var(--notification-border);
-            border-radius: 8px;
-            box-shadow: var(--shadow);
-        }
-        
-        .notification-badge {
-            position: relative;
-        }
-        
-        .notification-badge::after {
-            content: attr(data-count);
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background-color: #f04747;
-            color: white;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        /* Responsive design */
-        @media (max-width: 768px) {
-            nav {
-                padding: 0.8rem 1rem;
-            }
-            
-            .nav-left, .nav-right {
-                gap: 1rem;
-            }
-            
-            .main-content {
-                padding: 1rem;
-            }
-            
-            #notification-container {
-                width: 280px;
-                right: 10px;
-            }
-        }
-    </style>
+        --text-header: var(--text-heading);
+        --button-color: var(--btn-bg);
+        /* --button-text is already defined with the new value */
+
+        --notification-bg: var(--bg-accent);
+        --notification-border: var(--bg-hover);
+        --shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        --active-border: var(--btn-bg);
+    }
+
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--bg-base); 
+        color: var(--text-main);
+    }
+
+    nav {
+        background-color: var(--bg-card); 
+        color: var(--text-main);
+        padding: 0 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: var(--shadow);
+        height: 56px;
+        border-bottom: 1px solid var(--bg-accent); 
+    }
+
+    .nav-left, .nav-right, .nav-center {
+        display: flex;
+        align-items: center;
+        height: 100%;
+    }
+
+    .nav-left { gap: 8px; flex: 1; }
+    .nav-center { justify-content: center; flex: 2; max-width: 680px; }
+    .nav-right { justify-content: flex-end; gap: 8px; flex: 1; }
+
+    .logo {
+        height: 40px;
+        width: 40px;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .search-bar {
+        background-color: var(--bg-base); 
+        border-radius: 50px;
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        max-width: 240px;
+        border: 1px solid var(--bg-accent); 
+    }
+
+    .search-bar input {
+        border: none;
+        background: transparent;
+        outline: none;
+        margin-left: 8px;
+        width: 100%;
+        font-size: 15px;
+        color: var(--text-main);
+    }
+
+    .search-icon {
+        color: var(--text-main);
+        font-size: 16px;
+    }
+
+    nav a {
+        color: var(--text-main);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        padding: 0 16px;
+        border-radius: 8px;
+        transition: background-color 0.2s ease, color 0.2s ease; 
+        position: relative;
+    }
+
+    nav a:hover {
+        background-color: var(--bg-hover);
+        color: var(--btn-bg); 
+    }
+    
+    nav a.active, nav a:focus {
+        background-color: var(--bg-accent);
+        color: var(--btn-bg);
+        font-weight: 600;
+    }
+
+    .nav-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .profile-pic {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    #notification-container {
+        display: none;
+        position: absolute;
+        right: 20px;
+        top: 56px;
+        z-index: 1000;
+        width: 360px;
+        max-height: 500px;
+        overflow-y: auto;
+        background: var(--notification-bg);
+        border: 1px solid var(--notification-border);
+        border-radius: 8px;
+        box-shadow: 0 12px 28px 0 rgba(0, 0, 0, 0.2), 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .notification-badge {
+        position: relative;
+    }
+
+    .notification-badge::after {
+        content: attr(data-count);
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background-color: #e41e3f; /* Standard red for notification dot */
+        color: white;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        border: 2px solid var(--bg-card); /* Match navbar background */
+    }
+
+    @media (max-width: 900px) {
+        .search-bar { max-width: 40px; padding: 8px; }
+        .search-bar input { display: none; }
+        .nav-center a { padding: 0 12px; }
+    }
+
+    @media (max-width: 600px) {
+        nav { padding: 0 8px; }
+        .nav-center { display: none; }
+        .nav-left, .nav-right { flex: 1; }
+    }
+
+    #global-messages {
+        position: fixed;
+        top: 70px;
+        left: 0;
+        width: 100%;
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        pointer-events: none;
+    }
+
+    #global-messages div {
+        pointer-events: auto;
+        min-width: 320px;
+        max-width: 600px;
+        margin: 8px auto;
+        padding: 16px 24px;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: 500;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .message-success {
+        background: #d1fae5;
+        color: #065f46;
+        border: 2px solid #10b981;
+    }
+
+    .message-error {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 2px solid #ef4444;
+    }    .message-warning {
+        background: #fef9c3;
+        color: #92400e;
+        border: 2px solid #facc15;
+        position: relative;
+    }
+
+    .message-close-btn {
+        position: absolute;
+        top: 8px;
+        right: 12px;
+        background: none;
+        border: none;
+        font-size: 18px;
+        color: #92400e;
+        cursor: pointer;
+        padding: 0;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: background-color 0.2s;
+    }
+
+    .message-close-btn:hover {
+        background-color: rgba(146, 64, 14, 0.1);
+    }
+
+    .message-info {
+        background: #e0e7ff;
+        color: #3730a3;
+        border: 2px solid #6366f1;
+    }
+</style>
+
     {% load static %}
-    <script src="{% static 'friendsearch/wordlist.js' %}"></script>
+    <script>
+      var CURRENT_USER_ID = {{ user.id|default:'null' }};
+      if (CURRENT_USER_ID === null) CURRENT_USER_ID = null; // Ensure it's a JS null
+    </script>
     <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
+
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/sidebar_styles.css' %}">
 </head>
 <body>
-    <nav>
-        <div class="nav-left">
-            <a href="/profile/">
-                <span>👤</span>
-                <span class="nav-text">Profile</span>
-            </a>
-            <a href="/friendsearch/your-friends/">
-                <span>👥</span>
-                <span class="nav-text">Friends</span>
-            </a>
-            <a href="/friendsearch/">
-                <span>🔍</span>
-                <span class="nav-text">Search</span>
-            </a>
-            <a href="/posts/">
-                <span>📰</span>
-                <span class="nav-text">Posts</span>
-            </a>
-            <a href="/chat/">
-                <span>💬</span>
-                <span class="nav-text">Chat</span>
-            </a>
+<nav>
+    <div class="nav-left">
+        <a href="/moments/feed/">
+            <img src="{% static 'img/Logo.png' %}" alt="ProximityLinked Logo" class="logo">
+        </a>
+        <button type="button" id="navbar-location-btn" style="background: var(--bg-accent); color: var(--text-main); border:none; border-radius:8px; padding:6px 16px; margin-left:12px; font-size:1rem; font-weight:500; cursor:pointer; box-shadow: var(--shadow); transition: background 0.2s; display:flex; align-items:center; gap:6px;" onmouseover="this.style.background='var(--bg-hover)'" onmouseout="this.style.background='var(--bg-accent)'"><i class="fas fa-map-marker-alt"></i> Use My Location</button>
+        <span id="navbar-location-status" style="margin-left:10px; color: var(--text-heading); font-size:0.98rem; font-weight:400;"></span>
+    </div>    <div class="nav-center">
+        <div class="search-bar" style="width: 100%; max-width: 300px;">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="navbar-interest-search" placeholder="Search interest..." style="color: var(--text-main);">
         </div>
-        
-        <div class="nav-right">
-            <a href="#" onclick="toggleNotifications()" class="notification-badge" id="notification-icon" 
-               data-count="{{ request.user.notifications.unread.count|default:0 }}">
-                <span>🔔</span>
-            </a>
-            <a href="/settings/">
-                <span>⚙️</span>
-                <span class="nav-text">Settings</span>
-            </a>
-            <a href="/logout/">
-                <span>🚪</span>
-                <span class="nav-text">Logout</span>
-            </a>
-        </div>
-    </nav>
-    
-    <!-- Notification dropdown container -->
-    <div id="notification-container"></div>
-
-    <div class="main-content">
-        {% block content %}{% endblock %}
+    </div><div class="nav-right">
+        <a href="/profile/" title="Profile">
+            {% if request.user.profile_picture %}
+                <img src="{{ request.user.profile_picture.url }}" alt="Profile" class="profile-pic">
+            {% else %}
+                <img src="{% static 'img/default-avatar.png' %}" alt="Default Profile" class="profile-pic">
+            {% endif %}
+        </a>        <a href="#" onclick="toggleNotifications()" title="Notifications" class="notification-badge" id="notification-icon" data-count="{{ friend_request_count|default:0 }}">
+            <i class="fas fa-bell nav-icon"></i>
+        </a>
+        <a href="/settings/" title="Settings">
+            <i class="fas fa-cog nav-icon"></i>
+        </a>
+        <a href="/logout/" title="Logout">
+            <i class="fas fa-sign-out-alt nav-icon"></i>
+        </a>
     </div>
+</nav>
+    
+<div id="notification-container"></div>
 
+<div class="flex flex-row max-w-[1600px] mx-auto mt-6 px-4">
+  {% block left_sidebar %}
+    <aside class="w-1/5 pr-4" style="background-color: var(--bg-base);">
+      {% include "partials/left_sidebar.html" %}
+    </aside>
+  {% endblock %}
+
+  <main class="w-3/5 px-6" style="background-color: var(--bg-base); border-left: 1px solid var(--bg-accent); border-right: 1px solid var(--bg-accent);" >
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block right_sidebar %}
+    <aside class="w-1/5 pl-4" style="background-color: var(--bg-base);">
+      {% include "partials/right_sidebar.html" %}
+    </aside>
+  {% endblock %}
+</div>
+
+<!-- Chat Modal -->
+<div id="chat-modal" class="hidden fixed bottom-5 right-5 w-96 h-[90vh] min-h-[700px] bg-white dark:bg-gray-900 shadow-2xl rounded-lg border border-gray-300 dark:border-gray-700 z-50 flex flex-col" style="height: 650px !important;">
+    <div class="flex justify-between items-center p-3 bg-gray-100 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 rounded-t-lg">
+        <h5 class="font-semibold text-md text-gray-800 dark:text-gray-200">Chat</h5>
+        <button id="close-chat-modal-button" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <div id="chat-modal-content-wrapper" class="flex-grow overflow-hidden">
+        <div id="chat-modal-loading" class="p-4 text-center text-gray-600 dark:text-gray-400">Loading chat...</div>
+        <iframe id="chat-modal-iframe" style="width: 100%; height: 100%; border: none; display: none;"></iframe>
+    </div>
+</div>
+
+
+    <audio id="notificationSound" src="{% static 'sounds/notification.mp3' %}" preload="auto"></audio>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let unlocked = false;
+    function unlockAudio() {
+        if (!unlocked) {
+            const audio = document.getElementById('notificationSound');
+            if (audio) {
+                audio.play().then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    unlocked = true;
+                }).catch(() => {});
+            }
+        }
+    }
+    window.addEventListener('click', unlockAudio, { once: true });
+    window.addEventListener('keydown', unlockAudio, { once: true });
+    window.addEventListener('mouseover', unlockAudio, { once: true }); // Added for extra compatibility
+});
+  let notificationSocket = null;
+  if (window.location.protocol === "https:") {
+    notificationSocket = new WebSocket('wss://' + window.location.host + '/ws/notifications/');
+  } else {
+    notificationSocket = new WebSocket('ws://' + window.location.host + '/ws/notifications/');
+  }
+  notificationSocket.onopen = function() {
+    console.log('WebSocket connection established for notifications!');
+  };
+  notificationSocket.onmessage = function(e) {
+    console.log('WebSocket message received:', e.data);
+    const data = JSON.parse(e.data);
+    if (data.message) {
+      document.getElementById('notificationSound').play();
+      // Optionally, show a toast or alert: alert(data.message);
+      const icon = document.getElementById('notification-icon');
+      let count = parseInt(icon.dataset.count || '0', 10) + 1;
+      icon.dataset.count = count;
+      icon.classList.add('notification-badge');
+    }
+  };
+  notificationSocket.onerror = function(e) {
+    console.error('WebSocket error:', e);
+  };
+  notificationSocket.onclose = function(e) {
+    console.warn('WebSocket closed:', e);
+  };
+</script>
     <script>
         // Notification system
         function toggleNotifications() {
             const container = document.getElementById('notification-container');
             const icon = document.getElementById('notification-icon');
-            
             if (container.style.display === 'none' || !container.style.display) {
                 fetch('/notifications/dropdown/')
                     .then(res => res.text())
@@ -209,7 +416,6 @@
         document.addEventListener('click', function(event) {
             const container = document.getElementById('notification-container');
             const icon = document.getElementById('notification-icon');
-            
             if (container.style.display === 'block' && 
                 !container.contains(event.target) && 
                 !icon.contains(event.target)) {
@@ -251,32 +457,390 @@
                     }
                 }
             }
-            
-            // Update notification count after actions
-            if (evt.detail.path.includes('/notifications/')) {
-                updateNotificationCount();
-            }
+            // No updateNotificationCount here
         });
-
-        // Periodically update notification count
-        function updateNotificationCount() {
-            fetch('/notifications/unread-count/')
-                .then(res => res.json())
-                .then(data => {
-                    const icon = document.getElementById('notification-icon');
-                    if (data.count > 0) {
-                        icon.dataset.count = data.count;
-                        icon.classList.add('notification-badge');
-                    } else {
-                        icon.dataset.count = 0;
-                        icon.classList.remove('notification-badge');
-                    }
-                });
-        }
-
-        // Update notification count every 30 seconds
-        setInterval(updateNotificationCount, 30000);
     </script>
     <script src="https://unpkg.com/htmx.org@1.9.6"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- Added jQuery -->
+    {% block scripts %}{% endblock %}
+    <script>
+// Global chat notification WebSocket
+(function() {
+    // Only run if user is authenticated and user ID is available
+    if (typeof CURRENT_USER_ID !== 'undefined' && CURRENT_USER_ID) {
+        let chatNotifySocket = null;
+        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        // Connect to a user-specific chat notification channel (adjust backend routing as needed)
+        chatNotifySocket = new WebSocket(protocol + window.location.host + '/ws/chat/notify/' + CURRENT_USER_ID + '/');
+
+        let chatNotificationQueue = [];
+        let chatNotificationActive = false;
+        const CHAT_NOTIFICATION_THROTTLE_MS = 5000; // 5 seconds
+
+        chatNotifySocket.onopen = function() {
+            console.log('Chat notification WebSocket connected!');
+        };        chatNotifySocket.onmessage = function(e) {
+            try {
+                const data = JSON.parse(e.data);
+                
+                // Handle user blocking/unblocking events
+                if (data.type === 'user_blocked') {
+                    console.log('User blocking event received:', data);
+                    
+                    // Refresh all chat messages to update blocking status
+                    if (typeof refreshChatMessages === 'function') {
+                        refreshChatMessages();
+                    }
+                    
+                    // Also update sidebar if it exists
+                    if (typeof updateChatSidebar === 'function') {
+                        updateChatSidebar();
+                    }
+                    
+                    return; // Don't process as a regular chat notification
+                }
+                
+                // Only notify for messages not sent by the current user
+                if (data.type === 'chat_message' && data.sender_id != CURRENT_USER_ID) {
+                    // Play sound
+                    const notifAudio = document.getElementById('notificationSound');
+                    if (notifAudio) notifAudio.play();
+
+                    // Add to queue and show if not already showing
+                    chatNotificationQueue.push(data);
+                    if (!chatNotificationActive) {
+                        showNextChatNotification();
+                    }
+
+                    // Increment notification badge count
+                    const icon = document.getElementById('notification-icon');
+                    let count = parseInt(icon.dataset.count || '0', 10) + 1;
+                    icon.dataset.count = count;
+                    icon.classList.add('notification-badge');
+                }
+            } catch (err) {
+                console.error('Error handling chat notification:', err);
+            }
+        };
+        // Discord-like notification queue logic (show only the latest message after close)
+        function showNextChatNotification() {
+            if (chatNotificationQueue.length === 0) {
+                chatNotificationActive = false;
+                return;
+            }
+            chatNotificationActive = true;
+            // Only show the latest message, discard all others
+            const data = chatNotificationQueue.pop();
+            chatNotificationQueue = [];
+            if (window.Notification && Notification.permission === 'granted') {
+                const notif = new Notification('New message from ' + (data.username || 'Someone'), {
+                    body: data.message,
+                    icon: '/static/img/default-avatar.png',
+                    tag: 'chat-message' // Ensures only one notification at a time in Chrome
+                });
+                notif.onclick = function() { window.focus(); notif.close(); };
+                notif.onclose = function() {
+                    setTimeout(showNextChatNotification, 100); // Show next (if any) after a short delay
+                };
+                setTimeout(() => notif.close(), CHAT_NOTIFICATION_THROTTLE_MS); // Auto-close after 5s
+            } else {
+                chatNotificationQueue = [];
+                chatNotificationActive = false;
+            }
+        }
+        // Request notification permission if not already granted
+        if (window.Notification && Notification.permission !== 'granted') {
+            Notification.requestPermission();
+        }
+    }
+})();
+</script>
+<script src="{% static 'friendsearch/js/friend_search.js' %}"></script>
+<script>
+// JavaScript for the chat modal
+document.addEventListener('DOMContentLoaded', function() {
+    const chatModal = document.getElementById('chat-modal');
+    const openChatModalIcon = document.getElementById('open-chat-modal-icon');
+    const closeChatModalButton = document.getElementById('close-chat-modal-button');
+    const chatModalIframe = document.getElementById('chat-modal-iframe');
+    const chatModalLoading = document.getElementById('chat-modal-loading');
+
+    const chatPageUrl = "{% url 'chat_modal_content' %}"; 
+
+    let isModalContentLoaded = false;
+
+    // Function to be called from iframe to load a specific chat room
+    window.loadChatRoomInModalFromIframe = function(roomId) {
+        if (chatModalIframe && chatModalLoading) {
+            chatModalLoading.style.display = 'block';
+            chatModalIframe.style.display = 'none';
+            
+            let roomSpecificUrl = "{% url 'chat_modal_content' %}"; // Default to base modal URL
+            if (roomId) {
+                // Use query parameter to specify the room ID
+                roomSpecificUrl = `{% url "chat_modal_content" %}?room_id=${roomId}`;
+            }
+            
+            chatModalIframe.onload = () => {
+                chatModalLoading.style.display = 'none';
+                chatModalIframe.style.display = 'block';
+            };
+            chatModalIframe.onerror = () => {
+                chatModalLoading.innerHTML = 'Failed to load chat room.';
+            };
+            chatModalIframe.src = roomSpecificUrl;
+        }
+    };
+
+    function openModal() {
+        if (chatModal) {
+            chatModal.classList.remove('hidden');
+            if (!isModalContentLoaded && chatModalIframe && chatModalLoading) {
+                chatModalLoading.style.display = 'block'; 
+                chatModalIframe.style.display = 'none';   
+                
+                chatModalIframe.onload = () => {
+                    chatModalLoading.style.display = 'none';    
+                    chatModalIframe.style.display = 'block';  
+                    isModalContentLoaded = true; 
+                };
+                chatModalIframe.onerror = () => {
+                    chatModalLoading.innerHTML = 'Failed to load chat.';
+                    console.error('Error loading iframe content from: ' + chatPageUrl);
+                };
+                // Load the general chat modal content URL (which lists chats)
+                chatModalIframe.src = chatPageUrl; 
+            } else if (chatModalIframe) {
+                chatModalLoading.style.display = 'none';
+                chatModalIframe.style.display = 'block';
+            }
+        }
+    }
+
+    function closeModal() {
+        if (chatModal) {
+            chatModal.classList.add('hidden');
+            // Optional: Clear the iframe src to stop activity and force reload next time
+            // if (chatModalIframe) {
+            //     chatModalIframe.src = 'about:blank'; 
+            //     isModalContentLoaded = false;
+            // }
+        }
+    }
+
+    if (openChatModalIcon) {
+        openChatModalIcon.addEventListener('click', function(event) {
+            event.stopPropagation(); 
+            openModal();
+        });
+    }
+
+    if (closeChatModalButton) {
+        closeChatModalButton.addEventListener('click', closeModal);
+    }
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && chatModal && !chatModal.classList.contains('hidden')) {
+            closeModal();
+        }
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const locationBtn = document.getElementById('navbar-location-btn');
+  const locationStatus = document.getElementById('navbar-location-status');
+  if (locationBtn && locationStatus) {
+    locationBtn.addEventListener('click', function() {
+      if (!navigator.geolocation) {
+        locationStatus.textContent = 'Geolocation not supported';
+        setTimeout(() => locationStatus.textContent = '', 2500);
+        return;
+      }
+      locationStatus.textContent = '(updating location)';
+      let timeout = setTimeout(() => locationStatus.textContent = '', 6000);
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          $.post('/friendsearch/', {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            csrfmiddlewaretoken: document.querySelector('input[name=csrfmiddlewaretoken]')?.value || document.querySelector('meta[name="csrf-token"]')?.content
+          }, function(data) {
+            if (data && data.status === 'success') {
+              locationStatus.textContent = 'location successfully saved';
+              window.userLatitude = position.coords.latitude;
+              window.userLongitude = position.coords.longitude;
+              setTimeout(() => { window.location.reload(); }, 800);
+            } else {
+              locationStatus.textContent = "couldn't fetch location";
+            }
+            setTimeout(() => locationStatus.textContent = '', 2000);
+            clearTimeout(timeout);
+          }, 'json').fail(function() {
+            locationStatus.textContent = "couldn't fetch location";
+            setTimeout(() => locationStatus.textContent = '', 2000);
+            clearTimeout(timeout);
+          });
+        },
+        error => {
+          locationStatus.textContent = "couldn't fetch location";
+          setTimeout(() => locationStatus.textContent = '', 2000);
+          clearTimeout(timeout);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    });
+  }
+  // --- Location warning logic ---
+  function showLocationWarning() {
+    // Check if warning was recently dismissed (within 2 minutes)
+    const lastDismissed = localStorage.getItem('locationWarningDismissed');
+    const now = Date.now();
+    if (lastDismissed && (now - parseInt(lastDismissed)) < 120000) { // 120000ms = 2 minutes
+      return;
+    }
+
+    if (document.getElementById('global-location-warning')) return;
+    
+    const warning = document.createElement('div');
+    warning.id = 'global-location-warning';
+    warning.className = 'global-message message-warning';
+    warning.innerHTML = `
+      Your location is not set. Some features may not work. Please use the "Use My Location" button.
+      <button class="message-close-btn" onclick="dismissLocationWarning()" title="Dismiss for 2 minutes">&times;</button>
+    `;
+    
+    let msgContainer = document.getElementById('global-messages');
+    if (!msgContainer) {
+      msgContainer = document.createElement('div');
+      msgContainer.id = 'global-messages';
+      msgContainer.style.position = 'fixed';
+      msgContainer.style.top = '70px';
+      msgContainer.style.left = '0';
+      msgContainer.style.width = '100%';
+      msgContainer.style.zIndex = '2000';
+      msgContainer.style.display = 'flex';
+      msgContainer.style.flexDirection = 'column';
+      msgContainer.style.alignItems = 'center';
+      msgContainer.style.pointerEvents = 'none';
+      document.body.prepend(msgContainer);
+    }
+    msgContainer.appendChild(warning);
+    
+    // Auto-hide after 10 seconds
+    setTimeout(() => { 
+      if (warning.parentNode) {
+        warning.remove(); 
+      }
+    }, 10000);
+  }
+
+  // Function to dismiss the warning and remember for 2 minutes
+  window.dismissLocationWarning = function() {
+    const warning = document.getElementById('global-location-warning');
+    if (warning) {
+      warning.remove();
+    }
+    localStorage.setItem('locationWarningDismissed', Date.now().toString());
+  };
+
+  // Check if location is set and valid
+  if (typeof window.userLatitude === 'undefined' || typeof window.userLongitude === 'undefined' || isNaN(window.userLatitude) || isNaN(window.userLongitude)) {
+    showLocationWarning();
+  }
+
+  // Utility for location-aware features
+  window.getUserLocationOrWarn = function() {
+    if (typeof window.userLatitude === 'undefined' || typeof window.userLongitude === 'undefined' || isNaN(window.userLatitude) || isNaN(window.userLongitude)) {
+      showLocationWarning();
+      return null;
+    }
+    return { lat: window.userLatitude, lng: window.userLongitude };
+  };
+});
+</script>
+{% if user.is_authenticated and user.location %}
+  <script>
+    window.userLatitude = parseFloat("{{ user.location.y|floatformat:'6'|default_if_none:'' }}");
+    window.userLongitude = parseFloat("{{ user.location.x|floatformat:'6'|default_if_none:'' }}");
+  </script>
+{% endif %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const navbarInterestInput = document.getElementById('navbar-interest-search');
+    if (navbarInterestInput) {
+        let wordlist = [];
+        let suggestionBox = null;
+        fetch('/moments/interest-wordlist/')
+            .then(res => res.json())
+            .then(data => { wordlist = data; });
+
+        // Create suggestion box
+        suggestionBox = document.createElement('div');
+        suggestionBox.style.position = 'absolute';
+        suggestionBox.style.background = 'var(--bg-base)';
+        suggestionBox.style.border = '1px solid var(--bg-accent)';
+        suggestionBox.style.borderRadius = '8px';
+        suggestionBox.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+        suggestionBox.style.zIndex = 1000;
+        suggestionBox.style.display = 'none';
+        document.body.appendChild(suggestionBox);
+
+        function updateSuggestionBoxPosition() {
+            const rect = navbarInterestInput.getBoundingClientRect();
+            suggestionBox.style.left = `${rect.left + window.scrollX}px`;
+            suggestionBox.style.top = `${rect.bottom + window.scrollY}px`;
+            suggestionBox.style.width = `${rect.width}px`;
+        }
+
+        navbarInterestInput.addEventListener('input', function() {
+            const term = this.value.trim().toLowerCase();
+            suggestionBox.innerHTML = '';
+            if (!term || wordlist.length === 0) {
+                suggestionBox.style.display = 'none';
+                return;
+            }
+            const matches = wordlist.filter(w => w.toLowerCase().startsWith(term)).slice(0, 7);
+            if (matches.length === 0) {
+                suggestionBox.style.display = 'none';
+                return;
+            }
+            matches.forEach(match => {
+                const item = document.createElement('div');
+                item.textContent = match;
+                item.style.padding = '8px 12px';
+                item.style.cursor = 'pointer';
+                item.style.color = 'var(--text-main)'; 
+                item.addEventListener('mouseover', function() { this.style.backgroundColor = 'var(--bg-hover)';});
+                item.addEventListener('mouseout', function() { this.style.backgroundColor = 'var(--bg-base)';});
+                item.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    navbarInterestInput.value = match;
+                    suggestionBox.style.display = 'none';
+                    // Redirect immediately
+                    window.location.href = `/moments/feed/?interest=${encodeURIComponent(match)}`;
+                });
+                suggestionBox.appendChild(item);
+            });
+            updateSuggestionBoxPosition();
+            suggestionBox.style.display = 'block';
+        });
+        navbarInterestInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const interest = navbarInterestInput.value.trim();
+                if (interest.length > 0) {
+                    window.location.href = `/moments/feed/?interest=${encodeURIComponent(interest)}`;
+                }
+            }
+        });
+        document.addEventListener('click', function(e) {
+            if (!navbarInterestInput.contains(e.target) && !suggestionBox.contains(e.target)) {
+                suggestionBox.style.display = 'none';
+            }
+        });
+    }
+});
+</script>
 </body>
 </html>

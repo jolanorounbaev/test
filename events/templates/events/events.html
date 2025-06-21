@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load event_extras %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'events/events.css' %}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<div class="events-header-centered">
+    Explore and join casual events happening close to you.
+</div>
+
+<div style="display: flex; justify-content: center; gap: 24px; margin: 32px 0; flex-wrap: wrap;">
+  <a href="/events/create/" class="btn btn-primary create-event-btn">Create Event</a>
+  <a href="#" class="btn btn-primary interactive-map-btn" id="open-interactive-map">Interactive Map</a>  <button id="quick-nearby-toggle-btn">
+      <span>Quick and nearby events</span>
+  </button>
+</div>
+<span id="quick-nearby-warning" style="color: #d9363e; font-size: 0.98em; margin-left: 8px; display: none; vertical-align: middle;">Please update your location in your profile first.</span>
+<hr>
+
+<form id="radius-filter-form" method="get" action="">
+    <label for="radius-select" style="margin-right:0.5em;">Show events within:</label>
+    <select name="radius" id="radius-select" style="margin-right:0.5em;">
+        <option value="10"{% if selected_radius == "10" %} selected{% endif %}>10 km</option>
+        <option value="20"{% if selected_radius == "20" %} selected{% endif %}>20 km</option>
+        <option value="30"{% if selected_radius == "30" %} selected{% endif %}>30 km</option>
+    </select>
+    
+    <label style="margin-left: 20px;">
+        <input type="checkbox" name="show_all" value="1"{% if request.GET.show_all %} checked{% endif %} onchange="this.form.submit()">
+        <span style="margin-left: 5px;">Show full events</span>
+    </label>
+    
+    {% if user.is_authenticated and user.latitude and user.longitude %}
+        <small style="color: #666; margin-left: 10px;">✓ Filtering by distance from your location</small>
+    {% elif user.is_authenticated %}
+        <small style="color: #d9363e; margin-left: 10px;">⚠ Set your location in profile for distance filtering</small>
+    {% endif %}
+</form>
+<hr>
+<!-- Remove the old map here -->
+
+    
+{% if events %}
+    <h3>Upcoming Events</h3>
+    <div class="event-card-grid">
+    {% for event in events %}        <div class="event-card{% if not event.image or not event.image.url %} no-image compact-card{% endif %}{% if event.status == 'full' %} full-event{% endif %}" id="event-card-{{ event.id }}">
+            <span class="quick-nearby-label" style="display:none;">Quick & Nearby</span>
+            {% if event.status == 'full' %}
+                <span class="full-event-label">FULL</span>
+            {% endif %}
+            <div class="event-title">{{ event.title }}</div>
+            {% if event.image %}
+                <img src="{{ event.image.url }}" alt="{{ event.title }}" />
+            {% endif %}
+            <div class="event-description">{{ event.description|linebreaksbr }}</div>            <div class="event-address">
+                <span class="address-marker" tabindex="0" data-lat="{{ event.latitude|default_if_none:'' }}" data-lng="{{ event.longitude|default_if_none:'' }}">
+                    <svg viewBox="0 0 20 20"><path d="M10 2C6.13 2 3 5.13 3 9c0 4.25 6.1 8.54 6.36 8.71.23.15.53.15.76 0C10.9 17.54 17 13.25 17 9c0-3.87-3.13-7-7-7zm0 11.5A4.5 4.5 0 1 1 10 4.5a4.5 4.5 0 0 1 0 9z"/><circle cx="10" cy="9" r="2.5"/></svg>
+                    {% if event.latitude and event.longitude %}
+                    <span class="address-tooltip">
+                        <div class="map-info">
+                            <div class="distance-info" id="distance-{{ event.id }}">
+                                <span class="distance-text">Calculating distance...</span>
+                            </div>
+                        </div>
+                        <iframe
+                            width="400"
+                            height="280"
+                            frameborder="0"
+                            style="border:0"
+                            referrerpolicy="no-referrer-when-downgrade"
+                            src="https://www.google.com/maps?q={{ event.latitude }},{{ event.longitude }}&hl=en&z=16&output=embed&maptype=roadmap">
+                        </iframe>                        <div class="map-actions">
+                            <a href="https://www.google.com/maps/dir/?api=1&destination={{ event.latitude }},{{ event.longitude }}" 
+                               target="_blank" class="directions-btn">
+                                <i class="fas fa-compass"></i> Get Directions
+                            </a>
+                        </div>
+                    </span>
+                    {% endif %}
+                </span>
+                <span>{{ event.address }}</span>
+            </div>            <div class="event-time">
+                <strong>Time:</strong> {{ event.time|date:'D, M d, Y H:i' }} 
+                {% if event.duration_minutes %}
+                    <small>({{ event.get_duration_minutes_display }})</small>
+                {% endif %}
+                <div class="event-countdown" data-event-id="{{ event.id }}" data-start-time="{{ event.time|date:'c' }}" data-duration="{{ event.duration_minutes|default:60 }}">
+                    <span class="countdown-timer" id="timer-{{ event.id }}"></span>
+                </div>
+            </div>
+            <div class="event-slots">
+                {% if event.open_slots == 0 %}
+                    <strong style="color: #d9363e;">FULL - No slots available</strong>
+                {% else %}
+                    Open slots: {{ event.open_slots }}
+                {% endif %}
+            </div>
+            {% if event.created_by == request.user %}
+                <form method="post" action="{% url 'events:delete_event' event.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="delete-btn">Delete</button>
+                </form>
+            {% else %}
+                {% if user.is_authenticated and event.created_by != user %}
+                    {% with user_join_request=user_join_requests|get_item:event.id %}
+                        {% if user_join_request %}
+                            {% if user_join_request.status == 'requested' %}
+                                <span class="join-status">Request Pending</span>
+                            {% elif user_join_request.status == 'accepted' %}
+                                <form method="post" action="{% url 'events:leave_event' event.id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="join-btn">Leave</button>
+                                </form>
+                            {% elif user_join_request.status == 'declined' %}
+                                <span class="join-status">Request Declined</span>
+                            {% endif %}
+                        {% else %}
+                            <form method="post" action="{% url 'events:request_join_event' event.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="join-btn">Request to Join</button>
+                            </form>
+                        {% endif %}
+                    {% endwith %}
+                {% endif %}
+            {% endif %}
+        </div>
+    {% endfor %}
+    </div>
+{% else %}
+    <p>No events found.</p>
+{% endif %}
+
+<!-- Interactive Map Modal -->
+<div id="interactive-map-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close" id="close-interactive-map">&times;</span>
+        <div id="modal-events-map" style="height: 500px; width: 100%; border-radius: 12px;"></div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+    // Pass Django events data to JavaScript
+    var eventsDataForMap = JSON.parse('[{% for event in events %}{"id": {{ event.id|safe }}, "title": "{{ event.title|escapejs }}", "lat": {{ event.latitude|default_if_none:"null" }}, "lng": {{ event.longitude|default_if_none:"null" }}, "address": "{{ event.address|escapejs }}", "time": "{{ event.time|date:'D, M d, Y H:i' }}"}{% if not forloop.last %},{% endif %}{% endfor %}]');
+    
+    // Function to calculate distance between two coordinates
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Radius of the Earth in kilometers
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distance = R * c;
+        return distance;
+    }
+    
+    // Function to update distance information
+    function updateDistances(userLat, userLng) {
+        document.querySelectorAll('.address-marker').forEach(marker => {
+            const eventLat = parseFloat(marker.dataset.lat);
+            const eventLng = parseFloat(marker.dataset.lng);
+            
+            if (eventLat && eventLng) {
+                const distance = calculateDistance(userLat, userLng, eventLat, eventLng);
+                const eventId = marker.closest('.event-card').id.replace('event-card-', '');
+                const distanceElement = document.getElementById(`distance-${eventId}`);
+                
+                if (distanceElement) {
+                    const distanceText = distance < 1 
+                        ? `${Math.round(distance * 1000)}m away`
+                        : `${distance.toFixed(1)}km away`;
+                    distanceElement.querySelector('.distance-text').textContent = distanceText;
+                }
+            }
+        });
+    }
+    
+    // Get user's location and update distances
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+                updateDistances(userLat, userLng);
+            },
+            function(error) {
+                // If geolocation fails, show fallback message
+                document.querySelectorAll('.distance-text').forEach(el => {
+                    el.textContent = 'Enable location for distance';
+                    el.style.color = '#888';
+                });
+            }
+        );
+    } else {
+        // Geolocation not supported
+        document.querySelectorAll('.distance-text').forEach(el => {
+            el.textContent = 'Location not supported';
+            el.style.color = '#888';
+        });    }
+    
+    // Countdown Timer Functionality
+    function updateCountdownTimers() {
+        document.querySelectorAll('.event-countdown').forEach(countdown => {
+            const eventId = countdown.dataset.eventId;
+            const startTime = new Date(countdown.dataset.startTime);
+            const durationMinutes = parseInt(countdown.dataset.duration);
+            const endTime = new Date(startTime.getTime() + (durationMinutes * 60 * 1000));
+            const timerElement = countdown.querySelector('.countdown-timer');
+            
+            const now = new Date();
+            
+            // Check if event hasn't started yet
+            if (now < startTime) {
+                timerElement.textContent = 'Event not started';
+                timerElement.className = 'countdown-timer waiting';
+                return;
+            }
+            
+            // Check if event has ended
+            if (now > endTime) {
+                timerElement.textContent = 'Event ended';
+                timerElement.className = 'countdown-timer ended';
+                return;
+            }
+            
+            // Calculate remaining time
+            const remainingMs = endTime - now;
+            const remainingMinutes = Math.floor(remainingMs / (1000 * 60));
+            const remainingSeconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+            
+            // Format time display
+            const formattedTime = `${remainingMinutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+            timerElement.textContent = `${formattedTime} left`;
+            timerElement.className = 'countdown-timer active';
+            
+            // Add urgency styling for last 5 minutes
+            if (remainingMinutes < 5) {
+                timerElement.classList.add('urgent');
+            }
+        });
+    }
+    
+    // Update timers immediately and then every second
+    updateCountdownTimers();
+    setInterval(updateCountdownTimers, 1000);
+</script>
+<script src="{% static 'events/events.js' %}"></script>
+{% endblock content %}

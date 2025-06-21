@@ -40,10 +40,16 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+X_FRAME_OPTIONS = 'SAMEORIGIN' # Allow iframing from the same origin
+
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',  
@@ -51,14 +57,19 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'registerandlogin',
+    'django.contrib.gis',
     'django_recaptcha',
     'userprofile',
     'rest_framework',
     'friendsearch',
     'chat',
-    'posts',
+    'moments',
+    'events',
+    'landing_page',
     'sitesettings',
     'notifications',
+    'channels',
+    'legal_pages',  # Add this line
 ]
 RECAPTCHA_PUBLIC_KEY = '6LfUcwUrAAAAADgKPrsFKt5Z7Ej3_odnnf_qlidy'
 RECAPTCHA_PRIVATE_KEY = '6LfUcwUrAAAAAOucBCfuxOEoOHh-4SzjVkoX5rBl'
@@ -75,13 +86,43 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'config.urls'
 
+ASGI_APPLICATION = 'config.asgi.application' 
+
+from celery.schedules import crontab
+
+
+CELERY_BEAT_SCHEDULE = {
+    'expire-moments-every-minute': {
+        'task': 'moments.tasks.expire_old_moments',
+        'schedule': crontab(),  # Every 1 minute
+    },
+    'decay-hot-moments-every-5-mins': {
+        'task': 'moments.tasks.decay_moment_activity',
+        'schedule': crontab(minute='*/5'),  # Every 5 minutes
+    },
+}
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
+]
+
+# Optional: set a channel layer (for testing, use in-memory)
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    }
+}
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
     BASE_DIR / 'templates',
     BASE_DIR / 'posts/templates',
-],
+    ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -89,6 +130,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'notifications.views.base_context',
+                'moments.context_processors.on_fire_moments_processor',  # Add this line
             ],
         },
     },
@@ -134,6 +177,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'registerandlogin.CustomUser'
 
+# Login/Logout URLs
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login/'
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
@@ -147,13 +194,22 @@ USE_I18N = True
 USE_TZ = True
 
 
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    BASE_DIR / "static",  # or os.path.join(BASE_DIR, "static")
+    BASE_DIR / "static",
+    BASE_DIR / "friendsearch" / "static",
+    BASE_DIR / "posts" / "static",  
+    BASE_DIR / "userprofile" / "static",
+    BASE_DIR / "registerandlogin" / "static",
+    BASE_DIR / "chat" / "static", 
+    BASE_DIR / "moments" / "static",
 ]
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

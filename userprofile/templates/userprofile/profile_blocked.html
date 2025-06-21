@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile Unavailable{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'userprofile/css/profile.css' %}">
+<style>
+.blocked-profile-container {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 40px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.blocked-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    opacity: 0.7;
+}
+
+.blocked-message {
+    color: #666;
+    font-size: 18px;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.back-button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    text-decoration: none;
+    display: inline-block;
+    transition: background-color 0.2s ease;
+}
+
+.back-button:hover {
+    background: #0056b3;
+    text-decoration: none;
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="blocked-profile-container">
+    <div class="blocked-icon"><i class="fas fa-ban"></i></div>
+    
+    {% if blocked_by_them %}
+        <h1>Profile Unavailable</h1>
+        <div class="blocked-message">
+            <p>This user has restricted access to their profile.</p>
+            <p>You cannot view their profile or send them messages.</p>
+        </div>
+    {% elif blocked_by_you %}
+        <h1>User Blocked</h1>
+        <div class="blocked-message">
+            <p>You have blocked <strong>{{ profile_user.full_name|default:profile_user.email }}</strong>.</p>
+            <p>You can unblock them using the button below or from your <a href="{% url 'blocked_users_list' %}">blocked users list</a>.</p>
+        </div>
+          <button id="unblockUserBtn" class="back-button" style="background: #28a745; margin-right: 10px;" 
+                onclick="unblockUser({{ profile_user.id }}, this)">
+            <i class="fas fa-check"></i> Unblock User
+        </button>
+    {% else %}
+        <h1>User Blocked</h1>
+        <div class="blocked-message">
+            <p>You have blocked this user.</p>
+            <p>You can unblock them from your <a href="{% url 'blocked_users_list' %}">blocked users list</a>.</p>
+        </div>
+    {% endif %}
+    
+    <a href="{% url 'profile' %}" class="back-button">← Back to My Profile</a>
+</div>
+
+{% if blocked_by_you %}
+<script>
+function unblockUser(userId, button) {
+    if (!confirm('Are you sure you want to unblock this user?')) {
+        return;
+    }
+    
+    button.disabled = true;
+    button.textContent = 'Unblocking...';
+    
+    fetch('{% url "block_user" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: `user_id=${userId}&action=unblock`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Redirect back to their profile after unblocking
+            window.location.href = '{% url "user_profile" profile_user.id %}';        } else {
+            alert(data.message || 'Failed to unblock user.');
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-check"></i> Unblock User';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while unblocking the user.');
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-check"></i> Unblock User';
+    });
+}
+</script>
+{% endif %}
+{% endblock %}

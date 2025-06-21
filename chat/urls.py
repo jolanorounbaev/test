@@ -1,9 +1,13 @@
 from django.urls import path
 from . import views
 
-app_name = 'chat'
-
 urlpatterns = [
-    path('', views.chat_index, name='chat_index'),  # for /chat/
-    path('<str:mode>/<int:id>/', views.chat_room, name='chat_room'),  # for /chat/private/2 or /chat/group/3
+    path('', views.chat_home, name='chat_home'),
+    path('modal/', views.chat_modal_content, name='chat_modal_content'),  # For initial load
+    path('modal/<int:room_id>/', views.chat_modal_content, name='chat_modal_content_room'),  # For loading specific room
+    path('<int:room_id>/', views.chat_home, name='chat_room'),
+    path('send/<int:room_id>/', views.send_message, name='send_message'),
+    path('delete-message/<int:message_id>/', views.delete_message, name='delete_message'),
+    path('create_group_chat/', views.create_group_chat, name='create_group_chat'),
+    path('check-blocked-status/', views.check_blocked_status, name='check_blocked_status'),
 ]

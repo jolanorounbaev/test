@@ -1,32 +1,342 @@
 {% extends 'base.html' %}
 
-{% block title %}Chat Room{% endblock %}
+{% block right_sidebar %}{% endblock %}
+{% load static %}
+{% load youtube_filters %}
+
+{% block title %}Chat{% endblock %}
 {% block content %}
 
-<h2>{{ chat_title }}</h2>
 
-<form method="POST">
-    {% csrf_token %}
-    <textarea name="content" rows="3" cols="50" placeholder="Type your message..."></textarea><br>
-    <button type="submit">Send</button>
-</form>
+<link rel="stylesheet" href="{% static 'chat/css/layout.css' %}">
+<script src="{% static 'chat/js/chat.js' %}" defer></script>
 
-<hr>
+<div class="chat-app">
+  <!-- Contacts sidebar -->
+  <div class="contacts-sidebar">
+    <div class="sidebar-header">
+      <h3>Messages</h3>
+      <button class="new-chat-btn" title="New message">
+        <i class="fas fa-edit"></i>
+      </button>
+    </div>
+    
+    <div class="search-box">
+      <input type="text" id="chat-search-input" placeholder="Search conversations">
+      <i class="fas fa-search"></i>
+    </div>
+    
+    <!-- Private Chats -->
+    <div class="contacts-section">  
+      <h4>Direct Messages</h4>
+      <ul class="contacts-list">
+        {% for room in chat_rooms %}
+          {% if not room.is_group %}
+            <li class="contact {% if room == active_room %}active{% endif %}">
+              <a href="{% url 'chat_room' room.id %}">
+                <div class="contact-avatar">
+                  {% if room.other_participant and room.other_participant.profile_picture %}
+                    <img src="{{ room.other_participant.profile_picture.url }}" alt="{{ room.other_participant.get_full_name }}">
+                  {% else %}
+                    <img src="{% static 'img/default-avatar.png' %}" alt="Default avatar">
+                  {% endif %}
+                </div>
+                <div class="contact-info">
+                  <span class="contact-name">
+                    {% if room.other_participant %}
+                      {{ room.other_participant.full_name|default:room.other_participant.username }}
+                    {% else %}
+                      Unknown User
+                    {% endif %}
+                  </span>
+                  {# Message preview temporarily removed #}
+                </div>
+                {% if room.unread_count > 0 %}
+                  <span class="unread-count">{{ room.unread_count }}</span>
+                {% endif %}
+              </a>
+            </li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+    
+    <!-- Group Chats -->
+    <div class="contacts-section">
+      <div style="padding: 10px 15px 0 15px; display: flex; align-items: center; justify-content: space-between;">
+        <span style="font-weight: bold; color: #a44;">GROUP CHATS</span>
+        <a href="#" id="open-group-modal" title="Create group chat" style="font-size: 2em; color: #007bff; text-decoration: none; margin-left: 10px; line-height: 1;">+</a>
+      </div>
+      <ul class="contacts-list">
+        {% for room in chat_rooms %}
+          {% if room.is_group %}
+            <li class="contact {% if room == active_room %}active{% endif %}">
+              <a href="{% url 'chat_room' room.id %}">
+                <div class="contact-avatar group">
+                  <img src="{% static 'img/default-group.png' %}" alt="{{ room.name }}">
+                </div>
+                <div class="contact-info">
+                  <span class="contact-name">{{ room.name }}</span>                  {% if room.last_message %}
+                    {% if room.last_message.is_blocked and room.last_message.sender != user %}
+                      <span class="contact-preview">{{ room.last_message.sender.first_name }}: Blocked message</span>
+                    {% else %}
+                      <span class="contact-preview">{{ room.last_message.sender.first_name }}: {{ room.last_message.content|truncatechars:25 }}</span>
+                    {% endif %}
+                  {% endif %}
+                </div>
+                {% if room.unread_count > 0 %}
+                  <span class="unread-count">{{ room.unread_count }}</span>
+                {% endif %}
+              </a>
+            </li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
 
-<h3>Messages</h3>
-<div style="max-height: 400px; overflow-y: auto;">
-    {% for message in messages %}
-        <p>
-            <strong>{{ message.sender.full_name }}</strong>: {{ message.content }} <br>
-            <small>{{ message.timestamp }}</small>
-        </p>
-    {% empty %}
-        <p>No messages yet.</p>
-    {% endfor %}
+  <!-- Main chat area -->
+  <div class="chat-area">
+    {% if active_room %}
+    <div class="chat-header">
+      <div class="chat-partner">        <div class="partner-avatar">
+          {% if active_room.is_group %}
+            <img src="{% static 'img/default-group.png' %}" alt="{{ active_room.name }}">
+          {% else %}
+            <a href="{% url 'user_profile' active_room.other_participant.id %}">
+              {% if active_room.other_participant.profile_picture %}
+                <img src="{{ active_room.other_participant.profile_picture.url }}" alt="{{ active_room.other_participant.get_full_name }}" style="cursor: pointer;">
+              {% else %}
+                <img src="{% static 'img/default-avatar.png' %}" alt="Default avatar" style="cursor: pointer;">
+              {% endif %}
+            </a>
+          {% endif %}
+        </div><div class="partner-info">
+          {% if active_room.is_group %}
+            <h3>{{ active_room.name }}</h3>
+            <span class="partner-status">Group chat</span>
+          {% else %}
+            <a href="{% url 'user_profile' active_room.other_participant.id %}" style="text-decoration: none; color: inherit;">
+              <h3 style="margin: 0; cursor: pointer; transition: color 0.2s ease;">
+                {{ active_room.other_participant.full_name|default:active_room.other_participant.username }}
+              </h3>
+            </a>
+            <span class="partner-status">Active now</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    
+    <div class="messages-container" id="messages-container">
+      {% for message in chat_messages %}
+        <div id="message-{{ message.id }}" class="message {% if message.sender == user %}sent{% else %}received{% endif %}">
+          <div class="message-avatar">
+            {% if message.sender.profile_picture %}
+              <img src="{{ message.sender.profile_picture.url }}" alt="{{ message.sender.full_name|default:message.sender.username }}">
+            {% else %}
+              <img src="{% static 'img/default-avatar.png' %}" alt="Default avatar">
+            {% endif %}
+          </div>
+          <div class="message-content">
+            <span class="message-sender">
+              {{ message.sender.full_name|default:message.sender.username }}
+            </span>            {% if message.reply_to %}
+              <div class="reply-preview-in-message">
+                <span class="reply-label">Replying to {{ message.reply_to.sender.full_name|default:message.reply_to.sender.username }}</span>
+                {% if message.is_blocked and message.reply_to.sender != user %}
+                  <span class="reply-original">Blocked message</span>
+                {% else %}
+                  <span class="reply-original">{{ message.reply_to.content|default:'(deleted message)' }}</span>
+                {% endif %}
+              </div>
+            {% endif %}
+            {% if message.content %}
+            <div class="message-bubble {% if message.is_blocked %}blocked-message{% endif %}">
+              {% if message.is_blocked and message.sender != user %}
+                Blocked message
+              {% else %}
+                {{ message.content }}
+              {% endif %}
+            </div>
+            {% endif %}            {% if message.image %}
+              <div class="chat-media">
+                {% if message.is_blocked and message.sender != user %}
+                  <div class="blocked-media">Blocked image</div>
+                {% else %}
+                  <img src="{{ message.image.url }}" alt="Image" class="chat-media-img" style="max-width: 350px; max-height: 250px; border-radius: 10px; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.15); border: 1px solid #CED4DA; cursor: pointer;" onclick="zoomImage(this.src)">
+                {% endif %}
+              </div>
+            {% endif %}
+            {% if message.video %}
+              <div class="chat-media">
+                {% if message.is_blocked and message.sender != user %}
+                  <div class="blocked-media">Blocked video</div>
+                {% else %}
+                  <video controls class="chat-media-video">
+                    <source src="{{ message.video.url }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                  </video>
+                {% endif %}
+              </div>
+            {% endif %}
+            <span class="message-time">{{ message.timestamp|time:"H:i" }}</span>
+            <div class="message-actions">
+              <button class="dots-btn" onclick="toggleDropdown('{{ message.id }}')">⋯</button>
+              <div class="dropdown-menu" id="dropdown-{{ message.id }}">
+                <button onclick="replyToMessage('{{ message.id }}')">💬 Reply</button>
+                {% if message.sender == request.user %}
+                  <button onclick="deleteMessage('{{ message.id }}')">🗑️ Delete</button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% empty %}
+        <div class="empty-chat">
+          <p>No messages yet. Say hello to start the conversation!</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <!-- Preview area for image/video before sending -->
+    <div id="preview-area"></div>
+
+    <div class="message-input-wrapper">
+
+    <div id="reply-preview" class="reply-preview" style="display: none;">
+      <span id="reply-text"></span>
+      <button onclick="cancelReply()" class="cancel-reply">✖</button>
+    </div>
+
+    <div class="message-input">
+        <input type="file" id="media-upload" accept="image/*,video/mp4" hidden>
+        <label for="media-upload" class="attach-btn" title="Attach media">
+          <i class="fas fa-paperclip"></i>
+        </label>
+
+        <input type="text" id="message-input" placeholder="Type a message...">
+        <button id="send-button"><i class="fas fa-paper-plane"></i></button>
+      </div>
+    </div>
+
+
+
+    <div id="imagePreviewModal" class="image-modal" onclick="closeZoom()">
+      <span class="close-button">&times;</span>
+      <img class="modal-content" id="zoomedImage">
+    </div>
+
+
+
+    <!-- Group Chat Creation Modal -->
+    <div id="group-modal" style="display:none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3); align-items: center; justify-content: center;">
+      <div style="background: #fff; border-radius: 10px; padding: 24px 32px; min-width: 320px; max-width: 90vw; box-shadow: 0 2px 16px rgba(0,0,0,0.2); position: relative;">
+        <button id="close-group-modal" style="position: absolute; top: 10px; right: 12px; background: none; border: none; font-size: 1.5em; color: #888; cursor: pointer;">&times;</button>
+        <h2 style="margin-top:0; font-size: 1.2em; color: #a44;">Create Group Chat</h2>
+        <form id="group-create-form">
+          <div style="margin-bottom: 12px;">
+            <label for="group-name" style="font-weight: 500;">Group Name</label><br>
+            <input type="text" id="group-name" name="group_name" required style="width: 100%; padding: 6px 10px; border-radius: 5px; border: 1px solid #ccc;">
+          </div>
+          <div style="margin-bottom: 12px;">
+            <label for="group-participants" style="font-weight: 500;">Add Participants</label><br>
+            <select id="group-participants" name="participants" multiple required style="width: 100%; min-height: 80px; border-radius: 5px; border: 1px solid #ccc;">
+              {% for user in all_users %}
+                {% if user != request.user %}
+                  <option value="{{ user.id }}">
+                    {% if user.profile_picture %}
+                      <img src="{{ user.profile_picture.url }}" alt="{{ user.full_name }}" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 6px; object-fit: cover; vertical-align: middle;">
+                    {% else %}
+                      <img src="{% static 'img/default-avatar.png' %}" alt="Default avatar" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 6px; object-fit: cover; vertical-align: middle;">
+                    {% endif %}
+                    {{ user.full_name|default:user.username }}
+                  </option>
+                {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" style="background: #007bff; color: #fff; border: none; border-radius: 5px; padding: 8px 18px; font-size: 1em; cursor: pointer;">Create</button>
+        </form>
+      </div>
+    </div>
+
+    {% else %}
+      <div class="empty-chat"></div>
+    {% endif %}
+  </div>
 </div>
 
-<hr>
+{% if active_room %}
+  <script id="active-room-id" type="application/json">{{ active_room.id }}</script>
+{% else %}
+  <script id="active-room-id" type="application/json">null</script>
+{% endif %}
+<script>
+  // CURRENT_USER_ID is defined globally in base.html
+  var ACTIVE_ROOM_ID = JSON.parse(document.getElementById('active-room-id').textContent);
+</script>
 
-<a href="{% url 'chat:chat_index' %}">⬅ Back to Chat Overview</a>
+<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
 
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<style>
+/* Make the main content take all available width when right sidebar is gone */
+main.w-3\/5 {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+</style>
+<script>
+// Modal open/close logic
+const openGroupModal = document.getElementById('open-group-modal');
+const groupModal = document.getElementById('group-modal');
+const closeGroupModal = document.getElementById('close-group-modal');
+openGroupModal.addEventListener('click', function(e) {
+  e.preventDefault();
+  groupModal.style.display = 'flex';
+});
+closeGroupModal.addEventListener('click', function() {
+  groupModal.style.display = 'none';
+});
+groupModal.addEventListener('click', function(e) {
+  if (e.target === groupModal) groupModal.style.display = 'none';
+});
+
+// Group chat creation AJAX logic
+const groupForm = document.getElementById('group-create-form');
+groupForm.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const name = document.getElementById('group-name').value.trim();
+  const select = document.getElementById('group-participants');
+  const selected = Array.from(select.selectedOptions).map(opt => opt.value);
+  if (!name || selected.length === 0) {
+    alert('Please enter a group name and select at least one participant.');
+    return;
+  }
+  // Add CSRF token
+  const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+  try {
+    const resp = await fetch("{% url 'create_group_chat' %}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken,
+      },
+      body: JSON.stringify({ group_name: name, participants: selected })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      window.location.href = `/chat/${data.room_id}/`;
+    } else {
+      alert(data.error || 'Failed to create group chat.');
+    }
+  } catch (err) {
+    alert('Error creating group chat.');
+  }
+  groupModal.style.display = 'none';
+});
+</script>
 {% endblock %}

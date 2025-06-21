@@ -1,53 +1,29 @@
 from django.db import models
 from django.conf import settings
-from django.utils import timezone
 
-class GroupChat(models.Model):
-    name = models.CharField(max_length=100)
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='created_chats'
-    )
-    created_at = models.DateTimeField(default=timezone.now)
-
+class ChatRoom(models.Model):
+    name = models.CharField(max_length=255, blank=True, null=True)
+    is_group = models.BooleanField(default=False)
+    participants = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='chatrooms')
+    last_message = models.ForeignKey(
+    'Message',
+    null=True,
+    blank=True,
+    on_delete=models.SET_NULL,
+    related_name='+'
+)
     def __str__(self):
-        return self.name
+        return self.name if self.name else ", ".join([user.full_name for user in self.participants.all()])
 
-
-class GroupMember(models.Model):
-    group = models.ForeignKey(GroupChat, on_delete=models.CASCADE, related_name='members')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = ('group', 'user')
-
-
-class ChatMessage(models.Model):
-    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_messages')
+class Message(models.Model):
+    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
-
-    # One of these will be set
-    receiver = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        null=True, blank=True,
-        related_name='received_messages'
-    )
-    group = models.ForeignKey(
-        GroupChat,
-        on_delete=models.CASCADE,
-        null=True, blank=True,
-        related_name='chat_messages'
-    )
-
-    def is_private(self):
-        return self.receiver is not None
+    read = models.BooleanField(default=False) 
+    image = models.ImageField(upload_to='chat_images/', blank=True, null=True)
+    video = models.FileField(upload_to='chat_videos/', blank=True, null=True)
+    reply_to = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
 
     def __str__(self):
-        if self.group:
-            return f"[Group:{self.group.name}] {self.sender} > {self.content[:20]}"
-        elif self.receiver:
-            return f"[Private] {self.sender} to {self.receiver}: {self.content[:20]}"
-        return f"{self.sender}: {self.content[:20]}"
+        return self.content[:50]  # Only show the message text, up to 50 chars

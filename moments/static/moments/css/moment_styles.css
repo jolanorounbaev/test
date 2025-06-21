@@ -1,0 +1,685 @@
+:root {
+  --bg-base: #FFFFFF; /* White */
+  --bg-card: #F8F9FA; /* Very light grey */
+  --bg-accent: #E9ECEF; /* Light grey for accents */
+  --bg-hover: #DEE2E6; /* Hover state for grey elements */
+
+  --text-main: #212529; /* Dark grey/almost black for text */
+  --text-heading: #343A40; /* Dark grey for headings */
+  --btn-bg: #007BFF; /* Standard blue for buttons */
+  --btn-text: #FFFFFF; /* White for button text */
+}
+
+body {
+  background-color: var(--bg-card);
+}
+
+/* Utility */
+.hidden {
+  display: none !important;
+}
+
+/* ============================
+   🔍 Interest Autocomplete Box
+============================ */
+#interest-suggestions {
+  position: absolute;
+  background-color: var(--bg-base);
+  border: 1px solid var(--bg-accent); /* Updated border color */
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  z-index: 1000;
+  max-height: 180px;
+  overflow-y: auto;
+  width: 100%;
+  font-size: 0.875rem;
+}
+
+#interest-suggestions div {
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#interest-suggestions div:hover {
+  background-color: var(--bg-hover);
+}
+
+/* ============================
+   📝 Moment Form Styling
+============================ */
+
+
+/* ============================
+   📄 Moment Card Styling
+============================ */
+.moment-card {
+  background-color: var(--bg-base);
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem;
+  margin: 20px 0; /* Remove horizontal centering */
+  max-width: none; /* Remove width restriction */
+  width: 100%;
+  color: var(--text-main);
+  transition: transform 0.2s ease;
+}
+
+.moment-card:hover {
+  transform: scale(1.01);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* Text Scaling */
+.moment-card .text-sm {
+  font-size: 0.9rem;
+}
+
+.moment-card .text-xs {
+  font-size: 0.75rem;
+}
+
+/* Meta + Reactions */
+.moment-meta {
+  font-size: 0.85rem;
+  color: #5e473a;
+  margin-top: 0.5rem;
+}
+
+.reaction-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+  font-size: 1.1rem;
+}
+
+.reaction-btn:hover {
+  transform: scale(1.2);
+}
+
+/* Media */
+.moment-card img,
+.moment-card video,
+.moment-card iframe {
+  width: 100%;
+  max-height: 320px;
+  border-radius: 14px;
+  object-fit: cover;
+  margin-top: 1rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* 🎯 Interests */
+.moment-card .tag {
+  background-color: var(--bg-hover);
+  color: var(--text-main);
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  margin: 0.25rem;
+  display: inline-block;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.moment-card .tag:hover {
+  background-color: var(--btn-bg);
+  color: white;
+}
+
+/* ============================
+   /* Comments Toggle & Join */
+============================ */
+.comment-toggle {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  cursor: pointer;
+  color: var(--text-main);
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06)
+  
+}
+
+.join-leave-btn {
+  background-color: var(--btn-bg);
+  color: white;
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.join-leave-btn:hover {
+  background-color: #0056b3; /* Darker blue for hover on join/leave button */
+}
+
+/* Comments Box */
+.comment-box {
+  margin-top: 1rem;
+  background-color: var(--bg-base); /* Changed to white */
+  border-left: 4px solid var(--bg-accent); /* Use new accent for border */
+  padding: 1rem;
+  border-radius: 14px;
+}
+
+
+/* Hide Alpine.js cloaked elements */
+[x-cloak] {
+  display: none !important;
+}
+
+
+
+.fire-btn, .heart-btn {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.fire-btn:hover, .heart-btn:hover {
+  transform: scale(1.1);
+}
+
+.fire-container {
+  position: relative;
+  display: inline-block;
+}
+
+.fire-tooltip {
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75em;
+  white-space: nowrap;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+  z-index: 999;
+}
+
+.fire-container:hover .fire-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+.moment-fire-corner {
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column-reverse; /* Put text below fire */
+  width: 72px;
+  height: 90px;
+  pointer-events: none;
+}
+
+.corner-fire {
+    width: 48px;
+    height: 64px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 8px var(--btn-bg)); /* Changed to new button blue */
+    margin-bottom: -8px; /* Pull fire closer to text */
+}
+
+.corner-text {
+    font-weight: bold;
+    font-size: 0.85rem;
+    color: var(--text-main); /* Changed to main text color */
+    text-align: center;
+    animation: flickerText 1.5s infinite;
+    text-shadow: 0 0 4px var(--btn-bg), 0 0 6px var(--bg-hover); /* Adjusted shadow to new theme */
+}
+
+/* ============================
+   📝 Moment Form Styling (Brand Colors)
+============================ */
+.moment_form {
+  background: var(--bg-base);
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  width: 100%;
+  margin: 0; /* Remove centering */
+  max-width: none; /* Remove width restriction */
+  color: var(--text-main);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.moment_form h2 {
+  color: var(--text-heading);
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+.moment_form label {
+  color: var(--text-heading);
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+  display: block;
+}
+.moment_form input[type="text"],
+.moment_form input[type="url"],
+.moment_form textarea {
+  width: 100%;
+  border: none;
+  border-radius: 16px;
+  background: var(--bg-card);
+  padding: 0.8rem 1.2rem;
+  font-size: 1rem;
+  color: var(--text-main);
+  margin-bottom: 0.5rem;
+  box-sizing: border-box;
+  outline: none;
+  transition: background 0.2s;
+}
+.moment_form input[type="text"]:focus,
+.moment_form input[type="url"]:focus,
+.moment_form textarea:focus {
+  background: var(--bg-hover);
+}
+.moment_form button[type="button"],
+.moment_form button[type="submit"] {
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.6rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  transition: background 0.2s;
+  box-shadow: 0 1px 2px rgba(239,119,65,0.08);
+}
+.moment_form button[type="button"]:hover,
+.moment_form button[type="submit"]:hover {
+  background: var(--bg-hover);
+  color: var(--text-main);
+}
+.moment_form #interest-input {
+  background: var(--bg-accent);
+  border-radius: 16px;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  color: var(--text-main);
+  border: none;
+  margin-bottom: 0.2rem;
+}
+.moment_form #interest-input:focus {
+  background: var(--bg-hover);
+}
+.moment_form p {
+  color: var(--text-main);
+  font-size: 0.95rem;
+  margin: 0.2rem 0 0.5rem 0;
+}
+.moment_form img,
+.moment_form video,
+.moment_form iframe {
+  max-width: 100%;
+  border-radius: 14px;
+  margin-top: 0.7rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* Responsive for mobile */
+@media (max-width: 700px) {
+  .moment_form {
+    padding: 1rem 0.5rem;
+    max-width: 98vw;
+  }
+}
+
+/* Flickering animation */
+@keyframes flickerText {
+  0%, 100% {
+    text-shadow: 0 0 3px var(--btn-bg), 0 0 5px var(--bg-accent); /* Use new theme colors */
+  }
+  50% {
+    text-shadow: 0 0 5px var(--bg-hover), 0 0 10px var(--btn-bg); /* Use new theme colors */
+  }
+}
+
+
+.moment_form {
+  /* ... your existing .moment_form styles ... */
+  gap: 1.5rem; /* Increased gap slightly */
+}
+
+.drop-zone {
+    border: 2px dashed var(--bg-accent);
+    padding: 20px;
+    text-align: center;
+    border-radius: 10px;
+    background-color: var(--bg-card);
+    margin-bottom: 1rem; /* Space below dropzone */
+}
+
+.preview-container {
+  position: relative;
+  margin-top: 1rem;
+  max-width: 100%; 
+}
+.preview-container img,
+.preview-container video,
+.preview-container iframe {
+  max-width: 100%;
+  max-height: 350px; /* Slightly increased max height */
+  display: block;
+  border-radius: 8px;
+  border: 1px solid var(--bg-accent);
+  margin: 0 auto; /* Center preview content */
+}
+.clear-preview-btn {
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border: none;
+  border-radius: 5px;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  display: block; /* Make it a block to use margin auto for centering */
+  margin: 0.5rem auto 0 auto; /* Center button below preview */
+  font-size: 0.9rem;
+}
+.clear-preview-btn:hover {
+  opacity: 0.9;
+}
+
+/* Styling for selected interests (if you use the example) */
+.selected-interests {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+.selected-interest {
+    background-color: var(--bg-accent);
+    color: var(--text-main);
+    padding: 0.3rem 0.6rem;
+    border-radius: 15px;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+}
+.selected-interest button {
+    background: none;
+    border: none;
+    color: var(--text-heading);
+    margin-left: 0.4rem;
+    cursor: pointer;
+    font-size: 1.1em;
+    padding: 0;
+    line-height: 1;
+}
+.autocomplete-suggestions {
+    border: 1px solid var(--bg-accent);
+    background: var(--bg-card);
+    max-height: 150px;
+    overflow-y: auto;
+    border-radius: 5px;
+    margin-top: 2px;
+}
+.autocomplete-suggestions ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.autocomplete-suggestions li {
+    padding: 0.5rem;
+    cursor: pointer;
+}
+.autocomplete-suggestions li:hover, .autocomplete-suggestions li.highlighted {
+    background-color: var(--bg-hover);
+}
+
+/* Styles for the new media actions bar and icon button */
+.media-actions-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* Space between icons/inputs */
+  padding: 0.5rem 0; /* Padding around the bar */
+  border-top: 1px solid var(--bg-accent); /* Optional separator line */
+  margin-top: 0.5rem; /* Space above the bar */
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: var(--text-main);
+  font-size: 1.5rem;
+  padding: 0.25rem;
+  cursor: pointer;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.icon-btn:hover {
+  background-color: var(--bg-hover);
+  color: var(--btn-bg);
+}
+
+/* Custom horizontal three-dots icon */
+.icon-btn.horizontal-dots::before {
+  content: '\2022\2022\2022'; /* ••• */
+  font-size: 1rem;
+  letter-spacing: 0.13em;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.icon-btn.horizontal-dots {
+  color: var(--text-main);
+  background: none;
+  border: none;
+  padding: 0.05rem 0.18rem;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s, color 0.2s;
+  box-shadow: none;
+}
+.icon-btn.horizontal-dots:hover {
+  background-color: var(--bg-hover);
+  color: var(--btn-bg);
+}
+.moment-menu-btn {
+  margin-left: 8px;
+}
+
+
+/* Hide the old drop-zone if not repurposed */
+.drop-zone[style*="display: none"] {
+    display: none !important;
+}
+
+
+.moment_form input[type="url"].youtube-input-field {
+    /* This class was on the old youtube input, we might not need it anymore if .youtube-input-inline covers it */
+    /* If you still have elements with .youtube-input-field, review their styling */
+    margin-top: 0; /* Reset margin if it was previously set */
+}
+
+
+/* Adjustments to preview container if needed after moving */
+.preview-container {
+  position: relative;
+  margin-top: 0.5rem; /* Space below description/textarea */
+  margin-bottom: 0.5rem; /* Space above media actions bar */
+  max-width: 100%; 
+}
+
+/* --- Compact Moment Form Tweaks for Twitter-like look --- */
+.moment_form {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0.7rem 0.7rem 0.7rem 0.7rem;
+  border-radius: 14px;
+  gap: 0.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  min-height: unset;
+}
+.moment_form-main {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.moment_form-main label {
+  font-size: 0.97rem;
+  margin-bottom: 0.1rem;
+}
+.moment_form-main input[type="text"],
+.moment_form-main textarea {
+  padding: 0.35rem 0.7rem;
+  font-size: 0.97rem;
+  border-radius: 8px;
+  margin-bottom: 0.2rem;
+  min-height: 36px;
+}
+.moment_form-main textarea {
+  min-height: 48px;
+  resize: vertical;
+}
+.moment_form-main .media-actions-bar {
+  margin-top: 0.2rem;
+  margin-bottom: 0.1rem;
+}
+.moment_form-main #postMomentBtn {
+  align-self: flex-end;
+  margin: 0.1rem 0 0 0;
+  padding: 0.3rem 1.1rem;
+  font-size: 1rem;
+  border-radius: 20px;
+  min-width: 90px;
+  min-height: 36px;
+  box-shadow: none;
+}
+.moment_form-interests {
+  width: 120px;
+  min-width: 100px;
+  max-width: 140px;
+  margin-left: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  align-items: flex-start;
+}
+.moment_form #interest-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.95rem;
+  border-radius: 8px;
+}
+.moment_form-interests label {
+  font-size: 0.93rem;
+  margin-bottom: 0.1rem;
+}
+@media (max-width: 700px) {
+  .moment_form {
+    flex-direction: column;
+    align-items: stretch;
+    max-width: 98vw;
+    padding: 0.5rem 0.2rem;
+  }
+  .moment_form-interests {
+    width: 100%;
+    margin-left: 0;
+    max-width: none;
+    align-items: stretch;
+  }
+}
+
+/* ============================
+   📐 Layout Styles
+============================ */
+.main-layout {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  width: 100%;
+}
+.left-sidebar {
+  min-width: 220px;
+  max-width: 260px;
+}
+.right-sidebar {
+  min-width: 260px;
+  max-width: 320px;
+}
+.main-feed-content {
+  flex: 1;
+  min-width: 0;
+  margin: 0 20px;
+}
+
+.moment_form, .moment-card {
+  width: 600px !important;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.interest-search-banner {
+  width: 600px !important;
+  max-width: 100%;
+  margin: 1rem auto; /* Center horizontally and add vertical spacing */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  position: relative;
+}
+
+.fire-cooldown-timer {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: 120%; /* float above the fire emoji */
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: rgba(255,255,255,0.95);
+  padding: 2px 8px;
+  border-radius: 6px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.fire-btn:hover + .fire-cooldown-timer,
+.fire-btn:focus + .fire-cooldown-timer {
+  display: block;
+}

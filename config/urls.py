@@ -27,11 +27,12 @@ urlpatterns = [
     path('', include('userprofile.urls')),
     path('', profile_view, name='home'),
     path('friendsearch/', include('friendsearch.urls')),
-    path('posts/', include('posts.urls')),
     path('chat/', include('chat.urls')),
     path('settings/', include('sitesettings.urls')), 
+    path('moments/', include(('moments.urls', 'moments'), namespace='moments')),
     path('notifications/', include('notifications.urls')),
     path('logout/', LogoutView.as_view(next_page='/login/'), name='logout'),
-
+    path('events/', include('events.urls', namespace='events')),
+    path('legal/', include('legal_pages.urls', namespace='legal_pages')), # Add this line
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
