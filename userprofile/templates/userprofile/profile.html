@@ -5,79 +5,260 @@
 {% load static %}
 {% load custom_filters %} 
 <link rel="stylesheet" href="{% static 'userprofile/css/profile.css' %}">
-<script src="{% static 'userprofile/js/profile.js' %}" defer></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<script src="{% static 'userprofile/js/profile.js' %}" defer></script></script>
 
 
-
-<div class="profile-header">
-  {% if profile_user.profile_picture %}
-    <img src="{{ profile_user.profile_picture.url }}" alt="Profile Picture" class="profile-picture">
-  {% else %}
-    <div class="profile-picture placeholder"></div>
-  {% endif %}
-
-  <div class="profile-info">
-    <h1 class="profile-name">{{ profile_user.full_name }}</h1>
-
-    {% if profile_user.show_email %}
-      <p>Email: {{ profile_user.email }}</p>
-    {% endif %}
-
-    {% if profile_user.show_date_of_birth %}
-      <p>Age: {{ profile_user.get_age }}</p>
-    {% endif %}
-
-    {% if profile_user.gender != 'other' and profile_user.show_gender %}
-      <p>Gender: {{ profile_user.gender }}</p>
-    {% endif %}
-
-    {% if profile_user.show_pronouns %}
-      <p>Pronouns: {{ profile_user.pronouns }}</p>
-    {% endif %}
-
-    {% if profile_user.show_phone_number %}
-      <p>Phone Number: {{ profile_user.phone_number }}</p>
-    {% endif %}
-
-    <p>Main Language: {{ profile_user.main_language_flag }} {{ profile_user.get_main_language_display }}</p>
-    <p>Sublanguage: {{ profile_user.sublanguage_flag }} {{ profile_user.get_sublanguage_display }}</p>
-
-    {% if profile_user.show_bio and profile_user.bio %}
-  <h3>About Me</h3>
-  <p>{{ profile_user.bio }}</p>
-{% endif %}
-  </div>  {% if is_own_profile %}
-  <div class="profile-edit-button">
-    <button class="edit-profile-btn" id="openEditProfileModal" type="button">Edit Profile <i class="fas fa-edit"></i></button>
-  </div>  {% else %}
-  <div class="profile-action-buttons">
-    {% if not is_blocked_by_viewer %}
-      <a href="/chat/{{ chat_room_id }}/" class="chat-btn"><i class="fas fa-comments"></i> Chat</a>
-      {% if is_friend %}
-        <button class="add-friend-btn" type="button" disabled style="background-color: #28a745;"><i class="fas fa-check"></i> Friends</button>
-      {% elif pending_request %}
-        <button class="add-friend-btn" type="button" disabled style="background-color: #ffc107;"><i class="fas fa-clock"></i> Request Sent</button>
-      {% else %}
-        <button class="add-friend-btn" id="addFriendButton" type="button" data-user-id="{{ profile_user.id }}"><i class="fas fa-user-plus"></i> Add Friend</button>
-      {% endif %}    {% else %}
-      <div style="color: #dc3545; font-weight: bold; margin-bottom: 10px;">
-        <i class="fas fa-ban"></i> You have blocked this user
-      </div>
-    {% endif %}
-    
-    <!-- Three dots menu -->
-    <div class="dropdown-menu-container">
-      <button class="three-dots-btn" id="threeDots" type="button">⋯</button>      <div class="dropdown-menu" id="dropdownMenu">
-        {% if not is_blocked_by_viewer %}
-          <button class="dropdown-item" id="reportUser" data-user-id="{{ profile_user.id }}"><i class="fas fa-flag"></i> Report</button>
-          <button class="dropdown-item" id="blockUser" data-user-id="{{ profile_user.id }}"><i class="fas fa-ban"></i> Block Account</button>
+<div class="profile-container">
+  <!-- Main Profile Card -->
+  <div class="profile-main-card">
+    <div class="profile-header-section">
+      <div class="profile-avatar-container">
+        {% if profile_user.profile_picture %}
+          <img src="{{ profile_user.profile_picture.url }}" alt="Profile Picture" class="profile-avatar">
         {% else %}
-          <button class="dropdown-item" onclick="unblockUser({{ profile_user.id }}, this)"><i class="fas fa-check"></i> Unblock User</button>
+          <div class="profile-avatar-placeholder">
+            <i class="fas fa-user"></i>
+          </div>
         {% endif %}
       </div>
+      
+      <div class="profile-main-info">
+        <h1 class="profile-name">{{ profile_user.full_name }}</h1>
+        
+        <div class="profile-details">
+          {% if profile_user.show_date_of_birth %}
+            <div class="profile-detail-item">
+              <i class="fas fa-birthday-cake"></i>
+              <span>Age: {{ profile_user.get_age }}</span>
+            </div>
+          {% endif %}
+          
+          {% if profile_user.gender != 'other' and profile_user.show_gender %}
+            <div class="profile-detail-item">
+              <i class="fas fa-user-tag"></i>
+              <span>Gender: {{ profile_user.gender }}</span>
+            </div>
+          {% endif %}
+          
+          <div class="profile-detail-item">
+            <i class="fas fa-language"></i>
+            <span>{{ profile_user.main_language_flag }} {{ profile_user.get_main_language_display }}</span>
+          </div>
+          
+          <div class="profile-detail-item">
+            <i class="fas fa-comment"></i>
+            <span>{{ profile_user.sublanguage_flag }} {{ profile_user.get_sublanguage_display }}</span>
+          </div>
+        </div>
+        
+        {% if profile_user.show_bio and profile_user.bio %}
+          <div class="profile-bio">
+            <h3><i class="fas fa-info-circle"></i> About Me</h3>
+            <p>{{ profile_user.bio }}</p>
+          </div>
+        {% endif %}
+      </div>
+      
+      <div class="profile-actions">
+        {% if is_own_profile %}
+          <button class="btn btn-primary" id="openEditProfileModal">
+            <i class="fas fa-edit"></i> Edit Profile
+          </button>
+        {% else %}
+          {% if not is_blocked_by_viewer %}
+            <a href="/chat/{{ chat_room_id }}/" class="btn btn-primary">
+              <i class="fas fa-comments"></i> Chat
+            </a>
+            {% if is_friend %}
+              <button class="btn btn-success" disabled>
+                <i class="fas fa-check"></i> Friends
+              </button>
+            {% elif pending_request %}
+              <button class="btn btn-warning" disabled>
+                <i class="fas fa-clock"></i> Request Sent
+              </button>
+            {% else %}
+              <button class="btn btn-success" id="addFriendButton" data-user-id="{{ profile_user.id }}">
+                <i class="fas fa-user-plus"></i> Add Friend
+              </button>
+            {% endif %}
+          {% else %}
+            <div class="blocked-notice">
+              <i class="fas fa-ban"></i> You have blocked this user
+            </div>
+          {% endif %}
+          
+          <!-- Three dots menu -->
+          <div class="profile-menu">
+            <button class="btn btn-secondary menu-trigger" id="threeDots">
+              <i class="fas fa-ellipsis-v"></i>
+            </button>
+            <div class="dropdown-menu" id="dropdownMenu">
+              {% if not is_blocked_by_viewer %}
+                <button class="dropdown-item" id="reportUser" data-user-id="{{ profile_user.id }}">
+                  <i class="fas fa-flag"></i> Report
+                </button>
+                <button class="dropdown-item" id="blockUser" data-user-id="{{ profile_user.id }}">
+                  <i class="fas fa-ban"></i> Block Account
+                </button>
+              {% else %}
+                <button class="dropdown-item" onclick="unblockUser({{ profile_user.id }}, this)">
+                  <i class="fas fa-check"></i> Unblock User
+                </button>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>  </div>
+
+  <!-- Content Grid -->
+  <div class="profile-content-grid">
+    <!-- Interests Card -->
+    <div class="content-card interests-card">
+      <div class="card-header">
+        <h2>
+          <i class="fas fa-heart"></i>
+          {% if is_own_profile %}
+            My 3 Main Interests
+          {% else %}
+            {{ profile_user.full_name|default:profile_user.username }}'s Interests
+          {% endif %}
+        </h2>
+      </div>
+      <div class="card-content">
+        <div class="interests-grid">
+          {% for interest in profile_user.interests %}
+            {% if interest %}
+              {% with profile_user.interest_descriptions|get_item:interest as data %}
+                <div class="interest-item">
+                  <div class="interest-icon">
+                    <i class="fas fa-star"></i>
+                  </div>
+                  <span class="interest-name">{{ interest }}</span>
+                </div>
+              {% endwith %}
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
     </div>
+
+    <!-- Places Visited Card -->
+    {% if visited_places %}
+    <div class="content-card places-card">
+      <div class="card-header">
+        <h2><i class="fas fa-map-marker-alt"></i> Places I've Visited</h2>
+      </div>
+      <div class="card-content">
+        <div class="places-grid">
+          {% for place in visited_places %}
+            <div class="place-item">
+              {% if place.image %}
+                <img src="{{ place.image.url }}" alt="{{ place.name }}" class="place-image">
+              {% else %}
+                <div class="place-placeholder">
+                  <i class="fas fa-image"></i>
+                </div>
+              {% endif %}
+              <span class="place-name">{{ place.name }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Achievements and Quotes Row -->
+    <div class="profile-extras-row">
+      {% if achievements %}
+      <div class="content-card achievements-card">
+        <div class="card-header">
+          <h2><i class="fas fa-trophy"></i> Achievements</h2>
+        </div>
+        <div class="card-content">
+          <div class="achievements-grid">
+            {% for achievement in achievements %}
+              <div class="achievement-item">
+                {% if achievement.icon %}
+                  <img src="{{ achievement.icon.url }}" alt="{{ achievement.title }}" class="achievement-icon">
+                {% else %}
+                  <div class="achievement-placeholder">
+                    <i class="fas fa-award"></i>
+                  </div>
+                {% endif %}
+                <span class="achievement-title">{{ achievement.title }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if quotes %}
+      <div class="content-card quotes-card">
+        <div class="card-header">
+          <h2><i class="fas fa-quote-left"></i> Quotes I Live By</h2>
+        </div>
+        <div class="card-content">
+          <div class="quotes-container">
+            {% for quote in quotes %}
+              <blockquote class="quote-item">
+                <i class="fas fa-quote-left quote-icon"></i>
+                {{ quote.text }}
+              </blockquote>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Content Items Card -->
+    {% if profile_user.content_items.all %}
+    <div class="content-card showcase-card">
+      <div class="card-header">
+        <h2><i class="fas fa-star"></i> Content I Would Like to Show</h2>
+        <div class="carousel-controls">
+          <button class="carousel-btn prev-btn" onclick="changeSlide(-1)">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button class="carousel-btn next-btn" onclick="changeSlide(1)">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+      <div class="card-content">
+        <div class="content-carousel">
+          <div class="carousel-track" id="carousel">
+            {% for item in profile_user.content_items.all %}
+              <div class="content-item">
+                <div class="content-media">
+                  {% if item.image %}
+                    <img src="{{ item.image.url }}" alt="{{ item.title }}" class="content-image">
+                  {% elif item.get_youtube_embed_url %}
+                    <iframe src="{{ item.get_youtube_embed_url }}" 
+                            class="content-video" 
+                            allowfullscreen></iframe>
+                  {% else %}
+                    <div class="content-placeholder">
+                      <i class="fas fa-file"></i>
+                    </div>
+                  {% endif %}
+                </div>
+                <div class="content-info">
+                  <h3 class="content-title">{{ item.title }}</h3>
+                  <p class="content-description">{{ item.description }}</p>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
   </div>
-  {% endif %}
 </div>
 
 <!-- Edit Profile Modal -->
@@ -311,6 +492,41 @@ function unblockUser(userId, button) {
     });
   }
 }
+
+// Carousel functionality for content items
+let currentSlide = 0;
+
+function changeSlide(direction) {
+  const carousel = document.getElementById('carousel');
+  if (!carousel) return;
+  
+  const contentItems = carousel.querySelectorAll('.content-item');
+  const totalSlides = contentItems.length;
+  
+  if (totalSlides === 0) return;
+  
+  currentSlide += direction;
+  
+  if (currentSlide < 0) {
+    currentSlide = totalSlides - 1;
+  } else if (currentSlide >= totalSlides) {
+    currentSlide = 0;
+  }
+  
+  const translateX = -currentSlide * 100;
+  carousel.style.transform = `translateX(${translateX}%)`;
+}
+
+// Initialize carousel
+document.addEventListener('DOMContentLoaded', function() {
+  const carousel = document.getElementById('carousel');
+  if (carousel) {
+    // Auto-advance carousel every 5 seconds
+    setInterval(() => {
+      changeSlide(1);
+    }, 5000);
+  }
+});
 </script>
 
 <style>
@@ -571,136 +787,655 @@ function unblockUser(userId, button) {
   background: #6c757d;
   cursor: not-allowed;
 }
-</style>
 
-<div class="interests-display">
-  <h2 class="section-title">
-    {% if is_own_profile %}
-      My 3 Main Interests
-    {% else %}
-      {{ profile_user.full_name|default:profile_user.username }}'s 3 Main Interests
-    {% endif %}
-  </h2>
+/* Modern Profile Styles */
+:root {
+  --primary-color: #4f46e5;
+  --secondary-color: #06b6d4;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --danger-color: #ef4444;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --border-color: #e5e7eb;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
 
-  <div class="interest-cards">
-    {% for interest in profile_user.interests %}
-      {% if interest %}
-        {% with profile_user.interest_descriptions|get_item:interest as data %}
-          <div class="interest-card">
-            <h3 class="interest-title">{{ interest }}</h3>
-            {% if data.image %}
-              <img src="/media/{{ data.image }}" alt="{{ interest }} image" />
-            {% endif %}
-            <p class="interest-description">{{ data.description }}</p>
-          </div>
-        {% endwith %}
-      {% endif %}
-    {% endfor %}
-  </div>
-</div>
+.profile-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
 
+.profile-main-card {
+  background: var(--bg-primary);
+  border-radius: 24px;
+  padding: 2.5rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-xl);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
 
+.profile-header-section {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 2rem;
+  align-items: start;
+}
 
-{% if visited_places %}
-<div class="interests-display">
-  <h3 class="section-title">Places I’ve Visited</h3>
-  <div class="interest-cards">
-    {% for place in visited_places %}
-      <div class="interest-card hover-zoom">
-        {% if place.image %}
-          <img class="edit-place-preview" src="{{ place.image.url }}" alt="{{ place.name }}">
+.profile-avatar-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-        {% endif %}
-        <p>{{ place.name }}</p>
-      </div>
-    {% endfor %}
-  </div>
-</div>
-{% endif %}
+.profile-avatar {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid var(--primary-color);
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.3s ease;
+}
 
+.profile-avatar:hover {
+  transform: scale(1.05);
+}
 
+.profile-avatar-placeholder {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: white;
+  box-shadow: var(--shadow-lg);
+}
 
-<div class="extras-row-wrapper">
-  {% if achievements %}
-  <div class="profile-extras-card">
-    <h3 class="section-title">Achievements</h3>
-    <div class="extras-grid">
-      {% for a in achievements %}
-        <div class="achievement-item">
-          {% if a.icon %}
-            <img src="{{ a.icon.url }}" alt="{{ a.title }}">
-          {% endif %}
-          <p>{{ a.title }}</p>
-        </div>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
+.profile-main-info {
+  flex: 1;
+}
 
+.profile-name {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 1rem 0;  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 
-  {% if quotes %}
-  <div class="profile-extras-card">
-    <h3 class="section-title">Quotes I Live By</h3>
-    <div class="quotes-section">
-      {% for quote in quotes %}
-        <blockquote>{{ quote.text }}</blockquote>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
-</div>
+.profile-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
 
+.profile-detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border-left: 4px solid var(--primary-color);
+  transition: transform 0.2s ease;
+}
 
+.profile-detail-item:hover {
+  transform: translateX(4px);
+}
 
+.profile-detail-item i {
+  color: var(--primary-color);
+  font-size: 1.1rem;
+}
 
+.profile-bio {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(6, 182, 212, 0.1));
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid rgba(79, 70, 229, 0.2);
+}
 
+.profile-bio h3 {
+  color: var(--text-primary);
+  margin: 0 0 0.75rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 
+.profile-bio h3 i {
+  color: var(--primary-color);
+}
 
-{% if profile_user.content_items.all %}
-<div class="content-carousel-card">
-  <h2 class="section-title">Content I Would Like to Show</h2>
+.profile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
 
-  <div class="carousel-nav">
-    <button onclick="changeSlide(-1)">←</button>
-    <button onclick="changeSlide(1)">→</button>
-  </div>
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 140px;
+  justify-content: center;
+  font-size: 0.95rem;
+}
 
-  <div class="carousel-container">
-    <div class="carousel" id="carousel">
-      {% for item in profile_user.content_items.all %}
-        <div class="carousel-item">
-          <h4 class="content-title">{{ item.title }}</h4>
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  box-shadow: var(--shadow-md);
+}
 
-          {% if item.image %}
-            <img src="{{ item.image.url }}" class="content-image" alt="{{ item.title }}">
-          {% elif item.get_youtube_embed_url %}
-            <iframe class="content-iframe"
-                    src="{{ item.get_youtube_embed_url }}"
-                    frameborder="0"
-                    allowfullscreen></iframe>
-          {% endif %}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  color: white;
+}
 
-          <p class="content-description">{{ item.description }}</p>
-        </div>
-      {% endfor %}
-    </div>
-  </div>
-</div>
+.btn-success {
+  background: linear-gradient(135deg, var(--success-color), #059669);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
 
-{% endif %}
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
 
+.btn-warning {
+  background: linear-gradient(135deg, var(--warning-color), #d97706);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
 
+.btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+}
 
+.btn-secondary:hover {
+  background: var(--border-color);
+  transform: translateY(-2px);
+}
 
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
 
+.blocked-notice {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
+  color: var(--danger-color);
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 
+.profile-menu {
+  position: relative;
+}
 
+.menu-trigger {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: unset;
+}
 
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  min-width: 180px;
+  margin-top: 0.5rem;
+  overflow: hidden;
+  z-index: 1000;
+  display: none;
+}
 
+.dropdown-menu.show {
+  display: block;
+  animation: fadeInUp 0.3s ease;
+}
 
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  transition: background 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background: var(--bg-secondary);
+}
+
+.dropdown-item i {
+  width: 16px;
+  text-align: center;
+}
+
+.profile-content-grid {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+}
+
+.content-card {
+  background: var(--bg-primary);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  transition: transform 0.3s ease;
+}
+
+.content-card:hover {
+  transform: translateY(-4px);
+}
+
+.card-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-content {
+  padding: 1.5rem;
+}
+
+.interests-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.interest-item {
+  text-align: center;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.interest-item:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.interest-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.75rem;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.interest-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.places-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.place-item {
+  text-align: center;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.place-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.place-image {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+}
+
+.place-placeholder {
+  width: 100%;
+  height: 120px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 2rem;
+}
+
+.place-name {
+  padding: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.profile-extras-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 1rem;
+}
+
+.achievement-item {
+  text-align: center;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.achievement-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.achievement-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto 0.5rem;
+}
+
+.achievement-placeholder {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--warning-color), #d97706);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.5rem;
+  color: white;
+  font-size: 1.2rem;
+}
+
+.achievement-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.quotes-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.quote-item {
+  position: relative;
+  background: var(--bg-secondary);
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin: 0;
+  border-left: 4px solid var(--primary-color);
+  font-style: italic;
+  color: var(--text-primary);
+}
+
+.quote-icon {
+  position: absolute;
+  top: -8px;
+  left: 12px;
+  background: var(--bg-primary);
+  color: var(--primary-color);
+  padding: 0.25rem;
+  font-size: 0.8rem;
+}
+
+.showcase-card {
+  grid-column: 1 / -1;
+}
+
+.carousel-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.carousel-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.carousel-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.content-carousel {
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.carousel-track {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+
+.content-item {
+  flex: 0 0 100%;
+  background: var(--bg-secondary);
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-right: 1rem;
+}
+
+.content-media {
+  width: 100%;
+  height: 250px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.content-image, .content-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: none;
+}
+
+.content-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 3rem;
+}
+
+.content-info {
+  text-align: center;
+}
+
+.content-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.75rem 0;
+}
+
+.content-description {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Modal Improvements */
+.modal {
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.modal-header {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  border-radius: 18px 18px 0 0;
+  margin: 0;
+}
+
+.modal-header h2 {
+  color: white;
+}
+
+.close {
+  color: white;
+  opacity: 0.8;
+}
+
+.close:hover {
+  opacity: 1;
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 1rem;
+  }
   
-
-
+  .profile-main-card {
+    padding: 1.5rem;
+  }
+  
+  .profile-header-section {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 1.5rem;
+  }
+  
+  .profile-actions {
+    align-items: center;
+  }
+  
+  .profile-content-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .profile-extras-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .profile-name {
+    font-size: 2rem;
+  }
+  
+  .profile-details {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
 
 <!-- Report Modal -->
 <div id="reportModal" class="modal">

@@ -1,7 +1,3 @@
-import os
-os.environ['GDAL_LIBRARY_PATH'] = r'C:\Users\Jolan\miniconda3\envs\gdal_env\Library\bin\gdal.dll'
-
-
 #!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
 import os

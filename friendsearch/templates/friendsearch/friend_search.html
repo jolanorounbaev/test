@@ -1,520 +1,416 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Friendsearch{% endblock %}
+{% block title %}Find Friends{% endblock %}
+
 {% block content %}
+<!-- Friend Search specific CSS (Bootstrap Icons only, no Bootstrap CSS to avoid Tailwind conflicts) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<link rel="stylesheet" href="{% static 'friendsearch/css/friend_search.css' %}">
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Friend Search</title>
-  <!-- Add the required CSS and JS -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script>
-  <style>
-    .toggle-switch {
-      position: relative;
-      display: inline-block;
-      width: 50px;
-      height: 25px;
-    }
-    .toggle-switch input {  
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      background-color: #ccc;
-      border-radius: 25px;
-      top: 0; left: 0; right: 0; bottom: 0;
-      transition: 0.4s;
-    }
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 19px;
-      width: 19px;
-      left: 3px;
-      bottom: 3px;
-      background-color: white;
-      transition: 0.4s;
-      border-radius: 50%;
-    }
-    input:checked + .slider {
-      background-color: #4caf50;
-    }
-    input:checked + .slider:before {
-      transform: translateX(24px);
-    }
-
-    .location-button {
-      padding: 8px 12px;
-      background-color: #2196F3;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .location-success {
-      margin-left: 15px;
-      color: green;
-      font-weight: bold;
-    }
-    .autocomplete-container input {
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.dropdown div:hover {
-  background-color: #f0f0f0;
-}
-.dropdown {
-  position: absolute;
-  background: white;
-  border: 1px solid #ccc;
-  width: 100%;
-  z-index: 1000; /* Ensure this is high enough */
-}
-
-.toggle-switch {
-      position: relative;
-      display: inline-block;
-      width: 50px;
-      height: 25px;
-    }
-    /* ... your existing styles ... */
-
-    /* Autocomplete styles */
-    .autocomplete-container {
-      position: relative;
-      width: 100%;
-      margin-bottom: 10px;
-    }
-    
-    .tt-dropdown-menu {
-      width: 100%;
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 0 0 4px 4px;
-      border-top: none;
-      max-height: 300px;
-      overflow-y: auto;
-      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
-    }
-
-    .tt-suggestion {
-      padding: 10px;
-      cursor: pointer;
-    }
-
-    .tt-suggestion:hover {
-      background-color: #f5f5f5;
-    }
-
-    .tt-cursor {
-      background-color: #f0f0f0 !important;
-    }
-
-    .empty-message {
-      padding: 10px;
-      color: #999;
-      text-align: center;
-    }
-
-    .results-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
-}
-
-.user-card {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 16px;
-  background: white;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  transition: transform 0.2s;
-}
-
-.user-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.profile-img {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 50%;
-  margin: 0 auto 12px;
-  display: block;
-}
-
-.profile-placeholder {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: #f5f5f5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 12px;
-  color: #999;
-}
-
-.user-details {
-  margin: 12px 0;
-}
-
-.interests-list {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.interests-list li {
-  background: #e9f5ff;
-  color: #0066cc;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.85em;
-}
-
-.user-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.chat-btn, .profile-btn {
-  padding: 6px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.chat-btn {
-  background: #2196F3;
-  color: white;
-}
-
-.profile-btn {
-  background: #f0f0f0;
-  color: #333;
-  text-decoration: none;
-}
-
-.match-score {
-  margin-left: auto;
-  color: #4CAF50;
-  font-weight: bold;
-  align-self: center;
-}
-
-  </style>
-</head>
-<body>
-
-  <h2>Find Friends</h2>
-
-  <!-- 📍 Use My Location -->
-  <form method="post" id="locationForm" style="margin-bottom: 20px;">
-    {% csrf_token %}
-    <input type="hidden" name="latitude" id="latitude">
-    <input type="hidden" name="longitude" id="longitude">
-    <button type="button" class="location-button" onclick="getLocation()">📍 Use My Location</button>
-
-    {% if messages %}
-      {% for message in messages %}
-        {% if message.message == "📍 Location updated successfully!" %}
-          <span class="location-success">✅ {{ message }}</span>
-        {% endif %}
-      {% endfor %}
-    {% endif %}
-  </form>
-
-  <!-- 🎯 Saved Interests (Editable) -->
-  <h3>🎯 My Saved Interests:</h3>
-  <div id="interest-display">
-    {% if request.user.interests %}
-      <ul>
-        {% for interest in request.user.interests %}
-          <li>{{ interest }}</li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p>No interests set yet.</p>
-    {% endif %}
-    <button type="button" onclick="toggleEdit(true)">✏️ Edit</button>
+<div class="friend-search-container">
+<div class="main-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1><i class="bi bi-people-fill"></i> Find Friends</h1>
+    <p>Connect with people who share your interests and passions</p>
   </div>
-
-  <form id="interest-form" method="POST" action="{% url 'edit_interests_inline' %}" style="display: none;">
-    {% csrf_token %}
-    
-    <!-- Interest 1 -->
-    <div class="autocomplete-container">
-      <input type="text" name="interest_1" 
-             id="interest-1" 
-             value="{{ request.user.interests.0|default:'' }}"
-             placeholder="Interest 1"
-             autocomplete="off"
-             class="autocomplete-input"
-             style="width: 100%; padding: 6px;">
-    </div>
-    
-    <!-- Interest 2 -->
-    <div class="autocomplete-container">
-      <input type="text" name="interest_2" 
-             id="interest-2" 
-             value="{{ request.user.interests.1|default:'' }}"
-             placeholder="Interest 2"
-             autocomplete="off"
-             class="autocomplete-input"
-             style="width: 100%; padding: 6px;">
-    </div>
-  
-    <!-- Interest 3 -->
-    <div class="autocomplete-container">
-      <input type="text" name="interest_3" 
-             id="interest-3" 
-             value="{{ request.user.interests.2|default:'' }}"
-             placeholder="Interest 3"
-             autocomplete="off"
-             class="autocomplete-input"
-             style="width: 100%; padding: 6px;">
-    </div>
-  
-    <button type="submit">💾 Save</button>
-    <button type="button" onclick="toggleEdit(false)">❌ Cancel</button>
-  </form>
-  
-  <!-- 🔍 Friend Search Form -->
-  <h3>🔎 Search for Friends by Interests:</h3>
-  <form id="search_form" method="GET" style="margin-bottom: 30px;">
-
-    <!-- Search Interest 1 -->
-    <div class="autocomplete-container">
-      <label>Search Interest 1:
-        <input type="text" name="interest_1" 
-               id="search-interest-1"
-               value="{% if request.GET.interest_1 %}{{ request.GET.interest_1 }}{% elif request.user.interests|length > 0 %}{{ request.user.interests.0 }}{% endif %}"
-               autocomplete="off">
-      </label><br><br>
-    </div>
-
-    <!-- Search Interest 2 -->
-    <div class="autocomplete-container">
-      <label>Search Interest 2:
-        <input type="text" name="interest_2" 
-               id="search-interest-2"
-               value="{% if request.GET.interest_2 %}{{ request.GET.interest_2 }}{% elif request.user.interests|length > 1 %}{{ request.user.interests.1 }}{% endif %}"
-               autocomplete="off">
-      </label><br><br>
-    </div>
-
-    <!-- Search Interest 3 -->
-    <div class="autocomplete-container">
-      <label>Search Interest 3:
-        <input type="text" name="interest_3" 
-               id="search-interest-3"
-               value="{% if request.GET.interest_3 %}{{ request.GET.interest_3 }}{% elif request.user.interests|length > 2 %}{{ request.user.interests.2 }}{% endif %}"
-               autocomplete="off">
-      </label><br><br>
-    </div>
-
-    <!-- Rest of your form remains the same -->
-    <label>Main Language:
-      <select name="main_language">
-        <option value="en">English</option>
-        <option value="fr">French</option>
-        <option value="de">German</option>
-        <option value="nl">Dutch</option>
-      </select>
-    </label><br><br>
-
-    <label>Age Range:
-      <input type="number" name="age_min" value="20"> to
-      <input type="number" name="age_max" value="30">
-    </label><br><br>
-
-    <label>Radius (km): <input type="number" name="radius" value="20"></label><br><br>
-
-    <input type="hidden" id="latitude" name="latitude">
-    <input type="hidden" id="longitude" name="longitude">
-
-    <button type="submit">Search</button>
-  </form>
-
-<!-- 👥 Matching Results -->
-{% if results is not None and results|length > 0 %}
-  <h2>Matching People:</h2>
-  <div class="results-grid">
-    {% for user, score in results %}
-      <div class="user-card">
-        {% if user.profile_picture %}
-          <img src="{{ user.profile_picture.url }}" alt="Profile picture" class="profile-img">
+  <!-- Action Cards -->
+  <div class="action-cards">
+    <!-- My Interests Card -->
+    <div class="action-card">
+      <h3><i class="bi bi-heart-fill"></i> My Interests</h3>
+      <div class="current-interests">
+        {% if request.user.interests %}
+          <div class="interests-display">
+            {% for interest in request.user.interests %}
+              <span class="interest-tag">{{ interest }}</span>
+            {% endfor %}
+          </div>
         {% else %}
-          <div class="profile-placeholder">No photo</div>
+          <div class="no-interests">
+            <i class="bi bi-emoji-frown"></i>
+            No interests set yet
+          </div>
         {% endif %}
-        
-        <h3>{{ user.first_name }} {{ user.last_name }}</h3>
-        <p><strong>Age:</strong> {{ user.get_age|default:"N/A" }}</p>
-        
-        <div class="user-details">
-          <p><strong>Main Language:</strong> {{ user.main_language|default:"None" }}</p>
-          
-          {% if user.interests %}
-            <p><strong>Interests:</strong></p>
-            <ul class="interests-list">
-              {% for interest in user.interests %}
-                <li>{{ interest }}</li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-        </div>
-
-        <div class="user-actions">
-          <button class="chat-btn">Chat</button>
-          <a href="{% url 'user_profile' user.id %}" class="profile-btn">View Profile</a>
-          <div class="match-score">Match: {{ score }}%</div>
-        </div>
       </div>
-    {% endfor %}
+      <button type="button" class="btn btn-outline-custom" data-bs-toggle="modal" data-bs-target="#editInterestsModal">
+        <i class="bi bi-pencil-square"></i>
+        Edit My Interests
+      </button>
+    </div>
+
+    <!-- Search Preferences Card -->
+    <div class="action-card">
+      <h3><i class="bi bi-sliders"></i> Search Preferences</h3>
+      <p class="text-muted mb-3">Set your default search filters</p>
+      <div class="mb-3">
+        {% if saved_search_preferences.interests %}
+          <small class="text-muted">
+            <strong>Interests:</strong> {{ saved_search_preferences.interests|join:", "|truncatechars:40 }}<br>
+            <strong>Language:</strong> {{ saved_search_preferences.language|default:"Any" }}<br>
+            <strong>Range:</strong> {{ saved_search_preferences.radius|default:"10" }}km
+          </small>
+        {% else %}
+          <small class="text-muted">No preferences saved yet</small>
+        {% endif %}
+      </div>      <button type="button" class="btn btn-outline-custom" data-bs-toggle="modal" data-bs-target="#searchPreferencesModal">
+        <i class="bi bi-gear-fill"></i>
+        Edit Preferences
+      </button>
+    </div>
   </div>
-{% endif %}
 
-  <!-- Scripts -->
-  <script>
-    // Function to toggle the visibility of the interest form
-    function toggleEdit(showForm) {
-        const interestDisplay = document.getElementById('interest-display');
-        const interestForm = document.getElementById('interest-form');
-        
-        interestDisplay.style.display = showForm ? 'none' : 'block';
-        interestForm.style.display = showForm ? 'block' : 'none';
-        
-        // Reinitialize typeahead when showing the form with a slight delay
-        if (showForm) {
-            setTimeout(initializeTypeaheads, 50);
-        }
-    }
+  <!-- Find Friends Section -->
+  {% if saved_search_preferences.interests %}
+    <div class="text-center mt-4 mb-4">
+      <button type="button" class="btn btn-primary-custom btn-lg" onclick="searchWithPreferences()">
+        <i class="bi bi-search"></i>
+        Find Friends
+      </button>
+      <p class="text-muted mt-2">
+        Search using your saved preferences
+      </p>
+    </div>
+  {% endif %}
 
-    // Function to get the user's current location
-    function getLocation() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    document.getElementById('latitude').value = position.coords.latitude;
-                    document.getElementById('longitude').value = position.coords.longitude;
-                    document.getElementById('locationForm').submit();
-                },
-                function(error) {
-                    alert("⚠️ Could not retrieve your location. Error: " + error.message);
-                },
-                { timeout: 10000 } // 10 second timeout
-            );
-        } else {
-            alert("Geolocation is not supported by your browser.");
-        }
-    }
+  <!-- Results Section -->
+  {% if results is not None %}
+    <div class="results-section">
+      <div class="results-header">
+        <h3><i class="bi bi-people"></i> 
+          {% if results|length > 0 %}
+            Found {{ results|length }} Friend{{ results|length|pluralize }}
+          {% else %}
+            No Friends Found
+          {% endif %}
+        </h3>
+        {% if results|length > 0 %}
+          <small class="text-muted">Sorted by match score</small>
+        {% endif %}
+      </div>
 
-    // Auto-hide the success message after a few seconds
-    setTimeout(() => {
-        const successMsg = document.querySelector('.location-success');
-        if (successMsg) {
-            successMsg.style.display = 'none';
-        }
-    }, 3000);
-
-    // Initialize Typeahead.js for all autocomplete inputs
-    function initializeTypeaheads() {
-        try {
-            // First, destroy any existing typeahead instances
-            if ($.fn.typeahead) {
-                $('.autocomplete-container input').typeahead('destroy');
-            }
-
-            // Initialize Bloodhound suggestion engine
-            const engine = new Bloodhound({
-                datumTokenizer: Bloodhound.tokenizers.whitespace,
-                queryTokenizer: Bloodhound.tokenizers.whitespace,
-                remote: {
-                    url: '/friendsearch/autocomplete/?q=%QUERY%',
-                    wildcard: '%QUERY%',
-                    rateLimitWait: 300,
-                    filter: function(response) {
-                        return Array.isArray(response) ? response : [];
-                    }
-                }
-            });
-
-            // Initialize Typeahead for all interest inputs
-            $('.autocomplete-container input').each(function() {
-                const $input = $(this);
+      {% if results|length > 0 %}
+        <div class="results-grid">
+          {% for result in results %}
+            <div class="user-card">
+              <div class="match-score">
+                {{ result.score }}% Match
+              </div>
+              
+              <div class="profile-section">
+                {% if result.user.profile_picture %}
+                  <img src="{{ result.user.profile_picture.url }}" alt="Profile picture" class="profile-img">
+                {% else %}
+                  <div class="profile-placeholder">
+                    <i class="bi bi-person-fill"></i>
+                  </div>
+                {% endif %}
                 
-                $input.typeahead({
-                    hint: true,
-                    highlight: true,
-                    minLength: 1,
-                    autoselect: true
-                }, {
-                    name: $input.attr('id') || 'autocomplete-' + Math.random().toString(36).substr(2, 9),
-                    source: engine,
-                    limit: 10,
-                    display: function(item) { return item; },
-                    templates: {
-                        suggestion: function(data) {
-                            return '<div class="tt-suggestion">' + data + '</div>';
-                        },
-                        empty: '<div class="empty-message">No matches found</div>',
-                        footer: '<div class="tt-footer"></div>'
-                    }
-                })
-                .on('typeahead:render', function() {
-                    // Ensure only one dropdown is visible at a time
-                    $('.tt-dropdown-menu').not($(this).siblings('.tt-dropdown-menu')).hide();
-                })
-                .on('typeahead:select', function(ev, suggestion) {
-                    console.log('Selection:', suggestion);
-                    // You can add additional handling here if needed
-                })
-                .on('typeahead:autocomplete', function(ev, suggestion) {
-                    console.log('Autocomplete:', suggestion);
-                });
-            });
+                <div class="user-info">
+                  <h4>{{ result.user.first_name }} {{ result.user.last_name }}</h4>
+                  <div class="user-meta">
+                    {% if result.user.get_age %}
+                      <span class="meta-item">
+                        <i class="bi bi-calendar3"></i>
+                        {{ result.user.get_age }} years old
+                      </span>
+                    {% endif %}
+                    {% if result.user.main_language %}
+                      <span class="meta-item">
+                        <i class="bi bi-translate"></i>
+                        {{ result.user.get_main_language_display }}
+                      </span>
+                    {% endif %}
+                    {% if result.user.location %}
+                      <span class="meta-item">
+                        <i class="bi bi-geo-alt"></i>
+                        Nearby
+                      </span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
 
-            // Ensure the engine is initialized
-            engine.initialize().then(function() {
-                console.log('Bloodhound engine initialized successfully');
-            });
+              {% if result.user.description %}
+                <div class="user-description">
+                  <i class="bi bi-chat-quote"></i>
+                  "{{ result.user.description }}"
+                </div>
+              {% endif %}
 
-        } catch (error) {
-            console.error('Error initializing typeaheads:', error);
-        }
-    }
+              {% if result.user.interests %}
+                <div class="user-interests">
+                  <h5><i class="bi bi-heart"></i> Interests</h5>
+                  <ul class="interests-list">
+                    {% for interest in result.user.interests %}
+                      <li>{{ interest }}</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              {% endif %}
 
-    // Initialize typeaheads when page loads
-    $(document).ready(function() {
-        initializeTypeaheads();
-        
-        // Reinitialize when showing edit form (event delegation)
-        $(document).on('click', '[onclick*="toggleEdit(true)"]', function() {
-            setTimeout(initializeTypeaheads, 100);
-        });
-    });
+              <div class="user-actions">
+                <button class="action-btn chat-btn" onclick="startChat({{ result.chat_room_id }})">
+                  <i class="bi bi-chat-dots"></i>
+                  Chat
+                </button>
+                <a href="{% url 'user_profile' result.user.id %}" class="action-btn profile-btn">
+                  <i class="bi bi-person-lines-fill"></i>
+                  Profile
+                </a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="no-results">
+          <i class="bi bi-search"></i>
+          <h4>No friends found matching your criteria</h4>
+          <p class="text-muted">Try adjusting your search filters or interests</p>
+          <button type="button" class="btn btn-outline-custom mt-3" onclick="resetSearch()">
+            <i class="bi bi-arrow-clockwise"></i>
+            Reset Search
+          </button>
+        </div>
+      {% endif %}    </div>
+  {% endif %}
+</div>
+</div> <!-- End friend-search-container -->
 
-    // Handle window resize to reposition dropdowns
-    $(window).on('resize', function() {
-        $('.tt-dropdown-menu').hide();
-    });
-</script>
-</body>
-</html>
+<!-- Edit Interests Modal -->
+<div class="modal fade" id="editInterestsModal" tabindex="-1" aria-labelledby="editInterestsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">      <div class="modal-header">
+        <h5 class="modal-title" id="editInterestsModalLabel">
+          <i class="bi bi-heart-fill"></i>
+          Edit My Interests
+        </h5>
+      </div>
+      <form method="POST" id="editInterestsForm">
+        <div class="modal-body">
+          {% csrf_token %}
+          <input type="hidden" name="update-interest" value="1">
+          
+          <p class="text-muted mb-4">
+            Choose up to 3 interests that best represent what you're passionate about. 
+            These will be used to match you with like-minded people.
+          </p>
+          
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="form-label">Interest 1 *</label>
+                <div class="autocomplete-container">
+                  <input type="text" 
+                         name="update-interest_1" 
+                         id="modal-interest-1"
+                         class="form-control-custom"
+                         value="{{ update_form.interest_1.value|default:'' }}"
+                         placeholder="e.g. Photography"
+                         autocomplete="off"
+                         required>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="form-label">Interest 2</label>
+                <div class="autocomplete-container">
+                  <input type="text" 
+                         name="update-interest_2" 
+                         id="modal-interest-2"
+                         class="form-control-custom"
+                         value="{{ update_form.interest_2.value|default:'' }}"
+                         placeholder="e.g. Hiking"
+                         autocomplete="off">
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="form-label">Interest 3</label>
+                <div class="autocomplete-container">
+                  <input type="text" 
+                         name="update-interest_3" 
+                         id="modal-interest-3"
+                         class="form-control-custom"
+                         value="{{ update_form.interest_3.value|default:'' }}"
+                         placeholder="e.g. Cooking"
+                         autocomplete="off">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 p-3 border rounded description-box">
+            <h6><i class="bi bi-lightbulb"></i> Description (Optional)</h6>
+            <textarea name="description" 
+                      class="form-control-custom" 
+                      rows="3" 
+                      placeholder="Tell others a bit about yourself and your interests... (max 150 characters)"
+                      maxlength="150">{{ request.user.description|default:'' }}</textarea>
+            <small class="text-muted">
+              <span id="desc-char-count">{{ request.user.description|length|default:0 }}</span>/150 characters
+            </small>
+          </div>
+        </div>        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary-custom">
+            <i class="bi bi-check-circle"></i>
+            Save Interests
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Search Preferences Modal -->
+<div class="modal fade" id="searchPreferencesModal" tabindex="-1" aria-labelledby="searchPreferencesModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">      <div class="modal-header">
+        <h5 class="modal-title" id="searchPreferencesModalLabel">
+          <i class="bi bi-sliders"></i>
+          Search Preferences
+        </h5>
+      </div>
+      <form method="POST" id="searchPreferencesForm">
+        <div class="modal-body">
+          {% csrf_token %}
+          <input type="hidden" name="save_search_preferences" value="1">
+          
+          <p class="text-muted mb-4">
+            Set your default search preferences. These will be automatically applied when you visit the search page.
+          </p>
+
+          <!-- Preferred Interests -->
+          <h6 class="mb-3"><i class="bi bi-heart"></i> Preferred Interests to Search For</h6>
+          <div class="row mb-4">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="form-label">Interest 1</label>
+                <div class="autocomplete-container">
+                  <input type="text" 
+                         name="pref-interest_1" 
+                         id="pref-interest-1"
+                         class="form-control-custom"
+                         value="{{ pref_update_form.interest_1.value|default:'' }}"
+                         placeholder="e.g. Photography"
+                         autocomplete="off">
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="form-label">Interest 2</label>
+                <div class="autocomplete-container">
+                  <input type="text" 
+                         name="pref-interest_2" 
+                         id="pref-interest-2"
+                         class="form-control-custom"
+                         value="{{ pref_update_form.interest_2.value|default:'' }}"
+                         placeholder="e.g. Hiking"
+                         autocomplete="off">
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label class="form-label">Interest 3</label>
+                <div class="autocomplete-container">
+                  <input type="text" 
+                         name="pref-interest_3" 
+                         id="pref-interest-3"
+                         class="form-control-custom"
+                         value="{{ pref_update_form.interest_3.value|default:'' }}"
+                         placeholder="e.g. Cooking"
+                         autocomplete="off">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Other Preferences -->
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label"><i class="bi bi-translate"></i> Preferred Language</label>
+                <select name="search-main_language" class="form-control-custom">
+                  <option value="">Any Language</option>
+                  {% for code, name in search_form.main_language.field.choices %}
+                    <option value="{{ code }}" {% if search_form.main_language.value == code %}selected{% endif %}>
+                      {{ name }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label"><i class="bi bi-geo-circle"></i> Search Distance</label>
+                <select name="search-radius_km" class="form-control-custom">
+                  {% for value, label in search_form.radius_km.field.choices %}
+                    <option value="{{ value }}" {% if search_form.radius_km.value == value|stringformat:"s" %}selected{% endif %}>
+                      {{ label }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label"><i class="bi bi-calendar-heart"></i> Age Preference</label>
+            <div class="row">
+              {% for value, label in search_form.age_filtering_mode.field.choices %}
+                <div class="col-md-6">
+                  <div class="form-check">
+                    <input type="radio" 
+                           name="search-age_filtering_mode" 
+                           value="{{ value }}" 
+                           id="pref_age_{{ value }}"
+                           class="form-check-input"
+                           {% if search_form.age_filtering_mode.value == value %}checked{% endif %}>
+                    <label for="pref_age_{{ value }}" class="form-check-label">{{ label }}</label>
+                  </div>
+                </div>
+              {% endfor %}
+              <div class="col-md-6">
+                <div class="form-check">
+                  <input type="radio" 
+                         name="search-age_filtering_mode" 
+                         value="" 
+                         id="pref_age_any"
+                         class="form-check-input"
+                         {% if not search_form.age_filtering_mode.value %}checked{% endif %}>
+                  <label for="pref_age_any" class="form-check-label">Any age</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary-custom">
+            <i class="bi bi-check-circle"></i>
+            Save Preferences
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Handle Django Messages - Data passed via data attribute -->
+{% if messages %}
+<div id="django-messages" data-messages='[
+  {% for message in messages %}
+    {"tags": "{{ message.tags }}", "message": "{{ message|escapejs }}"}{% if not forloop.last %},{% endif %}
+  {% endfor %}
+]' class="hidden"></div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<!-- Friend Search specific JavaScript -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'friendsearch/js/friend_search_new.js' %}"></script>
 {% endblock %}

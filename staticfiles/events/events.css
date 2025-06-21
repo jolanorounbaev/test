@@ -1,0 +1,670 @@
+:root {
+  /* New Theme Variables */
+  --bg-base: #FFFFFF;       /* White */
+  --bg-card: #F8F9FA;       /* Very light grey */
+  --bg-accent: #E9ECEF;     /* Light grey for accents */
+  --bg-hover: #DEE2E6;      /* Hover state for grey elements */
+  --text-main: #212529;     /* Dark grey/almost black */
+  --text-heading: #343A40;  /* Dark grey for headings */
+  --btn-bg: #007BFF;        /* Standard blue */
+  --btn-text: #FFFFFF;      /* White */
+  --border-color: #CED4DA;  /* Border color */
+  --link-color: #007BFF;     /* Link color */
+  --link-hover-color: #0056b3; /* Link hover color */
+  --success-color: #28a745; /* Green for success messages */
+  --danger-color: #dc3545;   /* Red for danger/delete actions */
+  --danger-hover-color: #c82333; /* Darker red for hover */
+  --primary-color: #007bff; /* Primary action color */
+  --primary-hover-color: #0056b3; /* Darker shade for primary actions */
+  --secondary-color: #6c757d; /* Secondary action color */
+  --secondary-hover-color: #5a6268; /* Darker shade for secondary actions */
+
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 8px rgba(0,0,0,0.1);
+  --shadow-lg: 0 8px 16px rgba(0,0,0,0.15);
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+}
+
+body {
+    background: var(--bg-base); /* Updated */
+    color: var(--text-main);
+    font-family: 'Arial', sans-serif; /* Example default font */
+}
+
+/* Simple card styling for events */
+.event-card {
+    background: var(--bg-card); /* Updated */
+    border-radius: var(--border-radius-lg); /* Updated */
+    box-shadow: var(--shadow-md); /* Updated */
+    padding: 1.5rem; /* Adjusted padding */
+    margin: 0;
+    max-width: 100%;
+    width: 100%;
+    position: relative;
+    color: var(--text-main); /* Updated */
+    transition: box-shadow 0.2s, transform 0.2s; /* Added transform */
+    min-height: 600px; /* Set card height to 600px */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    box-sizing: border-box;
+    border: 1px solid var(--border-color); /* Added subtle border */
+}
+.event-card.no-image {
+    min-height: 0 !important;
+    height: auto !important;
+}
+.event-card.compact-card {
+    min-height: 0 !important;
+    height: auto !important;
+}
+.event-card.compact-card .event-description {
+    flex: 0 0 auto !important;
+    display: block !important;
+}
+.event-card:hover {
+    box-shadow: var(--shadow-lg); /* Updated */
+    transform: translateY(-5px); /* Added hover effect */
+    background: var(--bg-card); /* Keep background consistent on hover, or use --bg-hover */
+}
+.event-card img {
+    height: 260px; /* Increased height for event images */
+    object-fit: cover;
+    width: 100%;
+    border-radius: var(--border-radius-md); /* Updated */
+    margin-bottom: 1rem; /* Adjusted margin */
+}
+.event-card .event-title {
+    font-size: 1.4rem; /* Adjusted size */
+    font-weight: bold;
+    margin-bottom: 0.5rem; /* Adjusted margin */
+    color: var(--text-heading); /* Updated */
+    text-align: center; /* Centered text */
+}
+.event-card .event-address {
+    display: flex;
+    align-items: center;
+    gap: 0.5em; /* Adjusted gap */
+    color: var(--text-main); /* Updated */
+    font-size: 1rem; /* Adjusted size */
+    margin-bottom: 0.75rem; /* Adjusted margin */
+    text-decoration: none;
+    position: relative;
+}
+.event-card .address-marker {
+    width: 1.2em; /* Adjusted size */
+    height: 1.2em; /* Adjusted size */
+    display: inline-block;
+    background: none;
+    border: none;
+    padding: 0;
+    margin-right: 0.3em; /* Adjusted margin */
+    cursor: pointer;
+    position: relative;
+}
+.event-card .address-marker svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    fill: var(--link-color); /* Updated */
+    transition: fill 0.2s;
+}
+.event-card .address-marker:hover svg {
+    fill: var(--link-hover-color); /* Updated */
+}
+.event-card .address-tooltip {
+    display: none;
+    position: absolute;
+    left: 120%; /* May need adjustment based on layout */
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--bg-base); /* Updated */
+    color: var(--text-main); /* Updated */
+    padding: 1rem; /* Increased padding */
+    border-radius: var(--border-radius-md); /* Updated */
+    font-size: 0.95em;
+    white-space: nowrap;
+    box-shadow: var(--shadow-lg); /* Updated */
+    z-index: 20;
+    min-width: 420px; /* Increased width to accommodate larger map */
+    min-height: 380px; /* Increased height to accommodate info and actions */
+    width: auto; /* Allow width to adjust */
+    height: auto; /* Allow height to adjust */
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+.event-card .address-tooltip iframe {
+    width: 100%; /* Make iframe responsive */
+    height: 280px; /* Adjusted height to make room for info and actions */
+    border: 0;
+    border-radius: var(--border-radius-sm); /* Updated */
+}
+
+/* Map info and actions styling */
+.event-card .map-info {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 0.5rem;
+}
+
+.event-card .distance-info {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.event-card .distance-text {
+    color: var(--primary-color);
+}
+
+.event-card .map-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.event-card .directions-btn {
+    padding: 0.6rem 1.2rem;
+    background: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+    transition: background-color 0.2s;
+    min-width: 140px;
+}
+
+.event-card .directions-btn:hover {
+    background: var(--primary-hover-color);
+    color: white;
+    text-decoration: none;
+}
+
+.event-card .event-description {
+    margin-bottom: 1rem; /* Adjusted margin */
+    flex: 1 1 auto;
+    font-size: 0.95rem; /* Adjusted size */
+    line-height: 1.5; /* Improved readability */
+}
+.event-card.no-image .event-description {
+    flex: 0 0 auto;
+    min-height: 0;
+}
+.event-card .event-actions {
+    margin-top: auto; /* Pushes actions to the bottom */
+    padding-top: 1rem; /* Space above actions */
+    border-top: 1px solid var(--bg-accent); /* Separator line */
+}
+.event-card .event-slots {
+    font-size: 1rem; /* Adjusted size */
+    margin-bottom: 0.75rem; /* Adjusted margin */
+    color: var(--text-main);
+}
+.event-card .delete-btn {
+    position: absolute;
+    top: 1rem; /* Adjusted position */
+    right: 1rem; /* Adjusted position */
+    background: var(--danger-color); /* Updated */
+    color: var(--btn-text); /* Updated */
+    border: none;
+    border-radius: var(--border-radius-md); /* Updated */
+    padding: 0.5rem 1rem; /* Adjusted padding */
+    cursor: pointer;
+    font-size: 0.9rem; /* Adjusted size */
+    font-weight: 500;
+    box-shadow: var(--shadow-sm); /* Updated */
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+.event-card .delete-btn:hover {
+    background: var(--danger-hover-color); /* Updated */
+    box-shadow: var(--shadow-md);
+}
+.event-card .address-marker:hover .address-tooltip,
+.event-card .address-marker:focus .address-tooltip {
+    display: block;
+}
+.join-btn {
+    background: var(--btn-bg); /* Updated */
+    color: var(--btn-text); /* Updated */
+    border: none;
+    border-radius: var(--border-radius-md); /* Updated */
+    padding: 0.6rem 1.2rem; /* Adjusted padding */
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    margin-top: 0.5rem; /* Adjusted margin */
+    margin-bottom: 0.5rem; /* Adjusted margin */
+    box-shadow: var(--shadow-sm); /* Updated */
+    transition: background-color 0.2s, box-shadow 0.2s;
+    text-align: center;
+    display: inline-block;
+}
+.join-btn:hover {
+    background: var(--link-hover-color); /* Updated */
+    box-shadow: var(--shadow-md);
+}
+.join-status {
+    display: inline-block;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 1rem; /* Adjusted size */
+    color: var(--success-color); /* Updated for positive status */
+    background: var(--bg-accent); /* Updated */
+    border-radius: var(--border-radius-md); /* Updated */
+    padding: 0.4em 0.9em; /* Adjusted padding */
+    font-weight: 500;
+}
+
+.events-header-centered {
+    text-align: center;
+    font-size: 1.8em; /* Adjusted size */
+    font-weight: 700; /* Adjusted weight */
+    color: var(--text-heading); /* Updated */
+    background: var(--bg-card); /* Updated */
+    border-radius: var(--border-radius-lg); /* Updated */
+    margin: 2rem auto; /* Adjusted margin */
+    padding: 1.5rem 1rem; /* Adjusted padding */
+    max-width: 700px;
+    box-shadow: var(--shadow-md); /* Updated */
+    letter-spacing: 0.2px;
+}
+.quick-nearby-label {
+    display: inline-block;
+    background: linear-gradient(135deg, #28a745, #20c997); /* Modern gradient */
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px; /* More rounded pill shape */
+    margin-bottom: 8px;
+    font-size: 0.85em;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3); /* Subtle shadow */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle border */    transition: all 0.2s ease;
+}
+.quick-nearby-title {
+    color: var(--success-color) !important; /* Updated */
+    font-weight: bold;
+    text-shadow: none; /* Removed old shadow */
+}
+#quick-nearby-toggle-btn {
+    background: var(--btn-bg); /* Standard blue */
+    color: var(--btn-text) !important;
+    border: none;
+    border-radius: var(--border-radius-md);
+    padding: 12px 30px;
+    font-size: 1.1em;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    box-shadow: var(--shadow-sm);
+    transition: background-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    margin-bottom: 0.7em;
+    margin-top: 0.5em;
+    cursor: pointer;
+    text-shadow: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 24px; /* Ensure same gap as between other buttons */
+}
+#quick-nearby-toggle-btn:hover, #quick-nearby-toggle-btn:focus {
+    background: var(--link-hover-color);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    color: var(--btn-text) !important;
+    outline: none;
+}
+#quick-nearby-toggle-btn.active {
+    background: var(--bg-accent) !important;
+    color: var(--text-heading) !important;
+    font-weight: 700;
+    border: 1px solid var(--border-color);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+}
+#refresh-quick-nearby-btn {
+    font-size: 1.2em;
+    color: inherit;
+    filter: none;
+}
+
+.create-event-btn {
+    display: inline-block;
+    background: var(--btn-bg); /* Updated to standard blue */
+    color: var(--btn-text) !important; /* Updated */
+    border: none;
+    border-radius: var(--border-radius-md); /* Updated */
+    padding: 12px 30px; /* Adjusted padding */
+    font-size: 1.1em; /* Adjusted size */
+    font-weight: 600; /* Adjusted weight */
+    letter-spacing: 0.3px; /* Adjusted spacing */
+    box-shadow: var(--shadow-sm);
+    transition: background-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    margin-bottom: 0.7em;
+    margin-top: 0.5em;
+    cursor: pointer;
+    text-shadow: none; /* Removed old shadow */
+}
+.create-event-btn:hover, .create-event-btn:focus {
+    background: var(--link-hover-color); /* Updated to darker blue */
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    color: var(--btn-text) !important;
+    outline: none;
+}
+.interactive-map-btn {
+    display: inline-block;
+    background: var(--bg-accent); /* Updated to light grey */
+    color: var(--text-main) !important; /* Updated */
+    border: 1px solid var(--border-color); /* Added border */
+    border-radius: var(--border-radius-md); /* Updated */
+    padding: 12px 28px; /* Adjusted padding */
+    font-size: 1rem; /* Adjusted size */
+    font-weight: 600; /* Adjusted weight */
+    letter-spacing: 0.3px;
+    box-shadow: var(--shadow-sm);
+    transition: background-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    margin-bottom: 0.7em;
+    margin-top: 0.5em;
+    cursor: pointer;
+    text-shadow: none;
+    margin-left: 10px;
+    margin-left: 24px; /* Match the gap between all buttons */
+}
+.interactive-map-btn:hover, .interactive-map-btn:focus {
+    background: var(--bg-hover); /* Updated */
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    color: var(--text-main) !important;
+    outline: none;
+    border-color: var(--text-main);
+}
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    overflow: auto;
+    background: rgba(0,0,0,0.5); /* Darker overlay */
+    backdrop-filter: blur(3px); /* Added blur */
+}
+.modal-content {
+    background: var(--bg-base); /* Updated */
+    margin: 5% auto; /* Adjusted margin */
+    padding: 2rem; /* Added padding */
+    border-radius: var(--border-radius-lg); /* Updated */
+    width: 90%;
+    max-width: 800px; /* Adjusted max-width */
+    box-shadow: var(--shadow-lg); /* Updated */
+    position: relative;
+    border: 1px solid var(--border-color);
+}
+.close {
+    color: var(--text-main); /* Updated */
+    opacity: 0.7;
+    position: absolute;
+    top: 1rem; /* Adjusted position */
+    right: 1.5rem; /* Adjusted position */
+    font-size: 2em; /* Adjusted size */
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s, opacity 0.2s;
+}
+.close:hover {
+    color: var(--danger-color); /* Updated */
+    opacity: 1;
+}
+#modal-events-map {
+    min-height: 400px;
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--border-color);
+}
+
+    .back-link-ce {
+        text-decoration: none;
+        display: inline-block; /* For better spacing */
+        margin-bottom: 1.5rem; /* Increased margin */
+    }
+    .back-link-ce h2 {
+        color: var(--link-color); /* Updated */
+        font-size: 1.2rem; /* Adjusted size */
+        transition: color 0.2s;
+    }
+    .back-link-ce h2:hover {
+        color: var(--link-hover-color);
+    }
+
+    #event-create-form {
+        background-color: var(--bg-card); /* Updated */
+        padding: 2rem; /* Increased padding */
+        border-radius: var(--border-radius-lg); /* Updated */
+        box-shadow: var(--shadow-md); /* Updated */
+        border: 1px solid var(--border-color);
+    }
+
+    /* Styling for Django form.as_p elements */
+    #event-create-form p {
+        margin-bottom: 1.2rem; /* Adjusted margin */
+    }
+    #event-create-form p label {
+        color: var(--text-heading); /* Updated */
+        font-weight: 600; /* Adjusted weight */
+        display: block;
+        margin-bottom: 0.5rem; /* Adjusted margin */
+        font-size: 0.95rem;
+    }
+    #event-create-form p input[type="text"],
+    #event-create-form p input[type="email"],
+    #event-create-form p input[type="url"],
+    #event-create-form p input[type="password"],
+    #event-create-form p input[type="number"],
+    #event-create-form p input[type="date"],
+    #event-create-form p input[type="datetime-local"],
+    #event-create-form p input[type="month"],
+    #event-create-form p input[type="time"],
+    #event-create-form p input[type="week"],
+    #event-create-form p input[type="search"],
+    #event-create-form p input[type="tel"],
+    #event-create-form p select,
+    #event-create-form p textarea {
+        width: 100%;
+        padding: 10px 12px; /* Adjusted padding */
+        border: 1px solid var(--border-color); /* Updated */
+        border-radius: var(--border-radius-md); /* Updated */
+        background-color: var(--bg-base); /* Updated */
+        color: var(--text-main); /* Updated */
+        box-sizing: border-box;
+        font-size: 1rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #event-create-form p input:focus,
+    #event-create-form p select:focus,
+    #event-create-form p textarea:focus {
+        border-color: var(--btn-bg);
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        outline: none;
+    }
+    #event-create-form p input[type="checkbox"] {
+        margin-right: 8px; /* Adjusted margin */
+        vertical-align: middle;
+        height: 1.1em; width: 1.1em; /* Slightly larger checkbox */
+    }
+
+
+    /* Specific label and select outside form.as_p */
+    .form-label-ce {
+        color: var(--text-heading); /* Updated */
+        font-weight: 600;
+        display: block;
+        margin-bottom: 0.5rem;
+        margin-top: 1.2rem; /* Adjusted margin */
+        font-size: 0.95rem;
+    }
+    .form-select-ce {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border-color); /* Updated */
+        border-radius: var(--border-radius-md); /* Updated */
+        background-color: var(--bg-base); /* Updated */
+        color: var(--text-main); /* Updated */
+        box-sizing: border-box;
+        font-size: 1rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-select-ce:focus {
+        border-color: var(--btn-bg);
+        box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        outline: none;
+    }
+
+    .submit-button-ce {
+        background-color: var(--btn-bg); /* Updated */
+        color: var(--btn-text); /* Updated */
+        padding: 12px 24px; /* Adjusted padding */
+        border: none;
+        border-radius: var(--border-radius-md); /* Updated */
+        font-size: 1.05em; /* Adjusted size */
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        display: block;
+        margin-top: 2rem; /* Adjusted margin */
+        box-shadow: var(--shadow-sm);
+    }
+    .submit-button-ce:hover {
+        background-color: var(--link-hover-color); /* Updated */
+        color: var(--btn-text);
+        box-shadow: var(--shadow-md);
+    }
+
+    #map { 
+        border: 1px solid var(--border-color); /* Updated */
+        border-radius: var(--border-radius-md); /* Updated */
+        height: 350px; /* Adjusted height */
+        margin-bottom: 1.5em; /* Adjusted margin */
+    }
+
+    #radius-warning {
+        /* display: none; is inline and controlled by JS */
+        color: var(--danger-color); /* Updated */
+        background-color: #fddfe2; /* Lighter red background for warning */
+        padding: 10px;
+        border-radius: var(--border-radius-sm); /* Updated */
+        margin-top: 8px;
+        border: 1px solid var(--danger-color);
+        font-size: 0.9rem;
+    }
+
+.event-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Responsive columns */
+  gap: 1.5rem; /* Adjusted gap */
+  margin: 2rem 0; /* Adjusted margin */
+}
+
+/* Media queries can be simplified if auto-fill works well, 
+   but kept for specific breakpoint adjustments if needed. */
+@media (max-width: 1100px) {
+  .event-card-grid {
+    /* grid-template-columns: repeat(2, 1fr); */ /* Covered by auto-fill */
+  }
+}
+@media (max-width: 700px) {
+  .event-card-grid {
+    /* grid-template-columns: 1fr; */ /* Covered by auto-fill */
+    gap: 1rem; /* Smaller gap on mobile */
+  }
+  .event-card {
+    min-height: auto; /* Allow cards to be shorter on mobile */
+  }
+  .modal-content {
+    margin: 10% auto; /* More space on mobile for modal */
+    padding: 1.5rem;
+  }
+  #quick-nearby-toggle-btn, .create-event-btn, .interactive-map-btn {
+    width: 100%;
+    justify-content: center;
+    font-size: 1em;
+    padding: 8px 0; /* Reduced height from 12px to 8px */
+  }
+}
+
+/* Countdown Timer Styles */
+.event-countdown {
+    margin-top: 5px;
+}
+
+.countdown-timer {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.countdown-timer.waiting {
+    background-color: #6c757d;
+    color: white;
+}
+
+.countdown-timer.active {
+    background-color: #28a745;
+    color: white;
+}
+
+.countdown-timer.urgent {
+    background-color: #dc3545;
+    color: white;
+    animation: pulse 1s infinite;
+}
+
+.countdown-timer.ended {
+    background-color: #6c757d;
+    color: white;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+/* Event time styling improvements */
+.event-time {
+    margin-bottom: 8px;
+}
+
+.event-time small {
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Full event styling */
+.event-card.full-event {
+    opacity: 0.7;
+    border: 2px solid var(--danger-color);
+    background: #fff5f5;
+}
+
+.full-event-label {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--danger-color);
+    color: white;
+    padding: 4px 8px;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.75rem;
+    font-weight: bold;
+    z-index: 10;
+}

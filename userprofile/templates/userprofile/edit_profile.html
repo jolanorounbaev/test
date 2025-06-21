@@ -1,230 +1,32 @@
-<!DOCTYPE html>
-<script>
-function openModal(id) {
-  var modalElement = document.getElementById(id);
-  if (modalElement) {
-    modalElement.style.display = 'block';
-  } else {
-    console.error('Modal with id ' + id + ' not found.');
-  }
-}
+{% extends 'base.html' %}
 
-function closeModal(id) {
-  var modalElement = document.getElementById(id);
-  if (modalElement) {
-    modalElement.style.display = 'none';
-  } else {
-    console.error('Modal with id ' + id + ' not found.');
-  }
-}
+{% block left_sidebar %}
+{% endblock %}
 
-function saveAllProfileForms() {
-  // Submit each form via AJAX and close the parent modal if present
-  var formsToSubmit = [
-    document.querySelector('#profile-modal form'),
-    document.querySelector('#places-modal .add-place-form'),
-    document.querySelector('#achievements-modal .add-achievement-form'),
-    document.querySelector('#quotes-modal .add-quote-form'),
-    document.querySelector('#add-content-modal .add-content-form')
-  ];
-  var ajaxCalls = [];
-  formsToSubmit.forEach(function(form) {
-    if (form) {
-      var $form = $(form);
-      var formData = new FormData(form);
-      var ajaxCall = $.ajax({
-        url: $form.attr('action') || window.location.href,
-        type: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
-        headers: {'X-CSRFToken': $form.find('input[name="csrfmiddlewaretoken"]').val()}
-      });
-      ajaxCalls.push(ajaxCall);
-    }
-  });
-  $.when.apply($, ajaxCalls).done(function() {
-    // Try to close the modal in both parent and current window
-    var closed = false;
-    try {
-      if (window.parent && window.parent.document) {
-        var parentModal = window.parent.document.getElementById('editProfileModal');
-        if (parentModal) {
-          parentModal.style.display = 'none';
-          closed = true;
-        }
-      }
-    } catch (e) { console.error('Error closing parent modal:', e); }
-    var mainModal = document.getElementById('editProfileModal');
-    if (mainModal) {
-      mainModal.style.display = 'none';
-      closed = true;
-    }
-    if (!closed) {
-      console.warn('No editProfileModal found to close.');
-    }
-  });
-}
-</script>
+{% block right_sidebar %}
+{% endblock %}
 
-<script>
-// Success toast notification function
-function showSuccessToast(message) {
-  var toastId = 'success-toast-' + Date.now();
-  var defaultMessage = 'Operation completed successfully!';
-  var displayMessage = message || defaultMessage;
-  
-  // Remove any existing toasts first
-  $('.success-toast').remove();
-  
-  // Create and show the toast
-  $('body').append('<div id="' + toastId + '" class="success-toast" style="position:fixed;top:32px;left:50%;transform:translateX(-50%);background:#28a745;color:#fff;padding:16px 32px;border-radius:8px;z-index:2100;font-size:1.1em;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-weight:500;">' + displayMessage + '</div>');
-  
-  // Auto-hide after 3 seconds
-  setTimeout(function() { 
-    $('#' + toastId).fadeOut(400, function() { 
-      $(this).remove(); 
-    }); 
-  }, 3000);
-}
+{% block content %}
 
-// Make it globally available
-window.showSuccessToast = showSuccessToast;
 
-// Function to handle interest form submission manually
-function submitInterestForm() {
-    console.log('submitInterestForm called');
-    
-    // Perform client-side validation first
-    const validation = validateUserProfileInterests();    if (!validation.valid) {
-        showUserProfileInterestError(validation.error);
-        return; // Don't submit if validation fails
-    }
-    
-    var $form = $('#update-user-interests-form');
-    var formData = $form.serialize();
-    console.log('Form data serialized:', formData);
 
-    $.ajax({
-        url: $form.attr('action'),
-        type: 'POST',
-        data: formData,
-        success: function(data) {
-            console.log('AJAX success - received data:', data);
-            if (data.status === 'success') {
-                console.log('Success status confirmed, processing...');
-                // Update the interests display
-                var newInterestsListHtml = '';
-                if (data.interests && data.interests.length > 0) {
-                    data.interests.forEach(function(interest) {
-                        newInterestsListHtml += '<li>' + interest + '</li>';
-                    });
-                } else {
-                    newInterestsListHtml = '<li>No interests set yet.</li>';
-                }
-                $('#current-interests-list-profile').html(newInterestsListHtml);
-                
-                // Hide form and show display
-                hideUserProfileInterestForm();
-                
-                // Close the interests modal and show success
-                console.log('About to close modal and show toast...');
-                closeModal('update-user-interests-modal');
-                
-                // Update interests display in parent page if it exists
-                try {
-                    if (window.parent && window.parent.document) {
-                        var parentInterestsContainer = window.parent.document.querySelector('.interests-display .grid-container');
-                        if (parentInterestsContainer && data.interests) {
-                            var newInterestsHtml = '';
-                            data.interests.forEach(function(interest) {
-                                newInterestsHtml += '<div class="grid-item">' + interest + '</div>';
-                            });
-                            if (newInterestsHtml === '') {
-                                newInterestsHtml = '<div class="grid-item">No interests set yet.</div>';
-                            }
-                            parentInterestsContainer.innerHTML = newInterestsHtml;
-                        }
-                    }
-                } catch (e) {
-                    console.log('Could not update parent interests display:', e);
-                }
-                  console.log('Success handler completed');
-                
-            } else {
-                console.log('Error in response:', data);
-                let errorMsg = data.message || 'Error updating interests.';
-                if (data.errors) {
-                    for (const field in data.errors) {
-                        errorMsg += '\\n- ' + field + ': ' + data.errors[field].join(', ');
-                    }
-                }
-                alert(errorMsg);
-            }
-        },        error: function(xhr) {
-            console.log('AJAX error occurred:', xhr);
-            console.error("AJAX error:", xhr.responseText);
-            
-            // Try to parse JSON error response
-            try {
-                const errorData = JSON.parse(xhr.responseText);
-                console.log('AJAX error:', errorData);
-                
-                if (errorData.status === 'error') {
-                    let errorMsg = errorData.message || 'Error updating interests.';
-                    if (errorData.errors) {
-                        // Display field-specific errors
-                        for (const field in errorData.errors) {
-                            if (field === '__all__') {
-                                // General form errors
-                                errorMsg = errorData.errors[field].join(', ');
-                            } else {
-                                errorMsg += '\n- ' + field + ': ' + errorData.errors[field].join(', ');
-                            }
-                        }
-                    }
-                    showUserProfileInterestError(errorMsg);
-                } else {
-                    showUserProfileInterestError('An unexpected error occurred. Please try again.');
-                }
-            } catch (e) {
-                console.error('Could not parse error response:', e);
-                showUserProfileInterestError('An error occurred: ' + xhr.status + ' ' + xhr.statusText);
-            }
-        }
-    });
-}
 
-// Make it globally available
-window.submitInterestForm = submitInterestForm;
-</script>
 
 {% load static %}
 <link rel="stylesheet" href="{% static 'userprofile/css/profile.css' %}">
 <link rel="stylesheet" href="{% static 'userprofile/css/edit_profile.css' %}">
-<style>
-.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; overflow: auto; background: rgba(0,0,0,0.35); }
-.modal-content { background: #fff; margin: 5vh auto; padding: 32px 24px; border-radius: 12px; max-width: 520px; box-shadow: 0 2px 16px rgba(0,0,0,0.18); position: relative; }
-.close-modal { position: absolute; top: 12px; right: 18px; font-size: 2rem; color: #888; cursor: pointer; }
-.section-btn { margin: 12px 8px; padding: 12px 24px; border-radius: 8px; border: none; background: #f5f5f5; font-size: 1.1em; cursor: pointer; transition: background 0.2s; }
-.section-btn:hover { background: #e0e0e0; }
-/* Styles for the new interest form, similar to friend_search.html */
-.interest-section .interests-list { list-style: none; padding: 0; margin-bottom: 10px; }
-.interest-section .interests-list li { background: #e9f5ff; border: 1px solid #b3d7ff; color: #004085; padding: 5px 10px; border-radius: 4px; margin-bottom: 5px; display: inline-block; margin-right: 5px; }
-.interest-section button { padding: 8px 15px; border-radius: 5px; border: 1px solid #ccc; background-color: #f0f0f0; cursor: pointer; margin-top: 5px; margin-right: 5px; }
-.interest-section button:hover { background-color: #e0e0e0; }
-.interest-section .cancel-btn { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb;}
-.interest-section .cancel-btn:hover { background-color: #f1b0b7; }
-.interest-section form input[type="text"] { width: calc(100% - 22px); padding: 8px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
-.autocomplete-container { margin-bottom: 10px; } /* Ensure spacing for autocomplete inputs */
-</style>
 
 <!-- Edit Your Profile Modal -->
 <div id="profile-modal" class="modal">
   <div class="modal-content">
-    <div class="edit-profile-form" style="position:relative;">
-      <span class="close-modal" onclick="closeModal('profile-modal')" style="position:absolute;top:18px;right:24px;z-index:10;">&times;</span>
-      <h2>Edit Your Profile</h2>
+    <span class="close-modal" onclick="closeModal('profile-modal')">&times;</span>
+    <div class="modal-header">
+      <div class="modal-icon">👤</div>
+      <h2 class="modal-title">Edit Your Profile</h2>
+      <p class="modal-subtitle">Update your personal information</p>
+    </div>
+    <div class="modal-body">
+      <div class="edit-profile-form">
       <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="form-row">
@@ -235,24 +37,7 @@ window.submitInterestForm = submitInterestForm;
             {% else %}
               <img id="profile-picture-img" src="" alt="Profile picture preview" style="max-width:120px;max-height:120px;border-radius:50%;border:1px solid #ccc;display:none;">
             {% endif %}
-          </div>
-          <input type="file" name="profile_picture" id="{{ profile_form.profile_picture.id_for_label }}" accept="image/*">
-          <script>
-            document.addEventListener('DOMContentLoaded', function() {
-              var fileInput = document.getElementById('{{ profile_form.profile_picture.id_for_label }}');
-              var img = document.getElementById('profile-picture-img');
-              fileInput.addEventListener('change', function(e) {
-                if (fileInput.files && fileInput.files[0]) {
-                  var reader = new FileReader();
-                  reader.onload = function(ev) {
-                    img.src = ev.target.result;
-                    img.style.display = 'block';
-                  };
-                  reader.readAsDataURL(fileInput.files[0]);
-                }
-              });
-            });
-          </script>
+          </div>          <input type="file" name="profile_picture" id="{{ profile_form.profile_picture.id_for_label }}" accept="image/*">
         </div>
         <div class="form-row">
           <label for="first_name">First Name:</label>
@@ -306,13 +91,14 @@ window.submitInterestForm = submitInterestForm;
           <span class="inline-checkbox">{{ profile_form.show_sublanguage.label_tag }} {{ profile_form.show_sublanguage }}</span>
         </div>
         <div class="form-row">
-          <label for="{{ profile_form.bio.id_for_label }}">About Me:</label><br>
-          {{ profile_form.bio }}
+          <label for="{{ profile_form.bio.id_for_label }}">About Me:</label><br>          {{ profile_form.bio }}
           <span class="inline-checkbox">{{ profile_form.show_bio.label_tag }} {{ profile_form.show_bio }}</span>
-        </div>        <div class="form-row form-row-submit">
+        </div>
+        <div class="form-row form-row-submit">
           <button type="submit" name="save_profile">Save Changes <i class="fas fa-check"></i></button>
         </div>
       </form>
+      </div>
     </div>
   </div>
 </div>
@@ -321,7 +107,13 @@ window.submitInterestForm = submitInterestForm;
 <div id="places-modal" class="modal">
   <div class="modal-content">
     <span class="close-modal" onclick="closeModal('places-modal')">&times;</span>
-    <div class="edit-profile-form places-section">
+    <div class="modal-header">
+      <div class="modal-icon">🗺️</div>
+      <h2 class="modal-title">Places I've Visited</h2>
+      <p class="modal-subtitle">Add amazing places you've explored</p>
+    </div>
+    <div class="modal-body">
+      <div class="edit-profile-form places-section">
       <h2>Places I’ve Visited</h2>
       <form method="post" enctype="multipart/form-data" class="add-place-form">
         {% csrf_token %}
@@ -334,14 +126,14 @@ window.submitInterestForm = submitInterestForm;
         <h3>Your Added Places</h3>
         <div class="places-grid">
           {% for place in user.visited_places.all %}
-            <div class="place-card">
-              <img src="{{ place.image.url }}" alt="{{ place.name }}" class="edit-place-preview">
+            <div class="place-card">              <img src="{{ place.image.url }}" alt="{{ place.name }}" class="edit-place-preview">
               <p class="place-name">{{ place.name }}</p>
               <a href="{% url 'delete_place' place.id %}" class="delete-place"><i class="fas fa-trash"></i></a>
             </div>
           {% endfor %}
         </div>
       {% endif %}
+      </div>
     </div>
   </div>
 </div>
@@ -350,7 +142,13 @@ window.submitInterestForm = submitInterestForm;
 <div id="achievements-modal" class="modal">
   <div class="modal-content">
     <span class="close-modal" onclick="closeModal('achievements-modal')">&times;</span>
-    <div class="edit-profile-form achievements-section">
+    <div class="modal-header">
+      <div class="modal-icon">🏆</div>
+      <h2 class="modal-title">My Achievements</h2>
+      <p class="modal-subtitle">Showcase your accomplishments</p>
+    </div>
+    <div class="modal-body">
+      <div class="edit-profile-form achievements-section">
       <h3><i class="fas fa-trophy"></i> My Achievements</h3>
       <form method="post" enctype="multipart/form-data" class="add-achievement-form">
         {% csrf_token %}
@@ -373,6 +171,7 @@ window.submitInterestForm = submitInterestForm;
           </div>
         {% endfor %}
       </div>
+      </div>
     </div>
   </div>
 </div>
@@ -381,7 +180,13 @@ window.submitInterestForm = submitInterestForm;
 <div id="quotes-modal" class="modal">
   <div class="modal-content">
     <span class="close-modal" onclick="closeModal('quotes-modal')">&times;</span>
-    <div class="edit-profile-form quotes-section">
+    <div class="modal-header">
+      <div class="modal-icon">💬</div>
+      <h2 class="modal-title">Quotes I Live By</h2>
+      <p class="modal-subtitle">Share your favorite inspirational quotes</p>
+    </div>
+    <div class="modal-body">
+      <div class="edit-profile-form quotes-section">
       <h3>💬 Quotes I Live By</h3>
       <form method="post" class="add-quote-form">
         {% csrf_token %}
@@ -401,6 +206,7 @@ window.submitInterestForm = submitInterestForm;
           </div>
         {% endfor %}
       </div>
+      </div>
     </div>
   </div>
 </div>
@@ -409,8 +215,13 @@ window.submitInterestForm = submitInterestForm;
 <div id="add-content-modal" class="modal">
   <div class="modal-content">
     <span class="close-modal" onclick="closeModal('add-content-modal')">&times;</span>
-    <div class="edit-profile-form add-content-section">
-      <h2>Add Content Item</h2>
+    <div class="modal-header">
+      <div class="modal-icon">📸</div>
+      <h2 class="modal-title">Add Content Item</h2>
+      <p class="modal-subtitle">Share photos, videos, or other content</p>
+    </div>
+    <div class="modal-body">
+      <div class="edit-profile-form add-content-section">      <h2>Add Content Item</h2>
       <form method="post" enctype="multipart/form-data" class="add-content-form">
         {% csrf_token %}
         {{ content_form.as_p }}
@@ -418,6 +229,7 @@ window.submitInterestForm = submitInterestForm;
           <button type="submit" name="add_content">Add Content</button>
         </div>
       </form>
+      </div>
     </div>
   </div>
 </div>
@@ -426,12 +238,15 @@ window.submitInterestForm = submitInterestForm;
 <div id="update-user-interests-modal" class="modal">
   <div class="modal-content">
     <span class="close-modal" onclick="closeModal('update-user-interests-modal')">&times;</span>
+    <div class="modal-header">
+      <div class="modal-icon">🎯</div>
+      <h2 class="modal-title">Update Your Interests</h2>
+      <p class="modal-subtitle">Choose up to 3 things you're passionate about</p>
+    </div>
+    <div class="modal-body">
       <!-- Hidden data for JavaScript -->
-    <script id="user-interests-data" type="application/json">{{ user_interests_list_json|safe }}</script>
-    <script id="wordlist-data" type="application/json">{{ wordlist_json|safe }}</script>
-    
-    <h2>🎯 Update Your Interests</h2>
-    <div class="interest-section">
+      <script id="user-interests-data" type="application/json">{{ user_interests_list_json|safe }}</script>
+      <script id="wordlist-data" type="application/json">{{ wordlist_json|safe }}</script>    <div class="interest-section">
       <div id="user-interest-display">
         <p>Your current interests:</p>
         <ul class="interests-list" id="current-interests-list-profile">
@@ -449,7 +264,8 @@ window.submitInterestForm = submitInterestForm;
       <form id="update-user-interests-form" method="POST" action="{% url 'edit_profile' %}" novalidate style="display:none;" onsubmit="return false;">
         {% csrf_token %}
         <input type="hidden" name="update-interest" value="1">
-        <p>Select up to 3 interests:</p>          <label for="id_interest_1">Interest 1:</label>
+        <p>Select up to 3 interests:</p>
+        <label for="id_interest_1">Interest 1:</label>
         <div class="autocomplete-container">
             <input type="text" name="interest_1" id="id_interest_1" list="profile-interest-suggestions-1" class="interest-input-profile" maxlength="50" autocomplete="off">
             <datalist id="profile-interest-suggestions-1"></datalist>
@@ -471,6 +287,7 @@ window.submitInterestForm = submitInterestForm;
         <button type="button" onclick="hideUserProfileInterestForm()" class="cancel-btn">❌ Cancel</button>
       </form>
     </div>
+    </div>
   </div>
 </div>
 <!-- END "Update Your Interests" Modal -->
@@ -479,29 +296,34 @@ window.submitInterestForm = submitInterestForm;
 <div id="manage-content-modal" class="modal">
   <div class="modal-content">
     <span class="close-modal" onclick="closeModal('manage-content-modal')">&times;</span>
-    <div class="edit-profile-form manage-content-section">
-      <h2>📁 Manage My Content</h2>
-      <div class="content-items-list">
-        {% if user.content_items.all %}
-          {% for item in user.content_items.all %}
-            <div class="content-item-entry" style="display:flex;align-items:center;gap:10px;background:#f0f8ff;margin-bottom:12px;padding:12px 0 12px 12px;border-radius:8px;">
-              {% if item.image %}
-                <img src="{{ item.image.url }}" alt="{{ item.title }}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">
-              {% endif %}
-              <div style="flex:1;">
-                <strong>{{ item.title }}</strong>
-                {% if item.description %}<div style="font-size:0.95em;color:#555;">{{ item.description }}</div>{% endif %}
-                {% if item.youtube_url %}<div style="font-size:0.9em;color:#0077cc;">YouTube: <a href="{{ item.youtube_url }}" target="_blank">{{ item.youtube_url }}</a></div>{% endif %}
+    <div class="modal-header">
+      <div class="modal-icon">📁</div>
+      <h2 class="modal-title">Manage My Content</h2>
+      <p class="modal-subtitle">Organize and delete your content</p>    </div>
+    <div class="modal-body">
+      <div class="edit-profile-form manage-content-section">
+        <div class="content-items-list">
+          {% if user.content_items.all %}
+            {% for item in user.content_items.all %}
+              <div class="content-item-entry" style="display:flex;align-items:center;gap:10px;background:#f0f8ff;margin-bottom:12px;padding:12px 0 12px 12px;border-radius:8px;">
+                {% if item.image %}
+                  <img src="{{ item.image.url }}" alt="{{ item.title }}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;">
+                {% endif %}
+                <div style="flex:1;">
+                  <strong>{{ item.title|default:"Untitled" }}</strong>
+                  {% if item.description %}<div style="font-size:0.95em;color:#555;">{{ item.description|truncatechars:50 }}</div>{% endif %}
+                  {% if item.youtube_url %}<div style="font-size:0.9em;color:#0077cc;">YouTube: <a href="{{ item.youtube_url }}" target="_blank">{{ item.youtube_url|truncatechars:30 }}</a></div>{% endif %}
+                </div>
+                <form method="post" action="{% url 'delete_content' item.id %}" style="display:inline;margin-left:8px;">
+                  {% csrf_token %}
+                  <button type="submit" title="Delete Content" style="background:none;border:none;color:#d9534f;font-size:1.2em;cursor:pointer;">🗑️</button>
+                </form>
               </div>
-              <form method="post" action="{% url 'delete_content' item.id %}" style="display:inline;margin-left:8px;">
-                {% csrf_token %}
-                <button type="submit" title="Delete Content" style="background:none;border:none;color:#d9534f;font-size:1.2em;cursor:pointer;">🗑️</button>
-              </form>
-            </div>
-          {% endfor %}
-        {% else %}
-          <div style="color:#888;">No content items yet.</div>
-        {% endif %}
+            {% endfor %}
+          {% else %}
+            <div style="color:#888;text-align:center;padding:20px;">No content items yet. Start by adding some content!</div>
+          {% endif %}
+        </div>
       </div>
     </div>
   </div>
@@ -527,261 +349,5 @@ window.submitInterestForm = submitInterestForm;
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="{% static 'userprofile/js/interests.js' %}"></script>
-<script>
-// Ensure these functions are globally available or correctly scoped
-// for the onclick attributes in the HTML.
-
-function openModal(id) {
-  var modalElement = document.getElementById(id);
-  if (modalElement) {
-    modalElement.style.display = 'block';  } else {
-    console.error('Modal with id ' + id + ' not found.');
-  }
-}
-
-window.onclick = function(event) {
-  const modals = document.querySelectorAll('.modal');
-  modals.forEach(function(modal) {
-    if (event.target === modal) {
-      // Check if the modal being closed is the main options container
-      // If so, and it's inside an iframe, try to close the parent modal
-      if (modal.id === 'profile-options-content-box' && window.parent && window.parent.document.getElementById('editProfileModal')) {
-        try {
-          var parentModal = window.parent.document.getElementById('editProfileModal');
-          if (parentModal) {
-            parentModal.style.display = 'none';
-          }
-        } catch (e) {
-          console.error('Error closing parent modal from window.onclick:', e);
-        }      } else {
-         modal.style.display = 'none';
-      }
-    }
-  });
-};
-
-// Load initial interests into the form when editing starts (legacy function for compatibility)
-function loadCurrentInterestsIntoForm() {
-    // This function is now handled by the new interests.js file
-    if (typeof loadCurrentUserInterestsIntoForm === 'function') {
-        loadCurrentUserInterestsIntoForm();
-    }
-}
-
-// Legacy function for compatibility
-function initializeProfileInterestAutocompletes() {
-    // This function is now handled by the new interests.js file  
-    if (typeof initializeUserProfileInterestAutocomplete === 'function') {
-        initializeUserProfileInterestAutocomplete();
-    }
-}// Legacy function for compatibility - now handled by interests.js
-function loadCurrentInterestsIntoForm() {
-    if (typeof loadCurrentUserInterestsIntoForm === 'function') {
-        loadCurrentUserInterestsIntoForm();
-    }
-}
-
-$(document).ready(function() {
-    console.log('Edit profile page JavaScript loaded successfully');
-    console.log('jQuery version:', $.fn.jquery);
-    
-    // Check if the interest form exists
-    var $interestForm = $('#update-user-interests-form');
-    console.log('Interest form exists:', $interestForm.length > 0);
-    if ($interestForm.length > 0) {
-        console.log('Interest form found, attaching submit handler...');
-    }
-    
-    // AJAX for profile form
-    $('#profile-modal form').on('submit', function(e) {
-        e.preventDefault();
-        var $form = $(this);
-        var formData = new FormData(this);
-        $.ajax({
-            url: $form.attr('action') || window.location.href,
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {'X-CSRFToken': $form.find('input[name="csrfmiddlewaretoken"]').val()},
-            success: function(data) {
-                closeModal('profile-modal');
-                // Check if response is JSON and has a message (from our updated view)
-                if (data && data.message) {
-                    showProfileSuccessMessage(data.message);
-                } else {
-                    showProfileSuccessMessage(); // Original generic message
-                }
-            },
-            error: function(xhr) { // Added xhr to access responseJSON
-                // Try to parse error from backend if available
-                let errorMsg = 'Error saving profile.';
-                if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    // You might want to format this better if there are multiple errors
-                    errorMsg = "Error: " + JSON.stringify(xhr.responseJSON.errors);
-                } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMsg = xhr.responseJSON.message;
-                }
-                alert(errorMsg);
-            }
-        });
-    });
-
-    // AJAX for places form
-    $('#places-modal form').on('submit', function(e) {
-        e.preventDefault();
-        var $form = $(this);
-        var formData = new FormData(this);
-        $.ajax({
-            url: $form.attr('action') || window.location.href,
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {'X-CSRFToken': $form.find('input[name="csrfmiddlewaretoken"]').val()},
-            success: function(data) {
-                closeModal('places-modal');
-            },
-            error: function() {
-                alert('Error saving place.');
-            }
-        });
-    });
-
-    // AJAX for achievements form
-    $('#achievements-modal form').on('submit', function(e) {
-        e.preventDefault();
-        var $form = $(this);
-        var formData = new FormData(this);
-        $.ajax({
-            url: $form.attr('action') || window.location.href,
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {'X-CSRFToken': $form.find('input[name="csrfmiddlewaretoken"]').val()},
-            success: function(data) {
-                closeModal('achievements-modal');
-            },
-            error: function() {
-                alert('Error saving achievement.');
-            }
-        });
-    });
-
-    // AJAX for quotes form
-    $('#quotes-modal form').on('submit', function(e) {
-        e.preventDefault();
-        var $form = $(this);
-        var formData = new FormData(this);
-        $.ajax({
-            url: $form.attr('action') || window.location.href,
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {'X-CSRFToken': $form.find('input[name="csrfmiddlewaretoken"]').val()},
-            success: function(data) {
-                closeModal('quotes-modal');
-            },
-            error: function() {
-                alert('Error saving quote.');
-            }
-        });
-    });
-
-    // AJAX for add content form
-    $('#add-content-modal form').on('submit', function(e) {
-        e.preventDefault();
-        var $form = $(this);
-        var formData = new FormData(this);
-        $.ajax({
-            url: $form.attr('action') || window.location.href,
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            headers: {'X-CSRFToken': $form.find('input[name="csrfmiddlewaretoken"]').val()},
-            success: function(data) {
-                closeModal('add-content-modal');
-            },
-            error: function() {                alert('Error saving content.');
-            }        });
-    });
-
-    // Clean AJAX handler for interest updates
-    $('#update-user-interests-form').on('submit', function(e) {
-        console.log('Form submission intercepted by AJAX handler');
-        e.preventDefault();
-        e.stopPropagation();
-        var $form = $(this);
-        var formData = $form.serialize();
-
-        $.ajax({
-            url: $form.attr('action'),
-            type: 'POST',
-            data: formData,
-            success: function(data) {
-                if (data.status === 'success') {
-                    // Update the interests display
-                    var newInterestsListHtml = '';
-                    if (data.interests && data.interests.length > 0) {
-                        data.interests.forEach(function(interest) {
-                            newInterestsListHtml += '<li>' + interest + '</li>';
-                        });
-                    } else {
-                        newInterestsListHtml = '<li>No interests set yet.</li>';
-                    }
-                    $('#current-interests-list-profile').html(newInterestsListHtml);
-                      // Hide form and show display
-                    hideUserProfileInterestForm();
-                    
-                    // Close the interests modal and show success
-                    closeModal('update-user-interests-modal');
-                    
-                    // Update interests display in parent page if it exists                    try {
-                        if (window.parent && window.parent.document) {
-                            var parentInterestsContainer = window.parent.document.querySelector('.interests-display .grid-container');
-                            if (parentInterestsContainer && data.interests) {
-                                var newInterestsHtml = '';
-                                data.interests.forEach(function(interest) {
-                                    newInterestsHtml += '<div class="grid-item">' + interest + '</div>';
-                                });
-                                if (newInterestsHtml === '') {
-                                    newInterestsHtml = '<div class="grid-item">No interests set yet.</div>';
-                                }
-                                parentInterestsContainer.innerHTML = newInterestsHtml;
-                            }
-                        }
-                    } catch (e) {
-                        console.log('Could not update parent interests display:', e);
-                    }
-                    console.log('Success handler completed');
-                    
-                } else {
-                    console.log('Error in response:', data);
-                    let errorMsg = data.message || 'Error updating interests.';
-                    if (data.errors) {
-                        for (const field in data.errors) {
-                            errorMsg += '\\n- ' + field + ': ' + data.errors[field].join(', ');
-                        }
-                    }
-                    alert(errorMsg);
-                }
-            },
-            error: function(xhr) {
-                alert('An error occurred: ' + xhr.status + ' ' + xhr.statusText);
-                console.error("AJAX error:", xhr.responseText);
-            }
-        });
-    });
-
-});
-
-function showProfileSuccessMessage(message) { // Added message parameter
-  if ($('#profile-success-msg').length === 0) {
-    const displayMessage = message || 'Profile updated successfully!'; // Use provided message or default
-    $('body').append(`<div id="profile-success-msg" style="position:fixed;top:32px;left:50%;transform:translateX(-50%);background:#4fd18b;color:#fff;padding:18px 32px;border-radius:8px;z-index:2000;font-size:1.2em;box-shadow:0 2px 12px rgba(0,0,0,0.12);">${displayMessage}</div>`);
-    setTimeout(function() { $('#profile-success-msg').fadeOut(400, function() { $(this).remove(); }); }, 2500);
-  }
-}
+<script src="{% static 'userprofile/js/edit_profile.js' %}"></script>
+{% endblock %}

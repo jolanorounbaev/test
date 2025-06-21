@@ -199,8 +199,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
+    BASE_DIR / "friendsearch" / "static",  # Put friendsearch first to avoid conflicts
     BASE_DIR / "static",
-    BASE_DIR / "friendsearch" / "static",
     BASE_DIR / "posts" / "static",  
     BASE_DIR / "userprofile" / "static",
     BASE_DIR / "registerandlogin" / "static",

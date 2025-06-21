@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 import logging
 import json
-from .wordlist import WORDLIST, autocomplete_suggestions  
+from .wordlist import WORDLIST, autocomplete_suggestions, enhanced_autocomplete_suggestions  
 # Ensure InterestUpdateForm and InterestSearchForm are imported
 from .forms import InterestUpdateForm, InterestSearchForm 
 import re
@@ -24,16 +24,29 @@ from chat.models import ChatRoom
 
 def calculate_match_score(user1, user2):
     score = 0
-    total = 3  # 3 interests + 1 language
+    total_points = 10  # Total possible points
 
-    # Interests
-    user1_interests = set([i.lower() for i in user1.interests if i])  # up to 3
+    # Interests matching (up to 6 points - 2 points per common interest)
+    user1_interests = set([i.lower() for i in user1.interests if i])
     user2_interests = set([i.lower() for i in user2.interests if i])
     common_interests = user1_interests.intersection(user2_interests)
-    score += min(len(common_interests), 3)
+    interest_score = min(len(common_interests) * 2, 6)  # Max 6 points for interests
+    score += interest_score
 
+    # Language matching (2 points if same language)
+    if hasattr(user1, 'main_language') and hasattr(user2, 'main_language'):
+        if user1.main_language and user2.main_language and user1.main_language == user2.main_language:
+            score += 2
 
-    return round((score / total) * 10)
+    # Age compatibility (2 points for similar age)
+    if user1.get_age() and user2.get_age():
+        age_diff = abs(user1.get_age() - user2.get_age())
+        if age_diff <= 2:
+            score += 2
+        elif age_diff <= 5:
+            score += 1
+
+    return round((score / total_points) * 100)
 
 def get_language_code_from_label(label):
     if not label:
@@ -211,17 +224,13 @@ def friend_search_view(request):
                 if posted_pref_other_form.errors:
                     for field, errors_list in posted_pref_other_form.errors.items():
                         for error in errors_list: messages.error(request, f"Other Preferences Error ({field}): {error}")
-        
-        # Common AJAX response for POSTs that modify data and re-render page portions
+          # Common AJAX response for POSTs that modify data and re-render page portions
         if is_ajax and not (request.POST.get('latitude') and request.POST.get('longitude')): # Exclude location as it has its own JSON response
-             # Ensure all forms are correctly representing the latest state for the template
-            return render(request, "friendsearch/friend_search.html", {
-                'update_form': update_form, # User's own interests form
-                'pref_update_form': pref_update_form, # Preferred interests form for modal
-                'search_form': search_form, # Main search form / other prefs for modal
-                'results': results, # Typically None for these POST actions
-                'wordlist_json': json.dumps(WORDLIST),
-                'saved_search_preferences': { # Pass explicitly for template if needed beyond forms
+            # Return JSON response for AJAX requests
+            return JsonResponse({
+                'success': True,
+                'message': 'Data saved successfully',
+                'saved_search_preferences': {
                     'interests': getattr(user, 'preferred_search_interests', []),
                     'language': getattr(user, 'preferred_search_language', ''),
                     'age_mode': getattr(user, 'preferred_search_age_mode', ''),
@@ -235,12 +244,27 @@ def friend_search_view(request):
         # Consider adding redirects for non-AJAX success for these too for PRG pattern.
         # e.g. after successful 'update-interest' or 'description' or 'save_search_preferences' if not is_ajax: return redirect('friend_search')
         
-    # --- GET Request Handling (Actual Search or Page Load) ---
-    elif request.method == 'GET':
+    # --- GET Request Handling (Actual Search or Page Load) ---    elif request.method == 'GET':
         print(f"🔍 [DEBUG] GET request processing started")
         if request.GET: # If there are GET parameters, it's an attempt to search
             print(f"🔍 [DEBUG] GET request with parameters: {dict(request.GET)}")
-            search_form = InterestSearchForm(request.GET, prefix="search") # Bind to GET data
+            
+            # Create a modified request.GET that uses the form field names without prefixes
+            # This is to handle the search form that uses prefixed field names
+            modified_get = request.GET.copy()
+            
+            # Map prefixed search form field names to expected form field names
+            for i in range(1, 4):
+                search_key = f'search-interest_{i}'
+                if search_key in modified_get:
+                    modified_get[f'interest_{i}'] = modified_get[search_key]
+                    
+            for field in ['main_language', 'radius_km', 'age_filtering_mode']:
+                search_key = f'search-{field}'
+                if search_key in modified_get:
+                    modified_get[field] = modified_get[search_key]
+            
+            search_form = InterestSearchForm(modified_get, prefix="search") # Bind to modified GET data
             print(f"🔍 [DEBUG] Search form created, about to validate...")
             print(f"🔍 [DEBUG] Search form valid: {search_form.is_valid()}")
             if not search_form.is_valid():
@@ -325,8 +349,7 @@ def friend_search_view(request):
                         # Exclude self, apply filters
                         raw_users = CustomUser.objects.exclude(id=user.id).filter(filters).distinct()
                         print(f"  - Raw users count (before interest filtering): {raw_users.count()}")
-                        
-                        # DEBUG: Let's see what interests the first few users have
+                          # DEBUG: Let's see what interests the first few users have
                         for i, raw_user in enumerate(raw_users[:3]):
                             user_interests = getattr(raw_user, 'interests', []) or []
                             print(f"  - User {i+1} (ID: {raw_user.id}, {raw_user.first_name}): interests = {user_interests}")
@@ -363,7 +386,11 @@ def friend_search_view(request):
                                 if not chat_room:
                                     chat_room = ChatRoom.objects.create(is_group=False)
                                     chat_room.participants.add(user, other_user)
-                                processed_results.append({'user': other_user, 'score': score, 'chat_room_id': chat_room.id})
+                                processed_results.append({
+                                    'user': other_user, 
+                                    'score': score, 
+                                    'chat_room_id': chat_room.id
+                                })
                         
                         print(f"  - Users with matching interests: {interest_match_count}")
                         print(f"  - Users with score > 0: {score_filter_count}")
@@ -421,54 +448,49 @@ def edit_interests_inline(request):
     return redirect("friend_search")
 
 @login_required
+@login_required
 def your_friends(request):
- return render(request, 'friendsearch/your_friends.html')
+    from notifications.models import get_friends, FriendRequest
+    
+    # Get user's friends
+    friends = get_friends(request.user)
+    
+    # Get pending friend requests
+    friend_requests = FriendRequest.objects.filter(
+        to_user=request.user, 
+        accepted=False, 
+        declined=False
+    ).select_related('from_user').order_by('-timestamp')
+    
+    context = {
+        'friends': friends,
+        'friend_requests': friend_requests,
+        'friend_requests_count': friend_requests.count(),
+    }
+    
+    return render(request, 'friendsearch/your_friends.html', context)
 
 def autocomplete_view(request):
     query = request.GET.get('q', '').strip().lower()
     if not query or len(query) > 50:
         return JsonResponse([], safe=False)
 
-    suggestions = set()
-
-    # 1. Use optimized wordlist autocomplete
-    suggestions.update(autocomplete_suggestions(query, max_results=20))
-
-    # 2. User interests (prefix/substring, normalized, deduped)
-    if len(query) >= 2:
-        interest_query = Q()
-        for term in query.split():
-            interest_query |= Q(interests__icontains=term)
-        user_interests = (
-            CustomUser.objects
-            .filter(interest_query)
-            .exclude(interests__isnull=True)
-            .values_list('interests', flat=True)
-            .distinct()[:100]
-        )
-        for interests in user_interests:
-            if not interests:
-                continue
-            for interest in interests.split(','):
-                interest = interest.strip()
-                if not interest:
-                    continue
-                norm = interest.lower()
-                if norm.startswith(query) or query in norm:
-                    suggestions.add(interest)
-
-    # 3. Sort: exact > prefix > substring > shorter > alpha
-    def sort_key(word):
-        w = word.lower()
-        return (
-            w != query,                # exact match first
-            not w.startswith(query),   # then prefix
-            query not in w,            # then substring
-            len(w),                    # shorter first
-            w                          # alpha
-        )
-    sorted_suggestions = sorted(suggestions, key=sort_key)
-    return JsonResponse(sorted_suggestions[:20], safe=False)
+    try:
+        # 1. Primary source: Wordlist (highest priority)
+        wordlist_suggestions = enhanced_autocomplete_suggestions(query, max_results=15)
+        
+        # For debugging - let's add some logging
+        print(f"🔍 [AUTOCOMPLETE] Query: '{query}', Found {len(wordlist_suggestions)} suggestions")
+        print(f"🔍 [AUTOCOMPLETE] First 5 suggestions: {wordlist_suggestions[:5]}")
+        
+        # Return the suggestions directly (Typeahead expects a simple array)
+        return JsonResponse(wordlist_suggestions, safe=False)
+        
+    except Exception as e:
+        print(f"🔍 [AUTOCOMPLETE ERROR] {e}")
+        # Fallback to basic wordlist search
+        basic_suggestions = autocomplete_suggestions(query, max_results=15)
+        return JsonResponse(basic_suggestions, safe=False)
 
 @login_required
 @require_POST
@@ -505,3 +527,83 @@ def send_friend_request(request):
 
     except Exception as e:
         return JsonResponse({'success': False, 'message': f'Server error: {str(e)}'})
+
+@login_required
+def search_people(request):
+    """Search for people in the database"""
+    query = request.GET.get('q', '').strip()
+    
+    if len(query) < 2:
+        return JsonResponse({'users': []})
+    
+    # Search users by name or email (excluding current user)
+    users = CustomUser.objects.filter(
+        Q(first_name__icontains=query) | 
+        Q(last_name__icontains=query) | 
+        Q(email__icontains=query)
+    ).exclude(id=request.user.id)[:20]  # Limit to 20 results
+    
+    # Convert to JSON-serializable format
+    users_data = []
+    for user in users:
+        users_data.append({
+            'id': user.id,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'full_name': user.full_name,
+            'email': user.email,
+            'bio': user.bio,
+            'profile_picture': user.profile_picture.url if user.profile_picture else None,
+        })
+    
+    return JsonResponse({'users': users_data})
+
+@login_required
+@require_POST
+def remove_friend(request, friend_id):
+    """Remove a friend from user's friend list"""
+    from notifications.models import Friendship
+    
+    try:
+        friend = CustomUser.objects.get(id=friend_id)
+        
+        # Remove friendship in both directions
+        Friendship.objects.filter(
+            Q(user1=request.user, user2=friend) | 
+            Q(user1=friend, user2=request.user)
+        ).delete()
+        
+        return JsonResponse({
+            'success': True, 
+            'message': f'{friend.full_name} has been removed from your friends.'
+        })
+        
+    except CustomUser.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'User not found.'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': f'Error: {str(e)}'})
+
+@login_required
+def friend_requests_json(request):
+    """Get friend requests as JSON for AJAX calls"""
+    requests = FriendRequest.objects.filter(
+        to_user=request.user, 
+        accepted=False, 
+        declined=False
+    ).select_related('from_user').order_by('-timestamp')
+    
+    requests_data = []
+    for req in requests:
+        requests_data.append({
+            'id': req.id,
+            'from_user': {
+                'id': req.from_user.id,
+                'first_name': req.from_user.first_name,
+                'last_name': req.from_user.last_name,
+                'full_name': req.from_user.full_name,
+                'profile_picture': req.from_user.profile_picture.url if req.from_user.profile_picture else None,
+            },
+            'timestamp': req.timestamp.isoformat(),
+        })
+    
+    return JsonResponse({'requests': requests_data})

@@ -1,251 +1,1036 @@
-// ==================== //
-// Main Initialization
-// ==================== //
+/* ==================== */
+/* Friend Search JavaScript - Migrated from inline scripts */
+/* ==================== */
+
+// Global variables
+let isLocationLoading = false;
+let autocompleteCache = {};
+let autocompleteRequests = {};
+
+// Initialize everything when document is ready
 $(document).ready(function() {
-    // Initialize all components
-    initializeTypeaheads();
-    // setupEventHandlers();
-    
-    // Debugging
-    // logWordlistData();
+  initializeAutocomplete();
+  initializeCharacterCounter();
+  setupFormSubmissions();
+  handleDjangoMessagesFromData(); // Handle any Django messages
+  initializeModals(); // Initialize modal functionality
 });
 
-// ==================== //
-// Core Functions
-// ==================== //
-
-/**
- * Toggle between interest display and edit form
- * @param {boolean} showForm - Whether to show the form
- */
-function toggleEdit(showForm) {
-    const $interestDisplay = $('#interest-display');
-    const $interestForm = $('#interest-form');
+// Initialize custom autocomplete for all interest inputs
+function initializeAutocomplete() {
+  console.log('Initializing custom autocomplete...');
+  
+  $('.autocomplete-container input').each(function() {
+    const $input = $(this);
+    const $container = $input.closest('.autocomplete-container');
     
-    if (showForm) {
-        $interestDisplay.hide();
-        $interestForm.show();
-        // Reinitialize typeahead after form is visible
-        setTimeout(initializeTypeaheads, 50);
-    } else {
-        $interestDisplay.show();
-        $interestForm.hide();
+    // Create dropdown if it doesn't exist
+    let $dropdown = $container.find('.autocomplete-dropdown');
+    if ($dropdown.length === 0) {
+      $dropdown = $('<div class="autocomplete-dropdown"></div>');
+      $container.append($dropdown);
     }
+    
+    // Clear existing event handlers to prevent duplicates
+    $input.off('input.autocomplete keydown.autocomplete blur.autocomplete focus.autocomplete');
+    
+    // Input event for autocomplete
+    $input.on('input.autocomplete', function() {
+      const query = $(this).val().trim();
+      
+      if (query.length < 1) {
+        hideDropdown($dropdown);
+        return;
+      }
+      
+      // Show loading state
+      showLoadingDropdown($dropdown);
+      
+      // Debounce the request
+      clearTimeout($input.data('autocomplete-timeout'));
+      $input.data('autocomplete-timeout', setTimeout(() => {
+        fetchSuggestions(query, $dropdown, $input);
+      }, 200));
+    });
+    
+    // Keyboard navigation
+    $input.on('keydown.autocomplete', function(e) {
+      const $dropdown = $container.find('.autocomplete-dropdown');
+      const $items = $dropdown.find('.autocomplete-item');
+      const $active = $items.filter('.active');
+      
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if ($active.length === 0) {
+          $items.first().addClass('active');
+        } else {
+          const nextIndex = $items.index($active) + 1;
+          $active.removeClass('active');
+          if (nextIndex < $items.length) {
+            $items.eq(nextIndex).addClass('active');
+          } else {
+            $items.first().addClass('active');
+          }
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if ($active.length === 0) {
+          $items.last().addClass('active');
+        } else {
+          const prevIndex = $items.index($active) - 1;
+          $active.removeClass('active');
+          if (prevIndex >= 0) {
+            $items.eq(prevIndex).addClass('active');
+          } else {
+            $items.last().addClass('active');
+          }
+        }
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if ($active.length > 0) {
+          const value = $active.text();
+          $input.val(value);
+          hideDropdown($dropdown);
+          validateInterestInput($input, value);
+        }
+      } else if (e.key === 'Escape') {
+        hideDropdown($dropdown);
+      }
+    });
+    
+    // Hide dropdown on blur (with delay to allow for clicks)
+    $input.on('blur.autocomplete', function() {
+      setTimeout(() => {
+        if (!$container.find('.autocomplete-dropdown:hover').length) {
+          hideDropdown($dropdown);
+        }
+      }, 150);
+    });
+    
+    // Show dropdown on focus if there's content
+    $input.on('focus.autocomplete', function() {
+      const query = $(this).val().trim();
+      if (query.length >= 1) {
+        fetchSuggestions(query, $dropdown, $input);
+      }
+    });
+  });
+  
+  // Handle dropdown item clicks
+  $(document).on('click', '.autocomplete-item', function() {
+    const $item = $(this);
+    const $dropdown = $item.closest('.autocomplete-dropdown');
+    const $container = $dropdown.closest('.autocomplete-container');
+    const $input = $container.find('input');
+    const value = $item.text();
+    
+    $input.val(value);
+    hideDropdown($dropdown);
+    validateInterestInput($input, value);
+    $input.focus();
+  });
+  
+  // Close dropdowns when clicking outside
+  $(document).on('click', function(e) {
+    if (!$(e.target).closest('.autocomplete-container').length) {
+      $('.autocomplete-dropdown').hide();
+    }
+  });
 }
 
-/**
- * Get user's current location
- */
+// Fetch suggestions from backend
+function fetchSuggestions(query, $dropdown, $input) {
+  // Check cache first
+  if (autocompleteCache[query]) {
+    displaySuggestions(autocompleteCache[query], $dropdown, query);
+    return;
+  }
+  
+  // Cancel previous request for this input
+  const inputId = $input.attr('id') || 'default';
+  if (autocompleteRequests[inputId]) {
+    autocompleteRequests[inputId].abort();
+  }
+  
+  // Make new request
+  autocompleteRequests[inputId] = $.ajax({
+    url: '/friendsearch/autocomplete/',
+    method: 'GET',
+    data: { q: query },
+    timeout: 5000,
+    success: function(response) {
+      console.log('Autocomplete response:', response);
+      if (Array.isArray(response)) {
+        // Cache the result
+        autocompleteCache[query] = response;
+        displaySuggestions(response, $dropdown, query);
+      } else {
+        showErrorDropdown($dropdown, 'Invalid response format');
+      }
+    },
+    error: function(xhr, status, error) {
+      if (status !== 'abort') {
+        console.error('Autocomplete error:', error);
+        showErrorDropdown($dropdown, 'Failed to load suggestions');
+      }
+    },
+    complete: function() {
+      delete autocompleteRequests[inputId];
+    }
+  });
+}
+
+// Display suggestions in dropdown
+function displaySuggestions(suggestions, $dropdown, query) {
+  if (!suggestions || suggestions.length === 0) {
+    showEmptyDropdown($dropdown);
+    return;
+  }
+  
+  const html = suggestions.map(suggestion => {
+    // Highlight matching text
+    const highlighted = suggestion.replace(
+      new RegExp('(' + escapeRegex(query) + ')', 'gi'), 
+      '<strong>$1</strong>'
+    );
+    return `<div class="autocomplete-item">
+      <i class="bi bi-tag me-2"></i>${highlighted}
+    </div>`;
+  }).join('');
+  
+  $dropdown.html(html).show();
+  
+  // Position dropdown
+  positionDropdown($dropdown);
+}
+
+// Show loading state
+function showLoadingDropdown($dropdown) {
+  $dropdown.html(`
+    <div class="autocomplete-loading">
+      <i class="bi bi-hourglass me-2"></i>Searching...
+    </div>
+  `).show();
+  positionDropdown($dropdown);
+}
+
+// Show empty state
+function showEmptyDropdown($dropdown) {
+  $dropdown.html(`
+    <div class="autocomplete-empty">
+      <i class="bi bi-search me-2"></i>No matches found
+    </div>
+  `).show();
+  positionDropdown($dropdown);
+}
+
+// Show error state
+function showErrorDropdown($dropdown, message) {
+  $dropdown.html(`
+    <div class="autocomplete-error">
+      <i class="bi bi-exclamation-triangle me-2"></i>${message}
+    </div>
+  `).show();
+  positionDropdown($dropdown);
+}
+
+// Hide dropdown
+function hideDropdown($dropdown) {
+  $dropdown.hide().find('.autocomplete-item').removeClass('active');
+}
+
+// Position dropdown below input
+function positionDropdown($dropdown) {
+  const $container = $dropdown.closest('.autocomplete-container');
+  const $input = $container.find('input');
+  
+  // Reset positioning
+  $dropdown.css({
+    position: 'absolute',
+    top: $input.outerHeight(),
+    left: 0,
+    right: 0,
+    zIndex: 1050
+  });
+}
+
+// Escape regex special characters
+function escapeRegex(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Validate interest input against wordlist
+function validateInterestInput($input, value) {
+  // Simple client-side validation - can be enhanced
+  if (value.length > 0 && value.length < 2) {
+    $input.addClass('is-invalid');
+    showValidationTooltip($input, 'Interest must be at least 2 characters long');
+  } else if (value.length > 50) {
+    $input.addClass('is-invalid');
+    showValidationTooltip($input, 'Interest must be less than 50 characters');
+  } else {
+    $input.removeClass('is-invalid').addClass('is-valid');
+    hideValidationTooltip($input);
+  }
+}
+
+// Show validation tooltip
+function showValidationTooltip($input, message) {
+  // Remove existing tooltip
+  hideValidationTooltip($input);
+  
+  const tooltip = $(`<div class="validation-tooltip">${message}</div>`);
+  $input.parent().append(tooltip);
+  
+  // Position tooltip
+  const inputPos = $input.position();
+  tooltip.css({
+    position: 'absolute',
+    top: inputPos.top + $input.outerHeight() + 5,
+    left: inputPos.left,
+    background: '#dc3545',
+    color: 'white',
+    padding: '4px 8px',
+    borderRadius: '4px',
+    fontSize: '12px',
+    zIndex: 1001,
+    whiteSpace: 'nowrap'
+  });
+  
+  // Auto-hide after 3 seconds
+  setTimeout(() => hideValidationTooltip($input), 3000);
+}
+
+// Hide validation tooltip
+function hideValidationTooltip($input) {
+  $input.parent().find('.validation-tooltip').remove();
+}
+
+// Character counter for description
+function initializeCharacterCounter() {
+  $('textarea[name="description"]').on('input', function() {
+    const length = $(this).val().length;
+    $('#desc-char-count').text(length);
+    
+    // Change color based on character count
+    if (length > 140) {
+      $('#desc-char-count').addClass('text-warning');
+    } else if (length > 120) {
+      $('#desc-char-count').addClass('text-info');
+    } else {
+      $('#desc-char-count').removeClass('text-warning text-info');
+    }
+  });
+}
+
+// Show toast notifications
+function showToast(type, message) {
+  // No notification needed - silent success
+}
+
+// Setup form submissions
+function setupFormSubmissions() {  // Edit interests form
+  $('#editInterestsForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const $submitBtn = $(this).find('button[type="submit"]');
+    const originalText = $submitBtn.html();
+    
+    // Show loading state
+    $submitBtn.html('<span class="loading"></span> Saving...').prop('disabled', true);
+    
+    $.ajax({
+      url: window.location.href,
+      method: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,      success: function(response) {
+        if (response.status === 'success') {          // Show success state on button briefly
+          $submitBtn.html('<i class="bi bi-check-circle"></i> Successfully Saved!').removeClass('btn-primary-custom').addClass('btn-success');
+          
+          // Update interests display immediately
+          updateInterestsDisplay(response.interests);
+          
+          // Close modal instantly after brief success indication
+          setTimeout(() => {
+            const modal = $('#editInterestsModal');
+            modal.attr('data-can-close', 'true');
+            hideModal(modal);
+            
+            // Reset button after modal is closed
+            setTimeout(() => {
+              $submitBtn.html(originalText).removeClass('btn-success').addClass('btn-primary-custom').prop('disabled', false);
+            }, 100);
+          }, 500);
+        } else {
+          showToast('error', response.message || 'An error occurred');
+          $submitBtn.html(originalText).prop('disabled', false);
+        }
+      },
+      error: function(xhr) {
+        const response = xhr.responseJSON;
+        if (response && response.message) {
+          showToast('error', response.message);
+        } else {
+          showToast('error', 'An error occurred while saving');
+        }
+        $submitBtn.html(originalText).prop('disabled', false);
+      }
+    });
+  });
+  // Search preferences form
+  $('#searchPreferencesForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const $submitBtn = $(this).find('button[type="submit"]');
+    const originalText = $submitBtn.html();
+    
+    // Show loading state
+    $submitBtn.html('<span class="loading"></span> Saving...').prop('disabled', true);
+    
+    $.ajax({
+      url: window.location.href,
+      method: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,      success: function(response) {
+        // Show success state on button briefly
+        $submitBtn.html('<i class="bi bi-check-circle"></i> Successfully Saved!').removeClass('btn-primary-custom').addClass('btn-success');
+        
+        // Update the search preferences display immediately
+        updateSearchPreferencesDisplay();
+        
+        // Close modal instantly after brief success indication
+        setTimeout(() => {
+          const modal = $('#searchPreferencesModal');
+          modal.attr('data-can-close', 'true');
+          hideModal(modal);
+          
+          // Reset button after modal is closed
+          setTimeout(() => {
+            $submitBtn.html(originalText).removeClass('btn-success').addClass('btn-primary-custom').prop('disabled', false);
+          }, 100);
+        }, 500);
+      },
+      error: function() {
+        showToast('error', 'An error occurred while saving preferences');
+        $submitBtn.html(originalText).prop('disabled', false);
+      }
+    });
+  });
+}
+
+// Update interests display in the UI
+function updateInterestsDisplay(interests) {
+  const $interestsDisplay = $('.interests-display');
+  const $currentInterests = $('.current-interests');
+  
+  if (interests && interests.length > 0) {
+    const interestTags = interests.map(interest => 
+      `<span class="interest-tag">${interest}</span>`
+    ).join('');
+    
+    $interestsDisplay.html(interestTags);
+    $currentInterests.find('.no-interests').hide();
+  } else {
+    $interestsDisplay.empty();
+    $currentInterests.find('.no-interests').show();
+  }
+}
+
+// Update search preferences display in the UI
+function updateSearchPreferencesDisplay() {
+  console.log('updateSearchPreferencesDisplay called');
+  
+  const $form = $('#searchPreferencesForm');
+  
+  // Get the form values
+  const interests = [];
+  if ($form.find('input[name="pref-interest_1"]').val().trim()) {
+    interests.push($form.find('input[name="pref-interest_1"]').val().trim());
+  }
+  if ($form.find('input[name="pref-interest_2"]').val().trim()) {
+    interests.push($form.find('input[name="pref-interest_2"]').val().trim());
+  }
+  if ($form.find('input[name="pref-interest_3"]').val().trim()) {
+    interests.push($form.find('input[name="pref-interest_3"]').val().trim());
+  }
+  
+  const language = $form.find('select[name="search-main_language"]').val();
+  const languageText = $form.find('select[name="search-main_language"] option:selected').text();
+  const radius = $form.find('select[name="search-radius_km"]').val();
+  const radiusText = $form.find('select[name="search-radius_km"] option:selected').text();
+  
+  console.log('Form values extracted:', {
+    interests: interests,
+    language: language,
+    languageText: languageText,
+    radius: radius,
+    radiusText: radiusText
+  });
+  
+  // Update the search preferences card using a more reliable selector
+  const $preferencesDiv = $('.action-card').filter(function() {
+    return $(this).find('h3').text().includes('Search Preferences');
+  }).find('.mb-3');
+  
+  console.log('Found preferences div:', $preferencesDiv.length);
+  
+  if (interests.length > 0 || language || radius) {
+    // Show preferences and potentially add "Find Friends" button if not exists
+    const interestsText = interests.length > 0 ? interests.join(', ') : 'None';
+    const langText = language ? languageText : 'Any';
+    const rangeText = radius ? radiusText : '10km';
+    
+    const truncatedInterests = interestsText.length > 40 ? interestsText.substring(0, 37) + '...' : interestsText;
+    
+    console.log('Updating with:', {
+      truncatedInterests: truncatedInterests,
+      langText: langText,
+      rangeText: rangeText
+    });
+    
+    $preferencesDiv.html(`
+      <small class="text-muted">
+        <strong>Interests:</strong> ${truncatedInterests}<br>
+        <strong>Language:</strong> ${langText}<br>
+        <strong>Range:</strong> ${rangeText}
+      </small>
+    `);
+    
+    // Add "Find Friends" button if preferences are saved and button doesn't exist
+    // Use a more reliable check
+    if ($('button').filter(function() { return $(this).text().includes('Find Friends'); }).length === 0) {
+      console.log('Adding Find Friends button');
+      $('.action-cards').after(`
+        <div class="text-center mt-4 mb-4">
+          <button type="button" class="btn btn-primary-custom btn-lg" onclick="searchWithPreferences()">
+            <i class="bi bi-search"></i>
+            Find Friends
+          </button>
+          <p class="text-muted mt-2">
+            Search using your saved preferences
+          </p>
+        </div>
+      `);
+    } else {
+      console.log('Find Friends button already exists');
+    }
+  } else {
+    $preferencesDiv.html('<small class="text-muted">No preferences saved yet</small>');
+    
+    // Remove "Find Friends" button if no preferences
+    $('button').filter(function() { return $(this).text().includes('Find Friends'); }).closest('.text-center').remove();
+  }
+}
+
+// Location functionality
 function getLocation() {
-    if (!navigator.geolocation) {
-        showAlert("Geolocation is not supported by your browser.", 'error');
+  if (isLocationLoading) return;
+  
+  const $btn = $('#location-btn-text');
+  const originalText = $btn.text();
+  
+  if (!navigator.geolocation) {
+    showToast('error', 'Geolocation is not supported by your browser');
+    return;
+  }
+  
+  isLocationLoading = true;
+  $btn.html('<span class="loading"></span> Getting location...');
+  
+  navigator.geolocation.getCurrentPosition(
+    function(position) {
+      $('#latitude').val(position.coords.latitude);
+      $('#longitude').val(position.coords.longitude);
+      
+      // Submit the form
+      $('#locationForm').submit();
+      
+      showToast('success', 'Location updated successfully!');
+    },
+    function(error) {
+      let errorMessage = 'Could not retrieve your location. ';
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          errorMessage += 'Please allow location access.';
+          break;
+        case error.POSITION_UNAVAILABLE:
+          errorMessage += 'Location information is unavailable.';
+          break;
+        case error.TIMEOUT:
+          errorMessage += 'Location request timed out.';
+          break;
+        default:
+          errorMessage += 'An unknown error occurred.';
+          break;
+      }
+      showToast('error', errorMessage);
+      isLocationLoading = false;
+      $btn.text(originalText);
+    },
+    { 
+      timeout: 10000,
+      enableHighAccuracy: true,
+      maximumAge: 300000 // 5 minutes
+    }
+  );
+}
+
+// Start chat function
+function startChat(chatRoomId) {
+  // Implement chat functionality
+  window.location.href = `/chat/room/${chatRoomId}/`;
+}
+
+// Reset search function
+function resetSearch() {
+  // Clear all search form inputs
+  $('#search_form input[type="text"]').val('');
+  $('#search_form select').prop('selectedIndex', 0);
+  $('#search_form input[type="radio"]').prop('checked', false);
+  
+  // Check the "Any age" radio button by default
+  $('#age_any').prop('checked', true);
+  
+  showToast('info', 'Search form has been reset');
+}
+
+// Reinitialize autocomplete when modals are shown
+// This will be called from the showModal function instead of Bootstrap events
+
+// Handle window resize to reposition dropdowns
+$(window).on('resize', function() {
+  $('.autocomplete-dropdown').hide();
+});
+
+// Function to handle Django messages (called from template)
+function handleDjangoMessages(messages) {
+  messages.forEach(function(message) {
+    showToast(message.tags, message.message);
+  });
+}
+
+// Function to handle Django messages from data attribute
+function handleDjangoMessagesFromData() {
+  const messagesElement = document.getElementById('django-messages');
+  if (messagesElement) {
+    try {
+      const messagesData = messagesElement.getAttribute('data-messages');
+      if (messagesData) {
+        const messages = JSON.parse(messagesData);
+        handleDjangoMessages(messages);
+      }
+    } catch (e) {
+      console.error('Error parsing Django messages:', e);
+    }
+  }
+}
+
+// Simple modal functionality to replace Bootstrap modals
+function initializeModals() {
+  // Handle modal triggers
+  $(document).on('click', '[data-bs-toggle="modal"]', function(e) {
+    e.preventDefault();
+    const targetId = $(this).attr('data-bs-target');
+    const modal = $(targetId);
+    showModal(modal);
+  });  
+  // Prevent closing modals by clicking outside or other means
+  // Only allow closing through the Save button
+  $(document).on('click', '.modal', function(e) {
+    // Prevent closing when clicking on the modal backdrop
+    if (e.target === this) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  });
+  
+  // Also prevent closing when clicking on modal-dialog
+  $(document).on('click', '.modal-dialog', function(e) {
+    e.stopPropagation();
+  });
+  
+  // Disable escape key for closing modals
+  $(document).on('keydown', function(e) {
+    if (e.key === 'Escape' && $('.modal.show').length > 0) {
+      // Prevent escape key from closing the modal
+      e.preventDefault();
+      return false;
+    }
+  });
+}
+
+function showModal(modal) {
+  modal.addClass('show').css('display', 'block');
+  $('body').css('overflow', 'hidden');
+  
+  // Add a data attribute to track if modal can be closed
+  modal.attr('data-can-close', 'false');
+  
+  // Reset button states when modal opens
+  const $submitBtn = modal.find('button[type="submit"]');
+  if ($submitBtn.length) {
+    // Clear any existing timeouts to prevent conflicts
+    if ($submitBtn.data('timeout-id')) {
+      clearTimeout($submitBtn.data('timeout-id'));
+      $submitBtn.removeData('timeout-id');
+    }
+    
+    if (modal.attr('id') === 'editInterestsModal') {
+      $submitBtn.html('<i class="bi bi-check-circle"></i> Save Interests')
+                .removeClass('btn-success btn-danger')
+                .addClass('btn-primary-custom')
+                .prop('disabled', false);
+    } else if (modal.attr('id') === 'searchPreferencesModal') {
+      $submitBtn.html('<i class="bi bi-check-circle"></i> Save Preferences')
+                .removeClass('btn-success btn-danger')
+                .addClass('btn-primary-custom')
+                .prop('disabled', false);
+    }
+  }
+  
+  // Reinitialize autocomplete for modal inputs
+  setTimeout(initializeAutocomplete, 100);
+}
+
+function hideModal(modal) {
+  // Only allow closing if the modal is marked as closeable
+  if (modal.attr('data-can-close') !== 'true') {
+    return false;
+  }
+  
+  modal.removeClass('show').css('display', 'none');
+  $('body').css('overflow', '');
+  modal.removeAttr('data-can-close');
+}
+
+// Make functions globally available
+window.getLocation = getLocation;
+window.startChat = startChat;
+window.resetSearch = resetSearch;
+window.handleDjangoMessages = handleDjangoMessages;
+window.searchWithPreferences = searchWithPreferences;
+
+// ================================ //
+// Datalist Autocomplete System
+// ================================ //
+
+/**
+ * Initialize datalist-based autocomplete for specified input fields.
+ * @param {string} selector - CSS selector for the input fields.
+ */
+function initializeDatalistAutocomplete(selector) {
+    const wordlistScriptTag = document.getElementById('allowed-words-json');
+    if (!wordlistScriptTag) {
+        console.error('Wordlist JSON script tag ("allowed-words-json") not found.');
         return;
     }
 
-    const options = {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-    };
+    let availableWords = [];
+    try {
+        availableWords = JSON.parse(wordlistScriptTag.textContent);
+        if (!Array.isArray(availableWords)) {
+            console.error('Wordlist data is not an array:', availableWords);
+            availableWords = []; // Fallback to empty array
+        }
+    } catch (e) {
+        console.error('Failed to parse wordlist JSON:', e);
+        return; // Cannot proceed without wordlist
+    }
 
-    navigator.geolocation.getCurrentPosition(
-        position => {
-            $('#latitude').val(position.coords.latitude);
-            $('#longitude').val(position.coords.longitude);
-            $('#locationForm').trigger('submit');
-        },
-        error => {
-            const errorMessages = {
-                1: 'Permission denied', 
-                2: 'Position unavailable',
-                3: 'Request timeout'
-            };
-            showAlert(`⚠️ Could not retrieve your location: ${errorMessages[error.code] || error.message}`, 'error');
-        },
-        options
-    );
+    // console.log(`Initializing datalist for selector: "${selector}" with ${availableWords.length} words.`);
+
+    document.querySelectorAll(selector).forEach((inputField, index) => {
+        if (!inputField) {
+            // console.warn(`Input field not found for selector "${selector}" at index ${index}`);
+            return;
+        }
+        
+        // Ensure each input has a unique ID if it doesn't already
+        // Django forms usually provide IDs like "id_formprefix-fieldname"
+        if (!inputField.id) {
+            // Create a reasonably unique ID if one is missing
+            inputField.id = `interest-input-${Math.random().toString(36).substr(2, 9)}-${index}`;
+            // console.log(`Assigned new ID to input: ${inputField.id}`);
+        }
+        const datalistId = `datalist-for-${inputField.id}`;
+
+        // Remove existing datalist for this input to prevent duplicates if re-initialized
+        const existingDatalist = document.getElementById(datalistId);
+        if (existingDatalist) {
+            existingDatalist.remove();
+        }
+
+        inputField.setAttribute('list', datalistId);
+        inputField.setAttribute('autocomplete', 'off'); // Recommended for custom datalists
+
+        const datalist = document.createElement('datalist');
+        datalist.id = datalistId;
+
+        availableWords.forEach(word => {
+            const option = document.createElement('option');
+            option.value = String(word); // Ensure value is a string
+            datalist.appendChild(option);
+        });
+
+        // Insert the datalist into the DOM.
+        // It's conventional to place it right after the input or as a child of its container.
+        if (inputField.parentNode) {
+            // Insert after the input field within the same parent.
+            inputField.parentNode.insertBefore(datalist, inputField.nextSibling);
+        } else {
+            // Fallback: append to body, though less ideal.
+            // console.warn(`Input field with ID ${inputField.id} has no parent. Appending datalist to body.`);
+            document.body.appendChild(datalist);
+        }
+        // console.log(`Datalist "${datalistId}" initialized and attached for input "#${inputField.id}".`);
+    });
 }
 
+
 // ==================== //
-// Autocomplete System
+// Utility Functions
 // ==================== //
 
 /**
- * Initialize all typeahead instances
+ * Display a custom alert message
+ * @param {string} message - The message to display
+ * @param {string} type - \'success\', \'error\', or \'info\'
  */
-function initializeTypeaheads() {
-    try {
-        // Destroy existing instances more thoroughly
-        $('.autocomplete-container input').typeahead('destroy');
-        $('.autocomplete-container input').off('.typeahead');
+function showAlert(message, type = 'info') {
+    // Basic alert for now, can be replaced with a more sophisticated UI element
+    alert(`${type.toUpperCase()}: ${message}`);
+}
 
-        // Initialize Bloodhound with better configuration
-        const engine = new Bloodhound({
-            datumTokenizer: Bloodhound.tokenizers.whitespace,
-            queryTokenizer: Bloodhound.tokenizers.whitespace,
-            identify: function(item) { return item.toLowerCase(); }, // For duplicate detection
-            remote: {
-                url: '/friendsearch/autocomplete/?q=%QUERY%',
-                replace: function(url, uriEncodedQuery) {
-                    // Add timestamp to prevent caching issues
-                    return url.replace('%QUERY%', uriEncodedQuery) + '&t=' + Date.now();
-                },
-                wildcard: '%QUERY%',
-                rateLimitBy: 'debounce',
-                rateLimitWait: 300,
-                filter: function(response) {
-                    if (!Array.isArray(response)) return [];
-                    // Remove empty/null suggestions and trim whitespace
-                    return response.filter(item => item && typeof item === 'string').map(item => item.trim());
-                }
+/**
+ * Validate friendsearch interest inputs before submission
+ * Checks for duplicates and invalid words
+ */
+function validateFriendSearchInterests() {
+    const interests = [];
+    const wordlistScriptTag = document.getElementById('allowed-words-json');
+    let validWords = [];
+    
+    // Get wordlist for validation
+    if (wordlistScriptTag) {
+        try {
+            validWords = JSON.parse(wordlistScriptTag.textContent);
+        } catch (e) {
+            console.error('Error parsing wordlist for validation:', e);
+            return { valid: false, error: 'Could not validate interests. Please try again.' };
+        }
+    } else {
+        return { valid: false, error: 'Could not validate interests. Please try again.' };
+    }
+    
+    // Convert to lowercase for case-insensitive comparison
+    const validWordsLower = validWords.map(word => word.toLowerCase());
+      // Collect all interest values from the form
+    for (let i = 1; i <= 3; i++) {
+        // Try prefixed fields first (for Django forms with prefix), then non-prefixed
+        let input = document.querySelector(`#interest-form input[name="update-interest_${i}"]`);
+        if (!input) {
+            input = document.querySelector(`#interest-form input[name="interest_${i}"]`);
+        }
+        if (input && input.value.trim()) {
+            interests.push(input.value.trim());
+        }
+    }
+    
+    // Check if at least one interest is provided
+    if (interests.length === 0) {
+        return { valid: false, error: 'Please select at least one interest.' };
+    }
+    
+    // Check for duplicates
+    const uniqueInterests = [...new Set(interests.map(interest => interest.toLowerCase()))];
+    if (uniqueInterests.length !== interests.length) {
+        return { valid: false, error: 'You cannot select the same interest multiple times. Please choose different interests.' };
+    }
+    
+    // Check if all interests are valid (in wordlist)
+    for (const interest of interests) {
+        if (!validWordsLower.includes(interest.toLowerCase())) {
+            return { valid: false, error: `"${interest}" is not a valid interest. Please select from the list.` };
+        }
+    }
+    
+    return { valid: true };
+}
+
+/**
+ * Show error message to user in friendsearch
+ */
+function showFriendSearchInterestError(message) {
+    // Remove any existing error messages
+    const existingError = document.querySelector('.friendsearch-interest-error-message');
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    // Create and show new error message
+    const form = document.getElementById('interest-form');
+    if (form) {
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'friendsearch-interest-error-message';
+        errorDiv.style.cssText = 'color: #d9534f; background: #f8d7da; border: 1px solid #f5c6cb; padding: 10px; border-radius: 4px; margin: 10px 0; font-size: 14px;';
+        errorDiv.textContent = message;
+        
+        // Insert at the top of the form
+        form.insertBefore(errorDiv, form.firstChild);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (errorDiv.parentNode) {
+                errorDiv.remove();
             }
-        });
+        }, 5000);
+    }
+}
 
-        // Initialize Typeahead with enhanced configuration
-        $('.autocomplete-container input').each(function() {
-            const $input = $(this);
-            const $container = $input.parent('.autocomplete-container');
-            
-            $input.typeahead({
-                hint: true,
-                highlight: true,
-                minLength: 1,
-                autoselect: true,
-                classNames: {
-                    input: 'tt-input',
-                    hint: 'tt-hint',
-                    menu: 'tt-dropdown-menu',
-                    dataset: 'tt-dataset',
-                    suggestion: 'tt-suggestion',
-                    selectable: 'tt-selectable',
-                    empty: 'tt-empty',
-                    open: 'tt-open',
-                    cursor: 'tt-cursor'
+// Make validation functions globally available
+window.validateFriendSearchInterests = validateFriendSearchInterests;
+window.showFriendSearchInterestError = showFriendSearchInterestError;
+
+// ==================== //
+// AJAX Form Submission for Interests
+// ==================== //
+function submitFriendSearchInterestForm() {
+    console.log('submitFriendSearchInterestForm called');
+    
+    // Perform client-side validation first
+    const validation = validateFriendSearchInterests();
+    if (!validation.valid) {
+        showFriendSearchInterestError(validation.error);
+        return; // Don't submit if validation fails
+    }
+    
+    var $form = $('#interest-form');
+    var formData = $form.serialize();
+    console.log('FriendSearch form data serialized:', formData);
+
+    $.ajax({
+        url: $form.attr('action'),
+        type: 'POST',
+        data: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        success: function(data) {
+            console.log('FriendSearch AJAX success - received data:', data);
+            if (data.status === 'success') {
+                console.log('Success status confirmed, processing...');                // Update the interests display
+                var interestDisplayDiv = $('#interest-display');
+                if (data.interests && data.interests.length > 0) {
+                    var newInterestsHtml = '<ul class="interests-list">';
+                    data.interests.forEach(function(interest) {
+                        newInterestsHtml += '<li>' + interest + '</li>';
+                    });
+                    newInterestsHtml += '</ul><button type="button" onclick="toggleEdit(true)">✏️ Edit Interests</button>';
+                } else {
+                    var newInterestsHtml = '<p>No interests set yet.</p><button type="button" onclick="toggleEdit(true)">✏️ Edit Interests</button>';
                 }
-            }, {
-                name: $input.attr('id'),
-                source: engine,
-                limit: 15,
-                display: function(item) { return item; },
-                templates: {
-                    suggestion: function(data) {
-                        // Highlight matching parts of the suggestion
-                        const query = $input.typeahead('val').toLowerCase();
-                        const index = data.toLowerCase().indexOf(query);
-                        if (index >= 0) {
-                            const before = data.substring(0, index);
-                            const match = data.substring(index, index + query.length);
-                            const after = data.substring(index + query.length);
-                            return `<div class="tt-suggestion">${before}<strong>${match}</strong>${after}</div>`;
+                interestDisplayDiv.html(newInterestsHtml);
+                
+                // Hide form and show display
+                toggleEdit(false);
+                
+                console.log('FriendSearch success handler completed');
+                
+            } else {
+                console.log('Error in response:', data);
+                let errorMsg = data.message || 'Error updating interests.';
+                if (data.errors) {
+                    for (const field in data.errors) {
+                        if (field === '__all__') {
+                            errorMsg = data.errors[field].join(', ');
+                        } else {
+                            errorMsg += '\n- ' + field + ': ' + data.errors[field].join(', ');
                         }
-                        return `<div class="tt-suggestion">${data}</div>`;
-                    },
-                    empty: [
-                        '<div class="empty-message">',
-                        'No matches found',
-                        '</div>'
-                    ].join('\n'),
-                    footer: function() {
-                        return '<div class="tt-footer">Scroll for more results</div>';
                     }
                 }
-            })
-            .on('typeahead:render', function() {
-                // Position dropdown relative to container
-                const $menu = $input.siblings('.tt-dropdown-menu');
-                $menu.css({
-                    'width': $container.outerWidth() + 'px',
-                    'max-height': '300px',
-                    'overflow-y': 'auto'
-                });
-            })
-            .on('typeahead:select typeahead:autocomplete', function(ev, suggestion) {
-                // Validate selection matches exactly
-                if ($input.val().toLowerCase() !== suggestion.toLowerCase()) {
-                    $input.val(suggestion); // Force exact match
-                }
-            })
-            .on('typeahead:close', function() {
-                // Validate on blur
-                const currentValue = $input.val();
-                if (currentValue) {
-                    engine.get(currentValue, function(suggestions) {
-                        if (suggestions.length === 0 || 
-                            !suggestions.some(s => s.toLowerCase() === currentValue.toLowerCase())) {
-                            $input.val('');
-                            showTooltip($input, 'Please select a valid suggestion from the list');
+                showFriendSearchInterestError(errorMsg);
+            }
+        },
+        error: function(xhr) {
+            console.log('FriendSearch AJAX error occurred:', xhr);
+            console.error("FriendSearch AJAX error:", xhr.responseText);
+            
+            // Try to parse JSON error response
+            try {
+                const errorData = JSON.parse(xhr.responseText);
+                console.log('FriendSearch AJAX error:', errorData);
+                
+                if (errorData.status === 'error') {
+                    let errorMsg = errorData.message || 'Error updating interests.';
+                    if (errorData.errors) {
+                        for (const field in errorData.errors) {
+                            if (field === '__all__') {
+                                errorMsg = errorData.errors[field].join(', ');
+                            } else {
+                                errorMsg += '\n- ' + field + ': ' + errorData.errors[field].join(', ');
+                            }
                         }
-                    });
+                    }
+                    showFriendSearchInterestError(errorMsg);
+                } else {
+                    showFriendSearchInterestError('An unexpected error occurred. Please try again.');
                 }
-            })
-            .on('keydown', function(e) {
-                // Prevent form submission if value isn't valid
-                if (e.which === 13) { // Enter key
-                    const currentValue = $input.val();
-                    engine.get(currentValue, function(suggestions) {
-                        if (suggestions.length === 0 || 
-                            !suggestions.some(s => s.toLowerCase() === currentValue.toLowerCase())) {
-                            e.preventDefault();
-                            showTooltip($input, 'Please select a valid suggestion from the list');
-                            return false;
-                        }
-                    });
-                }
-            });
-        });
-
-        // Initialize engine with error handling
-        engine.initialize()
-            .then(function() {
-                console.log('Autocomplete engine ready');
-            })
-            .catch(function(error) {
-                console.error('Autocomplete initialization failed:', error);
-            });
-
-    } catch (error) {
-        console.error('Error initializing typeaheads:', error);
-        // Fallback to regular inputs if Typeahead fails
-        $('.autocomplete-container input').typeahead('destroy');
-    }
+            } catch (e) {
+                console.error('Could not parse error response:', e);
+                showFriendSearchInterestError('An error occurred: ' + xhr.status + ' ' + xhr.statusText);
+            }
+        }
+    });
 }
 
-// Helper function to show validation tooltips
-function showTooltip($element, message) {
-    let $tooltip = $element.siblings('.validation-tooltip');
-    if ($tooltip.length === 0) {
-        $tooltip = $(`<div class="validation-tooltip">${message}</div>`);
-        $element.after($tooltip);
-    }
-    $tooltip.text(message).fadeIn(200);
-    setTimeout(() => $tooltip.fadeOut(500), 3000);
+// Make function globally available
+window.submitFriendSearchInterestForm = submitFriendSearchInterestForm;
+
+// ==================== //
+// Event Handlers (Example Structure)
+// ==================== //
+/*
+function setupEventHandlers() {
+    // Example: Handling form submissions via AJAX
+    $('#some-form').on('submit', function(event) {
+        event.preventDefault();
+        // AJAX call logic here
+    });
+
+    // Example: Click event for a button
+    $('#some-button').on('click', function() {
+        // Action logic here
+    });
 }
+*/
 
-// Document ready with better initialization handling
-$(document).ready(function() {
-    // Initialize with a small delay to ensure DOM is fully ready
-    setTimeout(initializeTypeaheads, 50);
-    
-    // Reinitialize when showing edit form
-    $(document).on('click', '[onclick*="toggleEdit(true)"]', function() {
-        setTimeout(initializeTypeaheads, 150);
-    });
+// ==================== //
+// Debugging Functions (Optional)
+// ==================== //
+/*
+function logWordlistData() {
+    const wordlistScriptTag = document.getElementById('allowed-words-json');
+    if (wordlistScriptTag) {
+        try {
+            const words = JSON.parse(wordlistScriptTag.textContent);
+            console.log("Parsed wordlist data:", words);
+        } catch (e) {
+            console.error("Error parsing wordlist data for logging:", e);
+        }
+    } else {
+        console.warn("Wordlist script tag not found for logging.");
+    }
+}
+*/
 
-    // Handle window resize and scroll events
-    let resizeTimer;
-    $(window).on('resize scroll', function() {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(function() {
-            $('.tt-dropdown-menu').each(function() {
-                const $input = $(this).siblings('.tt-input');
-                $(this).css({
-                    'width': $input.outerWidth() + 'px',
-                    'top': $input.outerHeight() + 'px'
-                });
-            });
-        }, 100);
-    });
-});
+// Ensure to remove or comment out any old Typeahead/Bloodhound specific code
+// that might have been below or intermingled if this edit is partial.
+// The provided code replaces the relevant sections.
 
 // Add CSS for validation tooltips
 $('head').append(`
@@ -267,3 +1052,60 @@ $('head').append(`
         }
     </style>
 `);
+
+// Function to search for friends using saved preferences
+function searchWithPreferences() {
+  console.log('searchWithPreferences called');
+  
+  // Get the preferences from the form (since these are the current saved values)
+  const $form = $('#searchPreferencesForm');
+  
+  // Build search parameters using the saved preferences
+  const params = new URLSearchParams();
+  
+  // Add interests with search- prefix (matching the backend expectation)
+  const interest1 = $form.find('input[name="pref-interest_1"]').val().trim();
+  const interest2 = $form.find('input[name="pref-interest_2"]').val().trim();
+  const interest3 = $form.find('input[name="pref-interest_3"]').val().trim();
+  
+  console.log('Raw form values:', {
+    interest1: interest1,
+    interest2: interest2, 
+    interest3: interest3
+  });
+  
+  if (interest1) params.append('search-interest_1', interest1);
+  if (interest2) params.append('search-interest_2', interest2);
+  if (interest3) params.append('search-interest_3', interest3);
+  
+  // Add other search preferences
+  const language = $form.find('select[name="search-main_language"]').val();
+  const radius = $form.find('select[name="search-radius_km"]').val();
+  const ageMode = $form.find('input[name="search-age_filtering_mode"]:checked').val();
+  
+  console.log('Other preferences:', {
+    language: language,
+    radius: radius,
+    ageMode: ageMode
+  });
+  
+  if (language) params.append('search-main_language', language);
+  if (radius) params.append('search-radius_km', radius);
+  if (ageMode) params.append('search-age_filtering_mode', ageMode);
+  
+  console.log('Final search parameters:', params.toString());
+  
+  // Show loading state
+  const $findButton = $('button:contains("Find Friends")');
+  const originalText = $findButton.html();
+  $findButton.html('<span class="loading"></span> Searching...').prop('disabled', true);
+  
+  // Make GET request to perform search
+  const searchUrl = window.location.pathname + '?' + params.toString();
+  console.log('Search URL:', searchUrl);
+  
+  // Add a small delay to see the debug output
+  setTimeout(() => {
+    window.location.href = searchUrl;
+  }, 1000);
+}

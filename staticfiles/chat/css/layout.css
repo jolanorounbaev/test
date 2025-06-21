@@ -1,17 +1,44 @@
+:root {
+  /* New Theme Variables */
+  --bg-base: #FFFFFF;       /* White */
+  --bg-card: #F8F9FA;       /* Very light grey */
+  --bg-accent: #E9ECEF;     /* Light grey for accents */
+  --bg-hover: #DEE2E6;      /* Hover state for grey elements */
+  --text-main: #212529;     /* Dark grey/almost black */
+  --text-heading: #343A40;  /* Dark grey for headings */
+  --btn-bg: #007BFF;        /* Standard blue */
+  --btn-text: #FFFFFF;      /* White */
+  --border-color: #CED4DA;  /* Border color */
+  --link-color: #007BFF;     /* Link color */
+  --link-hover-color: #0056b3; /* Link hover color */
+  --success-color: #28a745; /* Green for success messages */
+  --error-bg: #f8d7da;      /* Light red for error background */
+  --error-text: #721c24;    /* Dark red for error text */
+  --error-border: #f5c6cb;  /* Red for error border */
+
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 8px rgba(0,0,0,0.1);
+  --shadow-lg: 0 8px 16px rgba(0,0,0,0.15);
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+}
+
 /* Base Styles */
 .chat-app {
   display: flex;
-  height: calc(100vh - 60px); /* Adjust based on your header */
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  height: calc(100vh - 60px); /* Assuming 60px is navbar height */
+  background: var(--bg-base); /* Updated */
+  border-radius: var(--border-radius-lg); /* Updated */
+  box-shadow: var(--shadow-md); /* Updated */
   overflow: hidden;
+  color: var(--text-main);
 }
 
-/* Contacts sidebar */
 .contacts-sidebar {
   width: 300px;
-  border-right: 1px solid #eaeaea;
+  background-color: var(--bg-card); /* Updated */
+  border-right: 1px solid var(--border-color); /* Updated */
   display: flex;
   flex-direction: column;
 }
@@ -21,20 +48,27 @@
   justify-content: space-between;
   align-items: center;
   padding: 15px;
-  border-bottom: 1px solid #eaeaea;
+  border-bottom: 1px solid var(--border-color); /* Updated */
 }
 
 .sidebar-header h3 {
   margin: 0;
   font-size: 1.2rem;
+  color: var(--text-heading); /* Updated */
 }
 
 .new-chat-btn {
   background: none;
   border: none;
-  color: #666;
+  color: var(--btn-bg); /* Updated to blue */
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 1.5rem; /* Made icon larger */
+  padding: 5px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+.new-chat-btn:hover {
+  background-color: var(--bg-hover);
 }
 
 .search-box {
@@ -44,50 +78,68 @@
 
 .search-box input {
   width: 100%;
-  padding: 8px 15px 8px 35px;
-  border: 1px solid #ddd;
-  border-radius: 20px;
+  padding: 10px 15px 10px 40px; /* Adjusted padding for icon */
+  border: 1px solid var(--border-color); /* Updated */
+  border-radius: var(--border-radius-lg); /* Updated */
   font-size: 0.9rem;
+  background-color: var(--bg-base); /* Updated */
+  color: var(--text-main); /* Updated */
+  box-sizing: border-box;
 }
+.search-box input:focus {
+  border-color: var(--btn-bg);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+  outline: none;
+}
+
 
 .search-box i {
   position: absolute;
   left: 30px;
   top: 50%;
   transform: translateY(-50%);
-  color: #999;
+  color: var(--text-main); /* Updated */
+  opacity: 0.6;
   font-size: 0.9rem;
 }
 
 .contacts-section {
   padding: 10px 0;
-  border-bottom: 1px solid #eaeaea;
+  border-bottom: 1px solid var(--border-color); /* Updated */
 }
 
 .contacts-section h4 {
   padding: 0 15px;
   margin: 10px 0;
-  color: #666;
-  font-size: 0.85rem;
+  color: var(--text-heading); /* Updated */
+  font-size: 0.8rem; /* Adjusted size */
   text-transform: uppercase;
+  font-weight: 600; /* Added weight */
 }
 
 .contacts-list {
   list-style: none;
+  padding: 0; /* Removed default padding */
+  margin: 0; /* Removed default margin */
 }
 
 .contact {
-  padding: 8px 15px;
+  padding: 10px 15px; /* Increased padding */
+  transition: background-color 0.2s;
+  cursor: pointer;
 }
 
 .contact.active {
-  background-color: #f5f5f5;
+  background-color: var(--bg-accent); /* Updated */
+}
+.contact:not(.active):hover {
+  background-color: var(--bg-hover);
 }
 
 .contact a {
   display: flex;
   align-items: center;
-  color: #333;
+  color: var(--text-main); /* Updated */
   text-decoration: none;
 }
 
@@ -97,6 +149,7 @@
   border-radius: 50%;
   margin-right: 12px;
   overflow: hidden;
+  border: 1px solid var(--border-color); /* Added subtle border */
 }
 
 .contact-avatar img {
@@ -106,10 +159,11 @@
 }
 
 .contact-avatar.group {
-  background: #f0f0f0;
+  background: var(--bg-accent); /* Updated */
   display: flex;
   align-items: center;
   justify-content: center;
+  color: var(--text-heading);
 }
 
 .contact-info {
@@ -123,40 +177,47 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--text-heading); /* Updated */
 }
 
 .contact-preview {
   display: block;
   font-size: 0.85rem;
-  color: #777;
+  color: var(--text-main); /* Updated */
+  opacity: 0.7; /* Muted preview text slightly */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .unread-count {
-  background: #4a6fa5;
-  color: white;
-  font-size: 0.7rem;
-  min-width: 18px;
-  height: 18px;
-  border-radius: 9px;
+  background: var(--btn-bg); /* Updated */
+  color: var(--btn-text); /* Updated */
+  font-size: 0.75rem; /* Adjusted size */
+  min-width: 20px; /* Adjusted size */
+  height: 20px; /* Adjusted size */
+  border-radius: 10px; /* Adjusted size */
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 4px;
+  padding: 0 5px; /* Adjusted padding */
+  font-weight: 600;
 }
 
-/* Chat area */
 .chat-area {
   flex: 1;
   display: flex;
   flex-direction: column;
+  background-color: var(--bg-base); /* Added base background */
 }
 
 .chat-header {
   padding: 15px;
-  border-bottom: 1px solid #eaeaea;
+  border-bottom: 1px solid var(--border-color); /* Updated */
+  background-color: var(--bg-card); /* Updated */
+  display: flex; /* Added for alignment */
+  justify-content: space-between; /* Added for options icon */
+  align-items: center; /* Added for alignment */
 }
 
 .chat-partner {
@@ -170,6 +231,7 @@
   border-radius: 50%;
   margin-right: 12px;
   overflow: hidden;
+  border: 1px solid var(--border-color); /* Added subtle border */
 }
 
 .partner-avatar img {
@@ -180,32 +242,46 @@
 
 .partner-info h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.1rem; /* Adjusted size */
+  color: var(--text-heading); /* Updated */
 }
 
 .partner-status {
   font-size: 0.8rem;
-  color: #666;
+  color: var(--text-main); /* Updated */
+  opacity: 0.7;
 }
 
 .messages-container {
   flex: 1;
-  padding: 15px;
+  padding: 20px; /* Increased padding */
   overflow-y: auto;
-  background: #f9f9f9;
+  background: var(--bg-base); /* Updated */
 }
 
 .empty-chat {
   height: 100%;
   display: flex;
+  flex-direction: column; /* Stack icon and text */
   align-items: center;
   justify-content: center;
-  color: #777;
+  color: var(--text-main); /* Updated */
+  opacity: 0.6;
+}
+.empty-chat i {
+  font-size: 3rem;
+  margin-bottom: 15px;
 }
 
 .message {
   display: flex;
   margin-bottom: 15px;
+  animation: fadeInMessage 0.3s ease-out; /* Added animation */
+}
+
+@keyframes fadeInMessage {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .message.sent {
@@ -216,19 +292,26 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  margin-right: 10px;
   overflow: hidden;
   flex-shrink: 0;
+  border: 1px solid var(--border-color);
 }
-
 .message-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-
 .message.sent .message-avatar {
-  display: none;
+  margin-left: 10px;
+  margin-right: 0;
+  order: 2;
+  display: block;
+}
+.message.received .message-avatar {
+  margin-right: 10px;
+  margin-left: 0;
+  order: 0;
+  display: block;
 }
 
 .message-content {
@@ -237,56 +320,104 @@
 
 .message-bubble {
   padding: 10px 15px;
-  border-radius: 18px;
+  border-radius: var(--border-radius-lg); /* Updated */
   line-height: 1.4;
+  box-shadow: var(--shadow-sm);
 }
 
 .message.received .message-bubble {
-  background: #fff;
-  border: 1px solid #eaeaea;
-  border-top-left-radius: 4px;
+  background: var(--bg-card); /* Updated */
+  border: 1px solid var(--border-color); /* Updated */
+  color: var(--text-main); /* Updated */
+  border-top-left-radius: var(--border-radius-sm); /* Updated */
 }
 
 .message.sent .message-bubble {
-  background: #4a6fa5;
-  color: white;
-  border-top-right-radius: 4px;
+  background: var(--btn-bg); /* Updated */
+  color: var(--btn-text); /* Updated */
+  border-top-right-radius: var(--border-radius-sm); /* Updated */
+  border: 1px solid var(--btn-bg); /* Ensure no other border is overriding */
+}
+
+/* Blocked Messages Styles */
+.message-bubble.blocked-message {
+  background: #f8f9fa !important;
+  color: #6c757d !important;
+  font-style: italic;
+  border: 1px solid #dee2e6;
+  opacity: 0.7;
+}
+
+.blocked-media {
+  background: #f8f9fa;
+  color: #6c757d;
+  padding: 20px;
+  text-align: center;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  font-style: italic;
+  opacity: 0.7;
+  max-width: 350px;
+  max-height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reply-original {
+  color: #6c757d;
+  font-style: italic;
 }
 
 .message-time {
   display: block;
   font-size: 0.75rem;
-  color: #999;
-  margin-top: 4px;
+  color: var(--text-main); /* Updated */
+  opacity: 0.6;
+  margin-top: 5px; /* Adjusted margin */
   text-align: right;
+}
+.message.received .message-time {
+  text-align: left;
+  margin-left: 5px; /* Add margin for received messages */
 }
 
 .message-input {
   padding: 10px 15px;
   display: flex;
   align-items: center;
-  border-top: 1px solid #eaeaea;
-  background: #fff;
+  border-top: 1px solid var(--border-color); /* Updated */
+  background: var(--bg-card); /* Updated */
 }
 
-.message-input input {
+.message-input input[type="text"] {
   flex: 1;
-  padding: 10px 15px;
-  border: 1px solid #ddd;
-  border-radius: 20px;
+  padding: 12px 18px; /* Increased padding */
+  border: 1px solid var(--border-color); /* Updated */
+  border-radius: var(--border-radius-lg); /* Updated */
   margin: 0 10px;
+  background-color: var(--bg-base); /* Updated */
+  color: var(--text-main); /* Updated */
+  font-size: 0.95rem;
+}
+.message-input input[type="text"]:focus {
+  border-color: var(--btn-bg);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+  outline: none;
 }
 
-.message-input button {
+.message-input button { /* For send, attach etc. */
   background: none;
   border: none;
-  color: #666;
+  color: var(--btn-bg); /* Updated */
   cursor: pointer;
-  font-size: 1.1rem;
+  font-size: 1.5rem; /* Increased icon size */
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
 }
-
-.message-input #send-button {
-  color: #4a6fa5;
+.message-input button:hover {
+  background-color: var(--bg-hover);
 }
 
 .welcome-view {
@@ -294,89 +425,98 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f9f9f9;
+  background: var(--bg-base); /* Updated */
 }
 
 .welcome-content {
   text-align: center;
-  color: #666;
+  color: var(--text-main); /* Updated */
+  opacity: 0.7;
 }
 
 .welcome-content i {
-  font-size: 3rem;
-  margin-bottom: 15px;
-  color: #ccc;
+  font-size: 3.5rem; /* Adjusted size */
+  margin-bottom: 20px; /* Adjusted margin */
+  color: var(--text-main); /* Updated */
 }
 
 .welcome-content h2 {
   margin-bottom: 5px;
-  color: #333;
+  color: var(--text-heading); /* Updated */
+  font-size: 1.5rem;
+}
+.welcome-content p {
+  font-size: 1rem;
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px; /* Slightly wider scrollbar */
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--bg-accent); /* Updated */
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 3px;
+  background: var(--border-color); /* Updated */
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #aaa;
+  background: #adb5bd; /* Darker grey for hover */
 }
 
-/* Message states */
 .message.pending .message-bubble {
-    opacity: 0.8;
+  opacity: 0.7; /* Adjusted opacity */
+  background-color: var(--bg-hover); /* Differentiate pending sent messages */
+  color: var(--text-main);
 }
 
 .message-spinner {
-    margin-left: 8px;
-    font-size: 0.8em;
-    color: #999;
+  margin-left: 8px;
+  font-size: 0.8em;
+  color: var(--text-main); /* Updated */
+  opacity: 0.7;
 }
 
 .chat-error {
-    background: #ffebee;
-    color: #c62828;
-    padding: 10px 15px;
-    border-radius: 4px;
-    margin: 10px 0;
-    display: flex;
-    align-items: center;
-    animation: fadeIn 0.3s;
+  background: var(--error-bg); /* Updated */
+  color: var(--error-text); /* Updated */
+  border: 1px solid var(--error-border); /* Added border */
+  padding: 10px 15px;
+  border-radius: var(--border-radius-md); /* Updated */
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+  animation: fadeIn 0.3s;
 }
 
 .chat-error i {
-    margin-right: 8px;
+  margin-right: 8px;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-
 
 #preview-area {
   margin-bottom: 10px;
-  max-height: 200px;
+  max-height: 150px; /* Adjusted max height */
   overflow: hidden;
-}
-.preview-image {
-  max-height: 200px;
-  border-radius: 8px;
-}
-.preview-video {
-  max-height: 200px;
-  border-radius: 8px;
+  padding: 5px; /* Added padding */
+  background-color: var(--bg-accent);
+  border-radius: var(--border-radius-md);
 }
 
+.preview-image,
+.preview-video {
+  max-height: 140px; /* Adjusted to fit padding */
+  border-radius: var(--border-radius-sm); /* Updated */
+  display: block; /* Ensure it behaves as a block */
+  margin: 0 auto; /* Center if smaller than container */
+}
 
 .chat-media {
   margin-top: 10px;
@@ -388,15 +528,15 @@
 
 .chat-media-img,
 .chat-media-video {
-  max-width: 400px;
-  max-height: 300px;
+  max-width: 350px; /* Adjusted size */
+  max-height: 250px; /* Adjusted size */
   width: auto;
   height: auto;
-  border-radius: 8px;
+  border-radius: var(--border-radius-md); /* Updated */
   object-fit: cover;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-sm); /* Updated */
+  border: 1px solid var(--border-color); /* Added border */
 }
-
 
 .image-modal {
   display: none;
@@ -408,15 +548,15 @@
   width: 100%;
   height: 100%;
   overflow: auto;
-  background-color: rgba(0,0,0,0.85);
+  background-color: rgba(0,0,0,0.85); /* Kept as is for image focus */
 }
 
-.modal-content {
+.modal-content { /* This is for the image modal, not to be confused with other modals */
   display: block;
   margin: auto;
   max-width: 90%;
   max-height: 85%;
-  border-radius: 8px;
+  border-radius: var(--border-radius-md); /* Updated */
 }
 
 .close-button {
@@ -424,36 +564,48 @@
   top: 20px;
   right: 35px;
   font-size: 40px;
-  color: white;
+  color: var(--btn-text); /* Updated to white for contrast on dark bg */
   font-weight: bold;
   cursor: pointer;
+  transition: color 0.2s;
 }
-
+.close-button:hover {
+  color: var(--bg-hover); /* Light grey hover */
+}
 
 .message-actions {
   position: relative;
   display: inline-block;
 }
 
-.dots-btn {
+.dots-btn { /* For message options */
   background: none;
   border: none;
-  font-size: 20px;
+  font-size: 1.2rem; /* Adjusted size */
   cursor: pointer;
-  padding: 0 5px;
-  color: #888;
+  padding: 5px;
+  color: var(--text-main); /* Updated */
+  opacity: 0.6;
+  border-radius: 50%;
+  transition: background-color 0.2s, opacity 0.2s;
+}
+.message:hover .dots-btn, /* Show on message hover */
+.dots-btn:focus, .dots-btn:hover {
+  opacity: 1;
+  background-color: var(--bg-hover);
 }
 
-.dropdown-menu {
+.dropdown-menu { /* For message actions */
   display: none;
   position: absolute;
   right: 0;
-  background-color: white;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  background-color: var(--bg-base); /* Updated */
+  border: 1px solid var(--border-color); /* Updated */
+  border-radius: var(--border-radius-md); /* Updated */
+  box-shadow: var(--shadow-md); /* Updated */
   z-index: 1000;
-  min-width: 100px;
+  min-width: 120px; /* Adjusted width */
+  padding: 5px 0; /* Added padding */
 }
 
 .dropdown-menu button {
@@ -461,11 +613,181 @@
   width: 100%;
   background: none;
   border: none;
-  padding: 8px 12px;
+  padding: 8px 15px; /* Adjusted padding */
   text-align: left;
   cursor: pointer;
+  color: var(--text-main); /* Updated */
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
 }
 
 .dropdown-menu button:hover {
-  background-color: #f0f0f0;
+  background-color: var(--bg-hover); /* Updated */
+}
+
+.reply-preview-in-message {
+  display: block;
+  background: rgba(79, 84, 92, 0.06);
+  border-left: 4px solid #5865f2;
+  padding: 8px 12px;
+  margin: 4px 0 8px 0;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  position: relative;
+  max-width: 100%;
+}
+
+.reply-preview-in-message:before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #5865f2;
+  border-radius: 2px 0 0 2px;
+}
+
+.reply-label {
+  font-weight: 500;
+  color: #5865f2;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-bottom: 2px;
+  display: block;
+}
+
+.reply-original {
+  color: #4f5660;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  max-width: 90%;
+}
+
+.reply-content {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cancel-reply-btn {
+  background: none;
+  border: none;
+  color: var(--text-main);
+  opacity: 0.7;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 2px 5px;
+  margin-left: auto; /* Push to the right */
+  transition: opacity 0.2s;
+}
+.cancel-reply-btn:hover {
+  opacity: 1;
+}
+
+/* Add styles for the reply input area */
+.reply-input-area {
+  padding: 10px 15px;
+  background-color: var(--bg-accent);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+}
+.reply-input-area .reply-info {
+  flex-grow: 1;
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.reply-input-area .reply-to-user {
+  font-weight: bold;
+  color: var(--text-heading);
+}
+.reply-input-area .cancel-reply-btn {
+  margin-left: 10px;
+}
+
+/* Group Chat Specific Styles */
+.group-chat-name-input {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    font-size: 1rem;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+}
+
+.user-selection-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    padding: 5px;
+    margin-bottom: 15px;
+}
+
+.user-selection-list label {
+    display: block;
+    padding: 8px 10px;
+    cursor: pointer;
+    border-radius: var(--border-radius-sm);
+    transition: background-color 0.2s;
+}
+
+.user-selection-list label:hover {
+    background-color: var(--bg-hover);
+}
+
+.user-selection-list input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+/* Modal for new chat/group */
+.modal-chat-creation {
+    /* Basic modal styles, assuming a generic modal class might exist */
+    /* These can be adjusted if you have a standard modal component */
+    background-color: var(--bg-base);
+    padding: 20px;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    width: 90%;
+    max-width: 450px; /* Max width for chat creation modal */
+    margin: 5% auto; /* Centering */
+}
+
+.modal-chat-creation h3 {
+    color: var(--text-heading);
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+}
+
+.modal-chat-creation .form-actions button {
+    background-color: var(--btn-bg);
+    color: var(--btn-text);
+    border: none;
+    padding: 10px 15px;
+    border-radius: var(--border-radius-md);
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-right: 10px;
+}
+
+.modal-chat-creation .form-actions button:hover {
+    background-color: var(--link-hover-color);
+}
+
+.modal-chat-creation .form-actions button.cancel {
+    background-color: var(--bg-accent);
+    color: var(--text-main);
+}
+
+.modal-chat-creation .form-actions button.cancel:hover {
+    background-color: var(--bg-hover);
 }

@@ -1,0 +1,276 @@
+/* edit_profile.css - Custom styles for the Edit Profile page */
+
+:root {
+  /* New theme variables */
+  --bg-base: #FFFFFF; 
+  --bg-card: #E0F7FA; /* Light Cyan - Was #F8F9FA */
+  --bg-accent: #B2EBF2; /* Medium Light Cyan - Was #E9ECEF */
+  --bg-hover: #80DEEA; /* Cyan - Was #DEE2E6 */
+  --text-main: #212529; 
+  --text-heading: #343A40; 
+  --btn-bg: #007BFF; 
+  --btn-text: #FFFFFF; 
+
+  /* Aliases for compatibility or direct replacement */
+  --brand-bg: var(--bg-card); /* Was #FFF1D6 */
+  --card-bg: var(--bg-card); /* Was #FFE3C1 - now consistent */
+  --accent-bg: var(--bg-accent); /* Was #FFD2B2 */
+  --highlight-bg: var(--bg-hover); /* Was #F9C89B */
+  --text-main: var(--text-main); /* Was #703B1E */
+  --text-header: var(--text-heading); /* Was #A4402F */
+  --button-color: var(--btn-bg); /* Was #EF7741 */
+  --button-text: var(--btn-text); /* Was #FFFFFF */
+}
+
+body {
+  background-color: var(--bg-base); /* Changed from --card-bg to --bg-base */
+}
+
+body.profile-modal-body-content {
+  margin: 0;
+  padding: 0;
+  height: auto; /* Allow body to shrink to content if it's the source of extra space */
+  background-color: transparent; /* Ensure no unexpected background if body is somehow visible */
+}
+
+/* Modern, beautiful modal styles for all modals */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: auto;
+  background: rgba(33, 37, 41, 0.25); /* Softer dark overlay */
+  backdrop-filter: blur(2px);
+  animation: modal-fade-in 0.3s;
+}
+
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: var(--bg-base);
+  margin: 5vh auto;
+  padding: 0;
+  border-radius: 18px;
+  max-width: 520px;
+  box-shadow: 0 8px 32px rgba(33,37,41,0.18);
+  position: relative;
+  border: 1.5px solid var(--bg-accent);
+  overflow: hidden;
+  animation: modal-content-pop 0.3s;
+}
+
+@keyframes modal-content-pop {
+  from { transform: scale(0.97); opacity: 0.7; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Close button for all modals */
+.close-modal {
+  position: absolute;
+  top: 18px;
+  right: 24px;
+  font-size: 2rem;
+  color: var(--text-header);
+  cursor: pointer;
+  z-index: 10;
+  background: none;
+  border: none;
+  transition: color 0.2s;
+}
+.close-modal:hover {
+  color: var(--btn-bg);
+}
+
+/* Edit Profile Form (blue box) */
+.edit-profile-form {
+  background: var(--bg-card);
+  padding: 2.5rem 2rem 2rem 2rem;
+  border-radius: 14px;
+  max-width: 700px;
+  margin: 30px auto;
+  box-shadow: 0 2px 8px rgba(33,37,41,0.07);
+  border: 1.5px solid var(--bg-accent);
+  position: relative;
+}
+.edit-profile-form h2 {
+  color: var(--text-header);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+.edit-profile-form label {
+  color: var(--text-header);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+.edit-profile-form input[type="text"],
+.edit-profile-form input[type="email"],
+.edit-profile-form textarea,
+.edit-profile-form select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1.5px solid var(--bg-accent);
+  margin-bottom: 1.1rem;
+  background: var(--bg-base);
+  color: var(--text-main);
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+.edit-profile-form input[type="text"]:focus,
+.edit-profile-form input[type="email"]:focus,
+.edit-profile-form textarea:focus,
+.edit-profile-form select:focus {
+  border-color: var(--btn-bg);
+  outline: none;
+}
+.edit-profile-form input[type="file"] {
+  margin-bottom: 1rem;
+}
+.edit-profile-form button[type="submit"] {
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  border: none;
+  padding: 14px 0;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  width: 100%;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 2px 8px rgba(33,37,41,0.07);
+}
+.edit-profile-form button[type="submit"]:hover {
+  background: #0056b3;
+}
+
+/* Styles for the main options container within the modal */
+.profile-options-content-box {
+  background-color: var(--bg-base, #FFFFFF); /* Use theme variable or default white */
+  padding-top: 15px;
+  padding-bottom: 15px;
+  padding-left: 20px;
+  padding-right: 50px; /* Increased right padding to accommodate close button */
+  border-radius: 12px; /* Modern rounded corners */
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Reduced gap - Was 15px */
+  position: relative; /* For positioning the close button */
+  max-width: 480px; /* Or your preferred width */
+  margin: auto; /* If this content box needs to self-center within a wider modal shell */
+  box-sizing: border-box; /* Add box-sizing */
+}
+
+.profile-options-close-btn {
+  position: absolute;
+  top: 15px; /* Align with top padding */
+  right: 15px; /* Position within the new right padding */
+  font-size: 2rem; /* Larger for easier clicking */
+  color: var(--text-main, #555);
+  cursor: pointer;
+  line-height: 1;
+  background: none;
+  border: none;
+  padding: 0;
+  z-index: 10; /* Ensure it is above other elements */
+}
+
+.profile-options-close-btn:hover {
+  color: var(--text-header, #000);
+}
+
+.options-buttons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* Reduced gap - Was 10px */
+  box-sizing: border-box; /* Add box-sizing */
+}
+
+.option-button {
+  display: block;
+  width: 100%;
+  padding: 10px 15px; /* Reduced top/bottom padding */
+  background-color: var(--bg-card, #f8f9fa); /* Light background */
+  color: var(--text-main, #212529);
+  text-align: center;
+  border: 1px solid var(--bg-accent, #e9ecef);
+  border-radius: 8px; /* Rounded buttons */
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  box-sizing: border-box; /* Add box-sizing */
+}
+
+.option-button:hover {
+  background-color: var(--bg-hover, #dee2e6);
+  border-color: var(--bg-accent, #ced4da);
+}
+
+/* Modal section buttons */
+.options-buttons-list .option-button {
+  background: var(--bg-card);
+  color: var(--text-header);
+  border: 1.5px solid var(--bg-accent);
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin-bottom: 12px;
+  padding: 14px 0;
+  transition: background 0.2s, border-color 0.2s;
+  box-shadow: 0 1px 4px rgba(33,37,41,0.04);
+}
+.options-buttons-list .option-button:hover {
+  background: var(--bg-hover);
+  border-color: var(--btn-bg);
+  color: var(--btn-bg);
+}
+
+/* Save All Changes button */
+.option-button-save {
+  background: #FF7F50;
+  color: var(--btn-text);
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.15rem;
+  margin-top: 18px;
+  box-shadow: 0 2px 8px rgba(33,37,41,0.07);
+  transition: background 0.2s;
+}
+.option-button-save:hover {
+  background: #FF6347;
+}
+
+/* Ensure the close button inside the profile-modal specifically is hidden */
+#profile-modal .modal-content > span.close-modal {
+  display: none !important;
+}
+
+@media (max-width: 700px) {
+  .modal-content {
+    max-width: 98vw;
+    padding: 0;
+  }
+  .edit-profile-form {
+    padding: 1rem;
+    max-width: 98vw;
+  }
+  .places-grid {
+    flex-direction: column;
+    align-items: center;
+  }
+}

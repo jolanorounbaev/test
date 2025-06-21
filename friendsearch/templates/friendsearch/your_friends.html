@@ -2,379 +2,104 @@
 {% load static %}
 
 {% block content %}
-<div class="friends-container">
-    <h1>Your Friends</h1>
-    
-    <!-- Add Friend by ID Section -->
-    <div class="friend-section">
-        <h2>Add Friend by ID</h2>
-        <div class="add-friend-form">
-            <input type="text" id="friend-id-input" placeholder="Enter User ID" class="search-input">
-            <button id="add-friend-btn" class="btn-primary">Send Request</button>
+<link rel="stylesheet" href="{% static 'friendsearch/css/your_friends.css' %}">
+
+<div class="friends-page">
+    <div class="friends-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>Your Friends Network</h1>
+            <p>Connect, discover, and manage your friendships</p>
         </div>
-        <div id="add-friend-result" class="result-message"></div>
-    </div>
-    
-    <!-- Your Friends Search Section -->
-    <div class="friend-section">
-        <h2>Search Your Friends</h2>
-        <input type="text" id="friend-search-input" placeholder="Search friends by name..." class="search-input">
-        <div id="friends-search-results" class="friends-grid"></div>
-    </div>
-    
-    <!-- Friends of Friends Section -->
-    <div class="friend-section">
-        <h2>Friends of Friends</h2>
-        <input type="text" id="friend-of-friend-input" placeholder="Enter friend's name to see their friends..." class="search-input">
-        <div id="selected-friend" class="selected-friend-container"></div>
-        <div id="friends-of-friends-results" class="friends-grid"></div>
-    </div>
-    
-    <!-- Your Current Friends List -->
-    <div class="friend-section">
-        <h2>Your Friend List</h2>
-        <div id="your-friends-list" class="friends-grid">
-            {% for friend in friends %}
-            <div class="friend-card" data-id="{{ friend.id }}">
-                <div class="friend-avatar">
-                    {% if friend.profile_picture %}
-                        <img src="{{ friend.profile_picture.url }}" alt="{{ friend.full_name }}">
-                    {% else %}
-                        <div class="default-avatar">{{ friend.first_name|first|upper }}{{ friend.last_name|first|upper }}</div>
-                    {% endif %}
+
+        <!-- Main Actions Grid -->
+        <div class="section-grid">
+            <!-- Add Friend by ID -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-icon">🆔</div>
+                    <h2 class="section-title">Add Friend by ID</h2>
                 </div>
-                <div class="friend-info">
-                    <h3>{{ friend.full_name }}</h3>
-                    <p>{{ friend.bio|default:"No bio yet"|truncatechars:30 }}</p>
+                <div class="input-group">
+                    <input type="text" id="friend-id-input" class="form-input" placeholder="Enter User ID (e.g., 123)" pattern="[0-9]+">
                 </div>
-                <button class="btn-remove" data-id="{{ friend.id }}">Remove</button>
+                <button id="add-friend-btn" class="btn btn-primary">Send Request</button>
+                <div id="add-friend-result" class="result-message"></div>
             </div>
-            {% empty %}
-            <p class="no-friends">You don't have any friends yet. Start adding some!</p>
-            {% endfor %}
+
+            <!-- Search Your Friends -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-icon">🔍</div>
+                    <h2 class="section-title">Search Your Friends</h2>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="friend-search-input" class="form-input" placeholder="Search friends by name or bio...">
+                </div>
+                <div id="friends-search-results" class="friends-grid"></div>
+            </div>
+
+            <!-- Search People -->
+            <div class="section-card">
+                <div class="section-header">
+                    <div class="section-icon">👥</div>
+                    <h2 class="section-title">Find New People</h2>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="people-search-input" class="form-input" placeholder="Search people by name or email...">
+                </div>
+                <button id="people-search-btn" class="btn btn-primary">Search People</button>
+                <div id="people-search-result" class="result-message"></div>
+                <div id="people-search-results" class="friends-grid"></div>
+            </div>
+        </div>
+
+        <!-- Friend Requests Section -->
+        {% if friend_requests_count > 0 %}
+        <div class="notifications-section">
+            <div class="section-header">
+                <div class="section-icon">📬</div>
+                <h2 class="section-title">Friend Requests ({{ friend_requests_count }})</h2>
+            </div>
+            <div id="friend-requests-list">
+                {% for request in friend_requests %}
+                <div class="notification-item">
+                    <div class="notification-content">
+                        <div class="notification-avatar">
+                            {% if request.from_user.profile_picture %}
+                                <img src="{{ request.from_user.profile_picture.url }}" alt="{{ request.from_user.full_name }}">
+                            {% else %}
+                                <div class="default-avatar">{{ request.from_user.first_name|first|upper }}{{ request.from_user.last_name|first|upper }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="notification-text">
+                            <strong>{{ request.from_user.full_name }}</strong> sent you a friend request
+                            <small style="display: block; color: #6c757d; margin-top: 4px;">{{ request.timestamp|timesince }} ago</small>
+                        </div>
+                    </div>
+                    <div class="notification-actions">
+                        <button class="btn btn-primary" onclick="respondToFriendRequest({{ request.id }}, 'accept')">
+                            Accept
+                        </button>
+                        <button class="btn btn-secondary" onclick="respondToFriendRequest({{ request.id }}, 'decline')">
+                            Decline
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>        {% endif %}
+
+        <!-- View Friends of Friends (Future Feature) -->
+        <div class="section-card" style="opacity: 0.6;">
+            <div class="section-header">
+                <div class="section-icon">🌐</div>
+                <h2 class="section-title">Friends of Friends</h2>
+            </div>
+            <p style="color: #6c757d; font-style: italic; margin-bottom: 0;">Coming soon - Discover connections through your existing friends</p>
         </div>
     </div>
 </div>
 
-<style>
-.friends-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.friend-section {
-    margin-bottom: 40px;
-    padding: 20px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.search-input {
-    width: 100%;
-    padding: 12px 15px;
-    border: 1px solid #ddd;
-    border-radius: 25px;
-    font-size: 16px;
-    margin-bottom: 15px;
-    transition: all 0.3s ease;
-}
-
-.search-input:focus {
-    outline: none;
-    border-color: #5865f2;
-    box-shadow: 0 0 0 2px rgba(88,101,242,0.2);
-}
-
-.friends-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
-    margin-top: 20px;
-}
-
-.friend-card {
-    background: white;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-    opacity: 0;
-    transform: translateY(20px);
-    animation: fadeInUp 0.5s forwards;
-    animation-delay: calc(var(--order) * 0.1s);
-}
-
-@keyframes fadeInUp {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.friend-avatar {
-    width: 100%;
-    height: 180px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #f5f5f5;
-}
-
-.friend-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-}
-
-.friend-card:hover .friend-avatar img {
-    transform: scale(1.05);
-}
-
-.default-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: #5865f2;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.friend-info {
-    padding: 15px;
-}
-
-.friend-info h3 {
-    margin: 0 0 5px 0;
-    font-size: 16px;
-}
-
-.friend-info p {
-    margin: 0;
-    color: #666;
-    font-size: 14px;
-}
-
-.btn-primary {
-    background: #5865f2;
-    color: white;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 25px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: all 0.3s ease;
-}
-
-.btn-primary:hover {
-    background: #4752c4;
-}
-
-.btn-remove {
-    background: #f04747;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    margin: 10px;
-    transition: all 0.3s ease;
-}
-
-.btn-remove:hover {
-    background: #d03c3c;
-}
-
-.result-message {
-    padding: 10px;
-    border-radius: 5px;
-    margin-top: 10px;
-    display: none;
-}
-
-.success {
-    background: #d1f7d1;
-    color: #2e7d32;
-}
-
-.error {
-    background: #ffebee;
-    color: #c62828;
-}
-
-.selected-friend-container {
-    margin: 15px 0;
-    padding: 15px;
-    background: #f5f5f5;
-    border-radius: 10px;
-    display: none;
-}
-
-.no-friends {
-    text-align: center;
-    color: #666;
-    padding: 20px;
-}
-</style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Add friend by ID
-    document.getElementById('add-friend-btn').addEventListener('click', function() {
-    const friendId = document.getElementById('friend-id-input').value.trim();
-    const resultDiv = document.getElementById('add-friend-result');
-    
-    if (!friendId) {
-        showResult(resultDiv, 'Please enter a user ID', 'error');
-        return;
-    }
-    
-    fetch(`/friendsearch/send-request/${friendId}/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        credentials: 'same-origin'
-    })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(err => { throw err; });
-        }
-        return response.json();
-    })
-    .then(data => {
-        showResult(resultDiv, data.message, data.success ? 'success' : 'error');
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showResult(resultDiv, error.message || 'An error occurred', 'error');
-    });
-});
-    
-    // Search your friends
-    const friendSearchInput = document.getElementById('friend-search-input');
-    const friendsSearchResults = document.getElementById('friends-search-results');
-    
-    friendSearchInput.addEventListener('input', function() {
-        const searchTerm = this.value.trim().toLowerCase();
-        
-        if (searchTerm.length < 2) {
-            friendsSearchResults.innerHTML = '';
-            return;
-        }
-        
-        // Filter friends client-side (or make AJAX call to server)
-        const allFriends = document.querySelectorAll('#your-friends-list .friend-card');
-        friendsSearchResults.innerHTML = '';
-        
-        let delay = 0;
-        allFriends.forEach(friend => {
-            const name = friend.querySelector('.friend-info h3').textContent.toLowerCase();
-            if (name.includes(searchTerm)) {
-                const clone = friend.cloneNode(true);
-                clone.style.setProperty('--order', delay);
-                friendsSearchResults.appendChild(clone);
-                delay++;
-            }
-        });
-    });
-    
-    // Friends of friends search
-    const friendOfFriendInput = document.getElementById('friend-of-friend-input');
-    const selectedFriendDiv = document.getElementById('selected-friend');
-    const friendsOfFriendsResults = document.getElementById('friends-of-friends-results');
-    
-    friendOfFriendInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            const searchTerm = this.value.trim();
-            
-            if (searchTerm.length < 2) {
-                return;
-            }
-            
-            // In a real app, you would make an AJAX call here to get the friend's friends
-            // For demo, we'll simulate it with your current friends
-            selectedFriendDiv.style.display = 'block';
-            selectedFriendDiv.innerHTML = `
-                <h3>${searchTerm}</h3>
-                <p>Showing friends of ${searchTerm}</p>
-            `;
-            
-            friendsOfFriendsResults.innerHTML = '';
-            
-            // Simulate loading friends of friends with a delay
-            setTimeout(() => {
-                // Again, in a real app, you would use actual data from the server
-                const allFriends = document.querySelectorAll('#your-friends-list .friend-card');
-                
-                allFriends.forEach((friend, index) => {
-                    setTimeout(() => {
-                        const clone = friend.cloneNode(true);
-                        clone.style.setProperty('--order', index);
-                        friendsOfFriendsResults.appendChild(clone);
-                    }, index * 100);
-                });
-            }, 500);
-        }
-    });
-    
-    // Remove friend
-    document.querySelectorAll('.btn-remove').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const friendId = this.dataset.id;
-            if (confirm('Are you sure you want to remove this friend?')) {
-                fetch('/friendsearch/remove-friend/' + friendId + '/', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': getCookie('csrftoken'),
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        this.closest('.friend-card').remove();
-                    } else {
-                        alert(data.message);
-                    }
-                });
-            }
-        });
-    });
-    
-    function showResult(element, message, type) {
-        element.textContent = message;
-        element.className = 'result-message ' + type;
-        element.style.display = 'block';
-        
-        setTimeout(() => {
-            element.style.display = 'none';
-        }, 3000);
-    }
-    
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-});
-</script>
+<script src="{% static 'friendsearch/js/your_friends.js' %}"></script>
 {% endblock %}

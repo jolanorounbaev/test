@@ -1,0 +1,184 @@
+/* Enhanced styling for Report Admin */
+
+/* Priority indicators for report IDs */
+.field-report_id_display {
+    font-weight: bold;
+}
+
+/* Enhanced table styling */
+#result_list .field-reporter_full_display,
+#result_list .field-reported_user_full_display {
+    min-width: 180px;
+    max-width: 200px;
+}
+
+#result_list .field-description_preview {
+    max-width: 250px;
+    word-wrap: break-word;
+}
+
+#result_list .field-quick_actions {
+    min-width: 120px;
+    white-space: nowrap;
+}
+
+/* Status indicators */
+.field-review_status_display span,
+.field-approval_status_display span {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    display: inline-block;
+}
+
+/* Unreviewed reports highlighting */
+.unreviewed-report {
+    background-color: #fff3cd !important;
+    border-left: 4px solid #ffc107 !important;
+}
+
+/* Quick action buttons */
+.quick-action-btn {
+    transition: all 0.2s ease;
+    font-size: 10px;
+    padding: 2px 6px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    margin: 1px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.quick-action-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.quick-action-approve {
+    background-color: #28a745;
+    color: white;
+}
+
+.quick-action-dismiss {
+    background-color: #6c757d;
+    color: white;
+}
+
+.quick-action-view {
+    background-color: #007cba;
+    color: white;
+}
+
+/* Report summary styling */
+.report-summary {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    margin: 10px 0;
+}
+
+.report-summary h3 {
+    margin-top: 0;
+    color: #495057;
+    border-bottom: 2px solid #007cba;
+    padding-bottom: 5px;
+}
+
+.report-summary h4 {
+    color: #007cba;
+    margin-bottom: 10px;
+    margin-top: 15px;
+}
+
+.report-summary .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.report-summary .info-section {
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #e9ecef;
+}
+
+/* Profile links styling */
+a[href*="/profile/"] {
+    color: #007cba;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+a[href*="/profile/"]:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+/* Ban status indicators */
+.ban-status-banned {
+    color: #dc3545;
+    font-weight: bold;
+    background: #f8d7da;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.ban-status-warning {
+    color: #fd7e14;
+    font-weight: bold;
+    background: #ffeaa7;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.ban-status-good {
+    color: #28a745;
+    font-weight: bold;
+    background: #d4edda;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .report-summary .info-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    #result_list .field-reporter_full_display,
+    #result_list .field-reported_user_full_display {
+        min-width: 150px;
+    }
+    
+    #result_list .field-description_preview {
+        max-width: 200px;
+    }
+}
+
+/* Loading states for quick actions */
+.quick-action-btn.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Success/Error message styling */
+.messages .success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+.messages .error {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
