@@ -8,27 +8,49 @@ https://docs.djangoproject.com/en/5.1/howto/deployment/asgi/
 """
 
 import os
-import django  # ✅ Must be before importing anything Django-related
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
-django.setup()  # ✅ Important: initialize Django settings before imports
-
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.auth import AuthMiddlewareStack
-import chat.routing  # This depends on Django models/settings being loaded
-import notifications.routing
-import events.routing
-import moments.routing
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+
+# Initialize Django ASGI application early to ensure the AppRegistry
+# is populated before importing other modules that use Django models
+django_asgi_app = get_asgi_application()
+
+# Now import the routing modules
+try:
+    import chat.routing
+    chat_patterns = chat.routing.websocket_urlpatterns
+except ImportError:
+    chat_patterns = []
+
+try:
+    import notifications.routing
+    notification_patterns = notifications.routing.websocket_urlpatterns
+except ImportError:
+    notification_patterns = []
+
+try:
+    import events.routing
+    event_patterns = events.routing.websocket_urlpatterns
+except ImportError:
+    event_patterns = []
+
+try:
+    import moments.routing
+    moment_patterns = moments.routing.websocket_urlpatterns
+except ImportError:
+    moment_patterns = []
 
 application = ProtocolTypeRouter({
-    "http": get_asgi_application(),
+    "http": django_asgi_app,
     "websocket": AuthMiddlewareStack(
         URLRouter(
-            chat.routing.websocket_urlpatterns +
-            notifications.routing.websocket_urlpatterns +
-            events.routing.websocket_urlpatterns +
-            moments.routing.websocket_urlpatterns
+            chat_patterns +
+            notification_patterns +
+            event_patterns +
+            moment_patterns
         )
     ),
 })

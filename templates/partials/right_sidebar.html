@@ -37,11 +37,10 @@
     </div>
 
     <div class="bg-white p-4 rounded-lg shadow" style="background-color: var(--bg-card);"> 
-        <h3 class="text-lg font-semibold mb-3" style="color: var(--text-heading);">Legal</h3>
-        <ul class="space-y-2">
-            <li><a href="{% url 'legal_pages:about' %}" class="hover:underline" style="color: var(--text-main);">About Me</a></li>
-            <li><a href="{% url 'legal_pages:privacy' %}" class="hover:underline" style="color: var(--text-main);">Privacy</a></li>
-            <li><a href="{% url 'legal_pages:more' %}" class="hover:underline" style="color: var(--text-main);">More</a></li>
+        <h3 class="text-lg font-semibold mb-3" style="color: var(--text-heading);">Legal</h3>        <ul class="space-y-2">
+            <li><a href="{% url 'about_me' %}" class="hover:underline" style="color: var(--text-main);">About Me</a></li>
+            <li><a href="{% url 'privacy_policy' %}" class="hover:underline" style="color: var(--text-main);">Privacy</a></li>
+            <li><a href="{% url 'more_info' %}" class="hover:underline" style="color: var(--text-main);">More</a></li>
         </ul>
     </div>
 </div>

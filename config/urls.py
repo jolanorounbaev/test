@@ -33,6 +33,6 @@ urlpatterns = [
     path('notifications/', include('notifications.urls')),
     path('logout/', LogoutView.as_view(next_page='/login/'), name='logout'),
     path('events/', include('events.urls', namespace='events')),
-    path('legal/', include('legal_pages.urls', namespace='legal_pages')), # Add this line
+    path('', include('legal_pages.urls')),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -396,14 +396,14 @@ class ReportAdmin(admin.ModelAdmin):
             obj.reported_user.email,
             Report.objects.filter(reported_user=obj.reported_user).count(),
             obj.reported_user.approved_reports_count,
-            ban_status_html,
-            obj.reported_user.id
+            ban_status_html,            obj.reported_user.id
         )
     reported_user_full_display.short_description = 'Reported User'
     reported_user_full_display.admin_order_field = 'reported_user__first_name'
 
     def reason_with_icon(self, obj):
-        """Display reason with appropriate icon"""        reason_icons = {
+        """Display reason with appropriate icon"""
+        reason_icons = {
             'spam': 'SPAM',
             'harassment': 'HARASSMENT',
             'inappropriate_content': 'INAPPROPRIATE',

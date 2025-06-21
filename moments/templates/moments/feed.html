@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'moments/css/moment_styles.css' %}">
+
+
+
+  <!-- Moment Form -->
+  {% include "moments/moment_form.html" %}
+</div>
+
+<!-- Horizontal Scrolling Feed -->
+<div class="w-screen overflow-x-auto scroll-smooth snap-x snap-mandatory px-6">
+  <div id="moment-feed" class="flex gap-6 w-max">
+    {% for moment in moments %}
+      <div class="flex-shrink-0 snap-start">
+        {% include "moments/moment_card.html" with moment=moment %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+
+<script src="{% static 'moments/js/moment_feed.js' %}"></script>
+{% endblock %}

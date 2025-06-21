@@ -17,7 +17,7 @@ from django.contrib.gis.measure import D
 from .models import Moment, FireReaction, HeartReaction
 from datetime import timedelta
 from .models import MomentFlag
-from .forms import MomentForm  # Import the form for editing moments
+# from .forms import MomentForm  # Import the form for editing moments
 from django.db import transaction, IntegrityError
 
 from .wordlist import WORDLIST  # Make sure this is your validated interest list
@@ -345,11 +345,12 @@ def flag_moment(request, moment_id):
 def edit_moment(request, moment_id):
     moment = get_object_or_404(Moment, id=moment_id, user=request.user)
     if request.method == 'POST':
-        form = MomentForm(request.POST, request.FILES, instance=moment)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Moment updated!')
-            return redirect('moments:moment_feed')
+        # form = MomentForm(request.POST, request.FILES, instance=moment)
+        # if form.is_valid():
+        #     form.save()
+        messages.success(request, 'Moment updated!')
+        return redirect('moments:moment_feed')
     else:
-        form = MomentForm(instance=moment)
-    return render(request, 'moments/moment_edit_page.html', {'form': form, 'moment': moment})
+        # form = MomentForm(instance=moment)
+        pass
+    return render(request, 'moments/moment_edit_page.html', {'moment': moment})

@@ -1,0 +1,93 @@
+<!-- moment_edit.html -->
+{% load static %}
+
+<div class="moment-form" x-data="momentUploader()">
+<form action="{% url 'moments:edit' moment.id %}" method="post" enctype="multipart/form-data"
+      class="bg-white p-4 rounded-xl shadow mb-6">
+
+    {% csrf_token %}
+    <h2 class="text-lg font-semibold mb-3">Edit Your Moment</h2>
+
+    <!-- Title -->
+    <label for="id_title" class="block text-sm font-medium mb-1">Title</label>
+    <input
+      type="text"
+      name="title"
+      id="id_title"
+      value="{{ moment.title }}"
+      class="w-full border rounded p-2 text-sm mb-3"
+      placeholder="Moment title (optional)"
+    />
+
+    <!-- Description -->
+    <div class="relative mb-3 min-h-[120px]">
+      <textarea
+        name="content"
+        rows="3"
+        required
+        placeholder="What are you doing or thinking?"
+        class="w-full border rounded p-2 pb-28 text-sm pr-28"
+      >{{ moment.content }}</textarea>
+
+      <div id="moment-preview"
+           class="absolute bottom-2 right-2 w-[96px] h-[96px] rounded shadow overflow-hidden bg-white border border-gray-300 flex items-center justify-center z-10">
+        <!-- Preview will be injected here -->
+      </div>
+    </div>
+
+    <!-- Interests -->
+    <label class="block text-sm font-medium mb-1">Interests (max 3)</label>
+    <input type="text" id="interest-input" class="w-full border rounded p-2 text-sm mb-2"
+           placeholder="Start typing an interest...">
+    <div id="selected-interests" class="flex flex-wrap gap-2 mb-2"></div>
+    <div id="interest-hidden-inputs">
+      <input type="hidden" name="interests" value="{{ moment.interests }}">
+    </div>
+
+    <!-- 🔴 Validation warning -->
+    <p id="interest-error" class="text-red-500 text-sm mb-2 hidden"></p>
+
+    <!-- Drag & Drop Upload -->
+    <div 
+      @dragover.prevent
+      @drop.prevent="handleDrop($event)"
+      class="border-2 border-dashed border-gray-300 p-4 rounded-lg text-center mb-3 cursor-pointer hover:border-blue-400"
+      x-ref="dropZone"
+    >
+      <p class="text-sm text-gray-500 mb-2">Drag & drop an image, video, or paste a YouTube link:</p>
+      <input type="file"
+       name="media_file"
+       @change="handleFile($event)"
+       class="hidden"
+       accept="image/*,video/*"
+       x-ref="fileInput">
+
+      <button type="button" class="text-blue-500 underline" @click="$refs.fileInput.click()">Browse</button>
+      <input type="url" name="youtube_link"
+             value="{{ moment.youtube_link }}"
+             class="w-full mt-2 p-2 text-sm border rounded">
+    </div>
+
+    <!-- Previews -->
+    <template x-if="previewType === 'image'">
+      <img :src="previewUrl" class="rounded mb-3 max-h-48 mx-auto" />
+    </template>
+    <template x-if="previewType === 'video'">
+      <video :src="previewUrl" controls class="rounded mb-3 max-h-48 mx-auto"></video>
+    </template>
+    <template x-if="previewType === 'youtube'">
+      <iframe :src="youtubeEmbedUrl" class="rounded mb-3 w-full h-48" frameborder="0" allowfullscreen></iframe>
+    </template>
+
+    <!-- Final Submit -->
+    <button id="editMomentBtn" type="submit" class="bg-yellow-500 text-white text-sm px-4 py-2 rounded hover:bg-yellow-600">
+      Save Changes
+    </button>
+  </form>
+
+  <!-- Use My Location -->
+  <button id="use-location-btn" class="mt-2 bg-blue-100 text-blue-700 px-4 py-2 rounded flex items-center gap-1">
+    📍 Use My Location
+  </button>
+  <span id="location-status" class="text-sm ml-2"></span>
+</div>

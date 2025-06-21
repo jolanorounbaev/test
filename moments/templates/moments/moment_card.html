@@ -1,0 +1,185 @@
+{% load static %}
+{% load youtube_filters %}
+
+<div class="moment-card relative p-4 border rounded-lg shadow-sm mb-6" x-data="{ showRoom: false }">
+  {% if moment.is_hot %}
+  <div class="moment-fire-corner">
+    <img src="{% static 'moments/img/fire.gif' %}" alt="🔥" class="corner-fire" />
+    <span class="corner-text">On Fire</span>
+  </div>
+  {% endif %}
+  
+  
+
+
+
+  <!-- Delete Button (only owner) -->
+  {% if request.user == moment.user %}
+    <form action="{% url 'moments:delete_moment' moment.id %}" method="POST" class="text-right">
+      {% csrf_token %}
+      <button type="submit" class="text-red-500 text-xs hover:underline">Delete Moment</button>
+    </form>
+  {% endif %}
+
+  <!-- Top section: profile + name + time left + interests -->
+  <div class="flex justify-between items-start mb-2">
+    <div class="flex items-center gap-2">
+      <img src="{{ moment.user.profile_picture.url }}"
+           alt="Profile"
+           style="width: 32px; height: 32px; object-fit: cover; border-radius: 9999px;">
+    
+      <div class="flex flex-col leading-tight">
+        <span class="text-sm font-semibold">{{ moment.user.full_name }}</span>
+        <span class="text-xs text-gray-500">🕒 {{ moment.remaining_time }} left</span>
+      </div>
+    </div>
+
+
+    <a href="#" onclick="flagMoment('{{ moment.id }}')">🚩 Flag</a>
+    
+  <!-- Title -->
+  {% if moment.title %}
+  <div class="flex items-center gap-2 mt-2">
+    <h2 class="text-lg font-semibold">{{ moment.title }}</h2>
+  </div>
+  {% endif %}
+
+
+
+<!-- Media Display -->
+<div class="mt-3">
+  {% if moment.image %}
+  <div class="w-full flex justify-center">
+    <div class="aspect-[4/5] max-w-sm w-full rounded-lg overflow-hidden shadow-md">
+      <img src="{{ moment.image.url }}"
+           alt="Moment Image"
+           class="w-full h-full object-cover transition duration-300 ease-in-out hover:scale-[1.02]">
+    </div>
+  </div>
+  
+  
+  {% elif moment.video %}
+    <video controls
+           class="rounded-lg w-full max-h-[600px] object-contain shadow-md bg-black">
+      <source src="{{ moment.video.url }}" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  
+  {% elif moment.youtube_link %}
+    <div class="w-full rounded-lg overflow-hidden shadow-md mt-2" style="aspect-ratio: 16/9;">
+      <iframe
+        class="w-full h-full"
+        src="https://www.youtube.com/embed/{{ moment.youtube_link|youtube_id }}"
+        allowfullscreen
+        loading="lazy"
+        title="YouTube video"
+        frameborder="0">
+      </iframe>
+    </div>
+  
+  {% else %}
+    <p class="text-sm text-gray-400 italic">No media provided for this moment.</p>
+  {% endif %}
+</div>
+
+
+
+  <!-- Content -->
+  <p class="mt-3 text-sm">{{ moment.content }}</p>
+
+  <!-- Reactions -->
+  <span class="fire-container">
+    <span class="fire-btn" data-moment-id="{{ moment.id }}">🔥 {{ moment.fire_count }}</span>
+    <span class="fire-tooltip"></span>
+  </span>
+  
+  <span class="heart-btn" data-moment-id="{{ moment.id }}">
+    ❤️ {{ moment.heart_count }}
+  </span>
+  
+  
+
+  <!-- Bottom Section: Join + View Comments -->
+  <div class="mt-4 flex justify-between items-center text-sm text-gray-600">
+    <!-- Join/Leave -->
+    <div>
+      <span>{{ moment.participants.count }} / {{ moment.max_participants }} users inside</span>
+      {% if request.user not in moment.participants.all %}
+        <form method="POST" action="{% url 'moments:join_moment' moment.id %}" class="inline">
+          {% csrf_token %}
+          <button type="submit" class="text-blue-600 hover:underline ml-2">Join Moment</button>
+        </form>
+      {% else %}
+        <form method="POST" action="{% url 'moments:leave_moment' moment.id %}" class="inline">
+          {% csrf_token %}
+          <button type="submit" class="text-red-600 hover:underline ml-2">Leave</button>
+        </form>
+      {% endif %}
+    </div>
+
+<!-- View Comments button -->
+{% if request.user not in moment.participants.all %}
+  <button id="comments-btn-{{ moment.id }}"
+          onclick="loadComments('{{ moment.id }}')"
+          class="text-sm text-gray-600 hover:underline flex items-center gap-1 mt-2">
+    👁️ View Comments
+  </button>
+  <div id="comments-{{ moment.id }}" class="mt-4 hidden"></div>
+{% endif %}
+
+
+
+  </div>
+
+  <!-- Inline Comments -->
+  <div id="comments-{{ moment.id }}" class="mt-4 hidden"></div>
+
+  <!-- Live Comment Room -->
+  {% if request.user in moment.participants.all %}
+    <div x-show="showRoom" class="mt-6 border-t pt-4 space-y-6">
+      <h3 class="text-sm font-semibold text-gray-700">Comments</h3>
+
+      {% for comment in moment.comments.all %}
+        <div class="mb-4 border-l-2 pl-3 border-gray-300">
+          <p>
+            <strong>{{ comment.user.first_name }}</strong>: {{ comment.content }}
+            {% if comment.user == request.user or moment.user == request.user %}
+              <form action="{% url 'moments:delete_comment' comment.id %}" method="POST" class="inline ml-2">
+                {% csrf_token %}
+                <button type="submit" class="text-xs text-red-500 hover:underline">Delete</button>
+              </form>
+            {% endif %}
+          </p>
+          <small class="text-xs text-gray-500">{{ comment.created_at|timesince }} ago</small>
+
+          {% for reply in comment.replies.all %}
+            <div class="ml-4 mt-1 text-sm text-gray-700">
+              ↪ <strong>{{ reply.user.first_name }}</strong>: {{ reply.content }}
+              {% if reply.user == request.user or moment.user == request.user %}
+                <form action="{% url 'moments:delete_reply' reply.id %}" method="POST" class="inline ml-2">
+                  {% csrf_token %}
+                  <button type="submit" class="text-xs text-red-500 hover:underline">Delete</button>
+                </form>
+              {% endif %}
+            </div>
+          {% endfor %}
+
+          <form action="{% url 'moments:add_reply' comment.id %}" method="POST" class="mt-2">
+            {% csrf_token %}
+            <input type="text" name="content" placeholder="Reply..." class="w-full border rounded px-2 py-1 text-sm mt-1" required>
+            <button type="submit" class="text-xs text-blue-600 hover:underline mt-1">Reply</button>
+          </form>
+        </div>
+      {% empty %}
+        <p class="text-sm text-gray-500">No comments yet.</p>
+      {% endfor %}
+
+      <form action="{% url 'moments:add_comment' moment.id %}" method="POST" class="mt-4">
+        {% csrf_token %}
+        <input type="text" name="content" placeholder="Write a comment..." class="w-full border px-2 py-2 rounded text-sm" required>
+        <button type="submit" class="mt-2 text-blue-600 text-sm hover:underline">Post Comment</button>
+      </form>
+    </div>
+  {% endif %}
+</div>
+</div>

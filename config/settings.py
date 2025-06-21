@@ -65,11 +65,10 @@ INSTALLED_APPS = [
     'chat',
     'moments',
     'events',
-    'landing_page',
     'sitesettings',
     'notifications',
     'channels',
-    'legal_pages',  # Add this line
+    'legal_pages',
 ]
 RECAPTCHA_PUBLIC_KEY = '6LfUcwUrAAAAADgKPrsFKt5Z7Ej3_odnnf_qlidy'
 RECAPTCHA_PRIVATE_KEY = '6LfUcwUrAAAAAOucBCfuxOEoOHh-4SzjVkoX5rBl'
