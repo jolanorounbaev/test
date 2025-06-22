@@ -1,20 +1,29 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block right_sidebar %}{% endblock %}
+
 {% block content %}
 <link rel="stylesheet" href="{% static 'moments/css/moment_styles.css' %}">
 
-<div class="moments-container">
-  <!-- Moment Form -->
-  {% include "moments/moment_form.html" %}
-  <!-- Vertical Feed -->
-  <div id="moment-feed" class="space-y-6">
-    {% for moment in moments %}
-      <div>
-        {% include "moments/moment_card.html" with moment=moment %}
-      </div>
-    {% endfor %}
-  </div>
+<div>
+  <aside class="moments-sidebar-left">
+  </aside>
+  <main class="moments-main-content">
+    <!-- Moment Form -->
+    {% include "moments/moment_form.html" %}
+    <!-- Vertical Feed -->
+    <div id="moment-feed" class="space-y-6">
+      {% for moment in moments %}
+        <div>
+          {% include "moments/moment_card.html" with moment=moment %}
+        </div>
+      {% endfor %}
+    </div>
+  </main>
+  <aside class="moments-sidebar-right">
+    {% include "partials/right_sidebar.html" %}
+  </aside>
 </div>
 
 <script src="{% static 'moments/js/moment_feed.js' %}"></script>

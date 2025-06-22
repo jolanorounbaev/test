@@ -4,7 +4,6 @@ function openModal(id) {
   var modalElement = document.getElementById(id);
   if (modalElement) {
     modalElement.style.display = 'block';
-    document.body.classList.add('modal-open');
   } else {
     console.error('Modal with id ' + id + ' not found.');
   }
@@ -14,12 +13,6 @@ function closeModal(id) {
   var modalElement = document.getElementById(id);
   if (modalElement) {
     modalElement.style.display = 'none';
-    // Remove modal-open only if no other modals are open
-    setTimeout(function() {
-      if (!document.querySelector('.modal[style*="display: block"]')) {
-        document.body.classList.remove('modal-open');
-      }
-    }, 100);
   } else {
     console.error('Modal with id ' + id + ' not found.');
   }

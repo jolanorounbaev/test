@@ -113,34 +113,54 @@ document.addEventListener('DOMContentLoaded', () => {
         return true;
       }
 
+      // DEBUG: Log input events and suggestion box state
       input.addEventListener('input', () => {
         const term = input.value.toLowerCase();
+        console.log('[DEBUG] Input event. Term:', term);
         suggestionBox.innerHTML = '';
         if (term) {
-          const matches = wordlist.filter(w => w.toLowerCase().startsWith(term));
+          // Use includes for substring matching instead of startsWith
+          const matches = wordlist.filter(w => w.toLowerCase().includes(term));
+          console.log('[DEBUG] Matches:', matches);
           if (matches.length > 0) {
-            matches.slice(0, 5).forEach(match => {
+            matches.slice(0, 10).forEach(match => {
               const item = document.createElement('div');
               item.className = 'p-2 hover:bg-gray-100 cursor-pointer';
               item.textContent = match;
+              // DEBUG: Add border and background for visibility
+              item.style.border = '1px solid #007bff';
+              item.style.background = '#e6f0ff';
+              item.style.fontSize = '1.1em';
               item.addEventListener('click', () => {
-                console.log(`Suggestion clicked: "${match}"`);
+                console.log(`[DEBUG] Suggestion clicked: "${match}"`);
                 addInterest(match);
-                input.value = ''; 
+                input.value = '';
                 suggestionBox.innerHTML = '';
                 suggestionBox.style.display = 'none';
-                // input.focus(); // Consider if refocus is needed, can sometimes cause quick re-opening of suggestions
               });
               suggestionBox.appendChild(item);
             });
             suggestionBox.style.display = 'block';
+            suggestionBox.style.position = 'absolute';
+            suggestionBox.style.zIndex = 9999;
+            suggestionBox.style.background = '#fff';
+            suggestionBox.style.border = '2px solid #007bff';
+            suggestionBox.style.minWidth = input.offsetWidth + 'px';
+            suggestionBox.style.maxWidth = '350px';
             updateSuggestionBoxPosition();
+            console.log('[DEBUG] Suggestion box should be visible.');
           } else {
             suggestionBox.style.display = 'none';
+            console.log('[DEBUG] No matches, suggestion box hidden.');
           }
         } else {
           suggestionBox.style.display = 'none';
+          console.log('[DEBUG] Empty term, suggestion box hidden.');
         }
+        // DEBUG: Log suggestion box DOM and style
+        console.log('[DEBUG] SuggestionBox DOM:', suggestionBox);
+        console.log('[DEBUG] SuggestionBox style.display:', suggestionBox.style.display);
+        console.log('[DEBUG] SuggestionBox offset/position:', suggestionBox.getBoundingClientRect());
       });
 
       input.addEventListener('keydown', (e) => {
@@ -514,7 +534,7 @@ function fireHandler(fireBtn) {
     headers: { 'X-CSRFToken': getCSRFToken() },
   })
   .then(res => res.json())
-  .then(data => {
+  .then data => {
     if (data.status === 'success') {
       fireBtn.innerText = `🔥 ${data.fire_count}`;
       showFireCooldown(fireBtn, data.cooldown_seconds);
