@@ -24,11 +24,40 @@
     const data = JSON.parse(e.data);
     if (data.message) {
       document.getElementById('notificationSound').play();
-      // Optionally, show a toast or alert: alert(data.message);
+      // Update badge
       const icon = document.getElementById('notification-icon');
       let count = parseInt(icon.dataset.count || '0', 10) + 1;
       icon.dataset.count = count;
       icon.classList.add('notification-badge');
+      icon.textContent = count; // If your badge uses text
+
+      // Add notification to the dropdown list
+      const notificationList = document.querySelector('.notification-list');
+      if (notificationList) {
+        // Remove "No notifications." if present
+        const emptyItem = notificationList.querySelector('.notification-item.empty');
+        if (emptyItem) emptyItem.remove();
+
+        // Create new notification item
+        const li = document.createElement('li');
+        li.className = 'notification-item';
+        li.innerHTML = `
+          <div class="notification-content">
+            <div class="notification-user-info">
+              <img src="${data.sender_profile_picture || '/static/img/default-avatar.png'}" alt="Avatar" class="friend-request-avatar">
+              <div class="notification-text">
+                <div class="notification-name">
+                  ${data.message}
+                </div>
+                <div class="notification-time">just now</div>
+              </div>
+            </div>
+            ${data.url ? `<a href="${data.url}" class="btn-view">View</a>` : ''}
+          </div>
+        `;
+        // Insert at the top
+        notificationList.insertBefore(li, notificationList.firstChild);
+      }
     }
   };
   notificationSocket.onerror = function(e) {

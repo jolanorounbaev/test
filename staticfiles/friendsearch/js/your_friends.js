@@ -1,494 +1,6 @@
-// Modern Friends Management JavaScript
-class FriendsManager {
-    constructor() {
-        this.notificationInterval = null;
-        this.searchDebounceTimer = null;
-        this.init();
-    }
-
-    init() {
-        this.bindEventListeners();
-        this.loadNotifications();
-        this.startNotificationPolling();
-        this.animateCards();
-    }
-
-    bindEventListeners() {
-        // Add friend by ID
-        const addFriendBtn = document.getElementById('add-friend-btn');
-        if (addFriendBtn) {
-            addFriendBtn.addEventListener('click', () => this.addFriendById());
-        }
-
-        // Enter key for add friend input
-        const addFriendInput = document.getElementById('friend-id-input');
-        if (addFriendInput) {
-            addFriendInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    this.addFriendById();
-                }
-            });
-        }
-
-        // Search friends
-        const searchInput = document.getElementById('friend-search-input');
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => this.searchFriends(e.target.value));
-        }
-
-        // Friends of friends search
-        const friendOfFriendInput = document.getElementById('friend-of-friend-input');
-        if (friendOfFriendInput) {
-            friendOfFriendInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    this.searchFriendsOfFriends(e.target.value);
-                }
-            });
-        }
-
-        // Remove friend buttons
-        this.bindRemoveFriendButtons();
-
-        // Refresh notifications button
-        const refreshBtn = document.getElementById('refresh-notifications');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', () => this.loadNotifications());
-        }
-    }
-
-    bindRemoveFriendButtons() {
-        document.querySelectorAll('.btn-remove-friend').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const friendId = e.target.dataset.friendId;
-                const friendName = e.target.dataset.friendName;
-                this.removeFriend(friendId, friendName);
-            });
-        });
-    }
-
-    async addFriendById() {
-        const input = document.getElementById('friend-id-input');
-        const resultDiv = document.getElementById('add-friend-result');
-        const button = document.getElementById('add-friend-btn');
-        
-        const friendId = input.value.trim();
-        
-        if (!friendId) {
-            this.showResult(resultDiv, 'Please enter a user ID', 'error');
-            return;
-        }
-
-        // Show loading state
-        const originalText = button.textContent;
-        button.innerHTML = '<span class="loading-spinner"></span> Sending...';
-        button.disabled = true;
-
-        try {
-            const response = await fetch('/friendsearch/send-friend-request/', {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': this.getCookie('csrftoken'),
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                body: new URLSearchParams({
-                    'user_id': friendId
-                }),
-                credentials: 'same-origin'
-            });
-
-            const text = await response.text();
-            const data = JSON.parse(text);
-            
-            if (data.success) {
-                input.value = '';
-                this.showResult(resultDiv, data.message, 'success');
-            } else {
-                this.showResult(resultDiv, data.message, 'error');
-            }
-        } catch (error) {
-            console.error('Error sending friend request:', error);
-            this.showResult(resultDiv, 'Network error. Please try again.', 'error');
-        } finally {
-            button.textContent = originalText;
-            button.disabled = false;
-        }
-    }
-
-    searchFriends(searchTerm) {
-        clearTimeout(this.searchDebounceTimer);
-        
-        this.searchDebounceTimer = setTimeout(() => {
-            const resultsContainer = document.getElementById('friends-search-results');
-            const friendsList = document.getElementById('your-friends-list');
-            
-            if (!resultsContainer || !friendsList) return;
-
-            if (searchTerm.length < 2) {
-                resultsContainer.innerHTML = '';
-                resultsContainer.style.display = 'none';
-                return;
-            }
-
-            resultsContainer.style.display = 'block';
-            const searchTermLower = searchTerm.toLowerCase();
-            const allFriends = friendsList.querySelectorAll('.friend-card');
-            const matches = [];
-
-            allFriends.forEach(friendCard => {
-                const nameElement = friendCard.querySelector('.friend-name');
-                const bioElement = friendCard.querySelector('.friend-bio');
-                
-                if (nameElement) {
-                    const name = nameElement.textContent.toLowerCase();
-                    const bio = bioElement ? bioElement.textContent.toLowerCase() : '';
-                    
-                    if (name.includes(searchTermLower) || bio.includes(searchTermLower)) {
-                        matches.push(friendCard.cloneNode(true));
-                    }
-                }
-            });
-
-            if (matches.length > 0) {
-                resultsContainer.innerHTML = `
-                    <div class="search-results-header">
-                        <span class="results-count">${matches.length} friend${matches.length === 1 ? '' : 's'} found</span>
-                        <button class="clear-results" onclick="friendsManager.clearSearchResults()">Clear</button>
-                    </div>
-                    <div class="friends-grid"></div>
-                `;
-                
-                const grid = resultsContainer.querySelector('.friends-grid');
-                matches.forEach((match, index) => {
-                    match.style.setProperty('--order', index);
-                    grid.appendChild(match);
-                });
-                
-                // Re-bind remove buttons for cloned elements
-                this.bindRemoveFriendButtons();
-            } else {
-                resultsContainer.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">🔍</div>
-                        <h3>No friends found</h3>
-                        <p>No friends match your search for "${searchTerm}"</p>
-                    </div>
-                `;
-            }
-        }, 300);
-    }
-
-    clearSearchResults() {
-        const resultsContainer = document.getElementById('friends-search-results');
-        if (resultsContainer) {
-            resultsContainer.innerHTML = '';
-            resultsContainer.style.display = 'none';
-        }
-        
-        const searchInput = document.getElementById('friend-search-input');
-        if (searchInput) {
-            searchInput.value = '';
-        }
-    }
-
-    async searchFriendsOfFriends(friendName) {
-        const resultsContainer = document.getElementById('friends-of-friends-results');
-        
-        if (!friendName.trim()) {
-            resultsContainer.innerHTML = '';
-            return;
-        }
-
-        resultsContainer.innerHTML = `
-            <div class="loading-state">
-                <span class="loading-spinner"></span> Loading ${friendName}'s friends...
-            </div>
-        `;
-
-        try {
-            // Simulate API call - replace with actual endpoint
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // For demo purposes, showing some mock data
-            // In a real app, you would make an actual API call here
-            resultsContainer.innerHTML = `
-                <div class="search-results-header">
-                    <span class="results-count">Friends of ${friendName}</span>
-                </div>
-                <div class="empty-state">
-                    <div class="empty-state-icon">👥</div>
-                    <h3>Feature Coming Soon</h3>
-                    <p>Friends of friends viewing will be available in a future update</p>
-                </div>
-            `;
-        } catch (error) {
-            console.error('Error searching friends of friends:', error);
-            resultsContainer.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">⚠️</div>
-                    <h3>Error</h3>
-                    <p>Could not load friends of ${friendName}</p>
-                </div>
-            `;
-        }
-    }
-
-    async removeFriend(friendId, friendName) {
-        if (!confirm(`Are you sure you want to remove ${friendName} from your friends?`)) {
-            return;
-        }
-
-        const friendCard = document.querySelector(`[data-friend-id="${friendId}"]`);
-        if (!friendCard) return;
-
-        try {
-            const response = await fetch(`/friendsearch/remove-friend/${friendId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': this.getCookie('csrftoken'),
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                // Animate removal
-                friendCard.style.transform = 'scale(0)';
-                friendCard.style.opacity = '0';
-                
-                setTimeout(() => {
-                    friendCard.remove();
-                    this.updateFriendsCount();
-                }, 300);
-                
-                this.showToast(`${friendName} has been removed from your friends`, 'success');
-            } else {
-                this.showToast(data.message || 'Failed to remove friend', 'error');
-            }
-        } catch (error) {
-            console.error('Error removing friend:', error);
-            this.showToast('Network error. Please try again.', 'error');
-        }
-    }
-
-    async loadNotifications() {
-        const notificationsContainer = document.getElementById('friend-requests-container');
-        const notificationBadge = document.querySelector('.notification-badge');
-        
-        if (!notificationsContainer) return;
-
-        try {
-            const response = await fetch('/notifications/friend-requests/', {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            
-            if (!response.ok) throw new Error('Failed to load notifications');
-            
-            const data = await response.json();
-            
-            if (data.requests && data.requests.length > 0) {
-                notificationsContainer.innerHTML = data.requests.map(request => `
-                    <div class="friend-request-card" data-request-id="${request.id}">
-                        <div class="request-header">
-                            <div class="request-avatar">
-                                ${request.from_user.profile_picture ? 
-                                    `<img src="${request.from_user.profile_picture}" alt="${request.from_user.name}">` :
-                                    `<div class="default-avatar">${request.from_user.name.charAt(0).toUpperCase()}</div>`
-                                }
-                            </div>
-                            <div class="request-info">
-                                <h4>${request.from_user.name}</h4>
-                                <p class="request-time">${this.formatTime(request.timestamp)}</p>
-                            </div>
-                        </div>
-                        <div class="request-actions">
-                            <button class="btn btn-success" onclick="friendsManager.acceptFriendRequest(${request.id})">
-                                Accept
-                            </button>
-                            <button class="btn btn-secondary" onclick="friendsManager.declineFriendRequest(${request.id})">
-                                Decline
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-                
-                if (notificationBadge) {
-                    notificationBadge.textContent = data.requests.length;
-                    notificationBadge.style.display = 'flex';
-                }
-            } else {
-                notificationsContainer.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📬</div>
-                        <h3>No pending requests</h3>
-                        <p>You don't have any pending friend requests</p>
-                    </div>
-                `;
-                
-                if (notificationBadge) {
-                    notificationBadge.style.display = 'none';
-                }
-            }
-        } catch (error) {
-            console.error('Error loading notifications:', error);
-            notificationsContainer.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-state-icon">⚠️</div>
-                    <h3>Error</h3>
-                    <p>Could not load friend requests</p>
-                </div>
-            `;
-        }
-    }
-
-    async acceptFriendRequest(requestId) {
-        await this.handleFriendRequest(requestId, 'accept');
-    }
-
-    async declineFriendRequest(requestId) {
-        await this.handleFriendRequest(requestId, 'decline');
-    }
-
-    async handleFriendRequest(requestId, action) {
-        const requestCard = document.querySelector(`[data-request-id="${requestId}"]`);
-        if (!requestCard) return;
-
-        try {
-            const response = await fetch(`/notifications/${action}-friend-request/${requestId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': this.getCookie('csrftoken'),
-                }
-            });
-
-            if (response.ok) {
-                // Animate removal
-                requestCard.style.transform = 'translateX(100%)';
-                requestCard.style.opacity = '0';
-                
-                setTimeout(() => {
-                    requestCard.remove();
-                    this.loadNotifications(); // Refresh to update badge
-                }, 300);
-                
-                const message = action === 'accept' ? 'Friend request accepted!' : 'Friend request declined';
-                this.showToast(message, 'success');
-                
-                if (action === 'accept') {
-                    // Refresh friends list to show new friend
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                }
-            } else {
-                this.showToast('Failed to process request', 'error');
-            }
-        } catch (error) {
-            console.error(`Error ${action}ing friend request:`, error);
-            this.showToast('Network error. Please try again.', 'error');
-        }
-    }
-
-    startNotificationPolling() {
-        // Poll for new notifications every 30 seconds
-        this.notificationInterval = setInterval(() => {
-            this.loadNotifications();
-        }, 30000);
-    }
-
-    stopNotificationPolling() {
-        if (this.notificationInterval) {
-            clearInterval(this.notificationInterval);
-        }
-    }
-
-    animateCards() {
-        const cards = document.querySelectorAll('.friend-card');
-        cards.forEach((card, index) => {
-            card.style.setProperty('--order', index);
-        });
-    }
-
-    updateFriendsCount() {
-        const friendsList = document.getElementById('your-friends-list');
-        const countElement = document.querySelector('.section-count');
-        
-        if (friendsList && countElement) {
-            const count = friendsList.querySelectorAll('.friend-card').length;
-            countElement.textContent = count;
-        }
-    }
-
-    showResult(element, message, type) {
-        if (!element) return;
-        
-        element.textContent = message;
-        element.className = `result-message ${type}`;
-        element.style.display = 'block';
-        
-        setTimeout(() => {
-            element.style.display = 'none';
-        }, 5000);
-    }
-
-    showToast(message, type = 'info') {
-        // Create toast if it doesn't exist
-        let toast = document.getElementById('toast');
-        if (!toast) {
-            toast = document.createElement('div');
-            toast.id = 'toast';
-            toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: var(--bg-card);
-                border: 1px solid var(--border-color);
-                border-radius: var(--border-radius-md);
-                padding: 1rem 1.5rem;
-                box-shadow: var(--shadow-lg);
-                z-index: 1000;
-                transform: translateX(100%);
-                transition: transform 0.3s ease;
-                max-width: 300px;
-            `;
-            document.body.appendChild(toast);
-        }
-
-        toast.textContent = message;
-        toast.className = `result-message ${type}`;
-        
-        // Show toast
-        setTimeout(() => {
-            toast.style.transform = 'translateX(0)';
-        }, 100);
-        
-        // Hide toast after 3 seconds
-        setTimeout(() => {
-            toast.style.transform = 'translateX(100%)';
-        }, 3000);
-    }
-
-    formatTime(timestamp) {
-        const date = new Date(timestamp);
-        const now = new Date();
-        const diff = now - date;
-        
-        const minutes = Math.floor(diff / 60000);
-        const hours = Math.floor(diff / 3600000);
-        const days = Math.floor(diff / 86400000);
-        
-        if (minutes < 1) return 'Just now';
-        if (minutes < 60) return `${minutes}m ago`;
-        if (hours < 24) return `${hours}h ago`;
-        if (days < 7) return `${days}d ago`;
-        
-        return date.toLocaleDateString();
-    }
-
-    getCookie(name) {
+document.addEventListener('DOMContentLoaded', function() {
+    // Utility function to get CSRF token
+    function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
             const cookies = document.cookie.split(';');
@@ -502,19 +14,451 @@ class FriendsManager {
         }
         return cookieValue;
     }
-}
 
-// Initialize the friends manager when the page loads
-let friendsManager;
-document.addEventListener('DOMContentLoaded', function() {
-    friendsManager = new FriendsManager();
-});
-
-// Clean up on page unload
-window.addEventListener('beforeunload', function() {
-    if (friendsManager) {
-        friendsManager.stopNotificationPolling();
+    // Show result message with animation
+    function showResult(element, message, type) {
+        element.textContent = message;
+        element.className = `result-message ${type}`;
+        element.style.display = 'block';
+        
+        setTimeout(() => {
+            element.style.display = 'none';
+        }, 5000);
     }
+
+    // Add loading state to button
+    function setButtonLoading(button, loading) {
+        if (loading) {
+            button.disabled = true;
+            button.innerHTML = '<span class="loading-spinner"></span> Sending...';
+        } else {
+            button.disabled = false;
+            button.innerHTML = 'Send Request';
+        }
+    }
+
+    // Add friend by ID functionality
+    const addFriendBtn = document.getElementById('add-friend-btn');
+    const friendIdInput = document.getElementById('friend-id-input');
+    const addFriendResult = document.getElementById('add-friend-result');
+
+    if (addFriendBtn) {
+        addFriendBtn.addEventListener('click', function() {
+            const friendId = friendIdInput.value.trim();
+            
+            if (!friendId) {
+                showResult(addFriendResult, 'Please enter a user ID', 'error');
+                return;
+            }
+
+            if (!/^\d+$/.test(friendId)) {
+                showResult(addFriendResult, 'User ID must be a number', 'error');
+                return;
+            }
+
+            setButtonLoading(addFriendBtn, true);
+
+            const formData = new FormData();
+            formData.append('user_id', friendId);
+
+            fetch('/friendsearch/send-friend-request/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                setButtonLoading(addFriendBtn, false);
+                showResult(addFriendResult, data.message, data.success ? 'success' : 'error');
+                if (data.success) {
+                    friendIdInput.value = '';
+                }
+            })
+            .catch(error => {
+                setButtonLoading(addFriendBtn, false);
+                console.error('Error:', error);
+                showResult(addFriendResult, 'An error occurred. Please try again.', 'error');
+            });
+        });
+
+        // Allow Enter key to send friend request
+        friendIdInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addFriendBtn.click();
+            }
+        });
+    }
+
+    // Search friends functionality
+    const friendSearchInput = document.getElementById('friend-search-input');
+    const friendsSearchResults = document.getElementById('friends-search-results');
+    const allFriendsContainer = document.getElementById('all-friends-list');
+
+    if (friendSearchInput && friendsSearchResults) {
+        friendSearchInput.addEventListener('input', function() {
+            const searchTerm = this.value.trim().toLowerCase();
+            
+            if (searchTerm.length === 0) {
+                friendsSearchResults.innerHTML = '';
+                return;
+            }
+
+            if (searchTerm.length < 2) {
+                friendsSearchResults.innerHTML = '<div class="empty-state"><p>Type at least 2 characters to search...</p></div>';
+                return;
+            }
+
+            // Filter friends client-side
+            const allFriendCards = allFriendsContainer ? allFriendsContainer.querySelectorAll('.friend-card') : [];
+            const matchingFriends = [];
+
+            allFriendCards.forEach(card => {
+                const nameElement = card.querySelector('.friend-name');
+                const bioElement = card.querySelector('.friend-bio');
+                
+                if (nameElement) {
+                    const name = nameElement.textContent.toLowerCase();
+                    const bio = bioElement ? bioElement.textContent.toLowerCase() : '';
+                    
+                    if (name.includes(searchTerm) || bio.includes(searchTerm)) {
+                        matchingFriends.push(card.cloneNode(true));
+                    }
+                }
+            });
+
+            friendsSearchResults.innerHTML = '';
+            
+            if (matchingFriends.length === 0) {
+                friendsSearchResults.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <div class="empty-state-title">No friends found</div>
+                        <div class="empty-state-text">No friends match your search term "${searchTerm}"</div>
+                    </div>
+                `;
+            } else {
+                matchingFriends.forEach((card, index) => {
+                    card.style.animationDelay = `${index * 0.1}s`;
+                    card.classList.add('search-result');
+                    friendsSearchResults.appendChild(card);
+                });
+            }
+        });
+    }
+
+    // People search functionality  
+    const peopleSearchInput = document.getElementById('people-search-input');
+    const peopleSearchBtn = document.getElementById('people-search-btn');
+    const peopleSearchResults = document.getElementById('people-search-results');
+
+    if (peopleSearchBtn) {
+        peopleSearchBtn.addEventListener('click', function() {
+            const searchTerm = peopleSearchInput.value.trim();
+            
+            if (searchTerm.length < 2) {
+                showResult(document.getElementById('people-search-result'), 'Please enter at least 2 characters', 'error');
+                return;
+            }
+
+            setButtonLoading(peopleSearchBtn, true);
+            peopleSearchBtn.innerHTML = '<span class="loading-spinner"></span> Searching...';
+
+            fetch(`/friendsearch/search-people/?q=${encodeURIComponent(searchTerm)}`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                peopleSearchBtn.innerHTML = 'Search People';
+                peopleSearchBtn.disabled = false;
+                
+                peopleSearchResults.innerHTML = '';
+                
+                if (data.users && data.users.length > 0) {
+                    data.users.forEach((user, index) => {
+                        const userCard = createUserCard(user, index);
+                        peopleSearchResults.appendChild(userCard);
+                    });
+                } else {
+                    peopleSearchResults.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">👥</div>
+                            <div class="empty-state-title">No users found</div>
+                            <div class="empty-state-text">No users match your search term "${searchTerm}"</div>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                peopleSearchBtn.innerHTML = 'Search People';
+                peopleSearchBtn.disabled = false;
+                console.error('Error:', error);
+                peopleSearchResults.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <div class="empty-state-title">Error</div>
+                        <div class="empty-state-text">An error occurred while searching. Please try again.</div>
+                    </div>
+                `;
+            });
+        });
+
+        // Allow Enter key to search
+        peopleSearchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                peopleSearchBtn.click();
+            }
+        });
+    }
+
+    // Helper function to create user card
+    function createUserCard(user, index) {
+        const card = document.createElement('div');
+        card.className = 'friend-card';
+        card.style.animationDelay = `${index * 0.1}s`;
+        
+        const avatarHtml = user.profile_picture 
+            ? `<img src="${user.profile_picture}" alt="${user.full_name}">`
+            : `<div class="default-avatar">${user.first_name.charAt(0).toUpperCase()}${user.last_name.charAt(0).toUpperCase()}</div>`;
+
+        card.innerHTML = `
+            <div class="friend-avatar">${avatarHtml}</div>
+            <div class="friend-info">
+                <h3 class="friend-name">${user.full_name}</h3>
+                <p class="friend-bio">${user.bio || 'No bio yet'}</p>
+                <div class="friend-actions">
+                    <span class="friend-status">ID: ${user.id}</span>
+                    <button class="btn btn-primary btn-sm" onclick="sendFriendRequestToUser(${user.id})">
+                        Add Friend
+                    </button>
+                </div>
+            </div>
+        `;
+
+        return card;
+    }
+
+    // Make sendFriendRequestToUser globally available
+    window.sendFriendRequestToUser = function(userId) {
+        const formData = new FormData();
+        formData.append('user_id', userId);
+
+        fetch('/friendsearch/send-friend-request/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Create a temporary result element for this specific action
+            const tempResult = document.createElement('div');
+            tempResult.className = `result-message ${data.success ? 'success' : 'error'}`;
+            tempResult.textContent = data.message;
+            tempResult.style.position = 'fixed';
+            tempResult.style.top = '20px';
+            tempResult.style.right = '20px';
+            tempResult.style.zIndex = '1000';
+            tempResult.style.padding = '15px 20px';
+            tempResult.style.borderRadius = '8px';
+            tempResult.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            
+            document.body.appendChild(tempResult);
+            
+            setTimeout(() => {
+                document.body.removeChild(tempResult);
+            }, 3000);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    };    // Friend request notifications functionality
+    function loadFriendRequests() {
+        fetch('/friendsearch/friend-requests-json/', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const requestsContainer = document.getElementById('friend-requests-list');
+            if (!requestsContainer) return;
+
+            requestsContainer.innerHTML = '';
+            
+            if (data.requests && data.requests.length > 0) {
+                data.requests.forEach((request, index) => {
+                    const requestElement = createFriendRequestElement(request, index);
+                    requestsContainer.appendChild(requestElement);
+                });
+            } else {
+                requestsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <div class="empty-state-title">No friend requests</div>
+                        <div class="empty-state-text">You don't have any pending friend requests.</div>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading friend requests:', error);
+        });
+    }
+
+    // Helper function to create friend request element
+    function createFriendRequestElement(request, index) {
+        const element = document.createElement('div');
+        element.className = 'notification-item';
+        element.style.animationDelay = `${index * 0.1}s`;
+        
+        const avatarHtml = request.from_user.profile_picture 
+            ? `<img src="${request.from_user.profile_picture}" alt="${request.from_user.full_name}">`
+            : `<div class="default-avatar">${request.from_user.first_name.charAt(0).toUpperCase()}${request.from_user.last_name.charAt(0).toUpperCase()}</div>`;
+
+        element.innerHTML = `
+            <div class="notification-content">
+                <div class="notification-avatar">${avatarHtml}</div>
+                <div class="notification-text">
+                    <strong>${request.from_user.full_name}</strong> sent you a friend request
+                </div>
+            </div>
+            <div class="notification-actions">
+                <button class="btn btn-primary btn-sm" onclick="respondToFriendRequest(${request.id}, 'accept')">
+                    Accept
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="respondToFriendRequest(${request.id}, 'decline')">
+                    Decline
+                </button>
+            </div>
+        `;
+
+        return element;
+    }
+
+    // Handle friend request responses
+    window.respondToFriendRequest = function(requestId, action) {
+        const url = action === 'accept' 
+            ? `/notifications/accept-friend-request/${requestId}/`
+            : `/notifications/decline-friend-request/${requestId}/`;
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                // Reload friend requests and friends list
+                loadFriendRequests();
+                if (action === 'accept') {
+                    location.reload(); // Refresh to show new friend in the list
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error responding to friend request:', error);
+        });
+    };
+
+    // Remove friend functionality
+    window.removeFriend = function(friendId, friendName) {
+        if (!confirm(`Are you sure you want to remove ${friendName} from your friends?`)) {
+            return;
+        }
+
+        fetch(`/friendsearch/remove-friend/${friendId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the friend card from the DOM
+                const friendCard = document.querySelector(`[data-friend-id="${friendId}"]`);
+                if (friendCard) {
+                    friendCard.style.opacity = '0';
+                    friendCard.style.transform = 'translateY(-20px)';
+                    setTimeout(() => {
+                        friendCard.remove();
+                        
+                        // Check if there are no more friends
+                        const remainingFriends = document.querySelectorAll('#all-friends-list .friend-card');
+                        if (remainingFriends.length === 0) {
+                            document.getElementById('all-friends-list').innerHTML = `
+                                <div class="empty-state">
+                                    <div class="empty-state-icon">👥</div>
+                                    <div class="empty-state-title">No friends yet</div>
+                                    <div class="empty-state-text">Start adding friends to build your network!</div>
+                                </div>
+                            `;
+                        }
+                    }, 300);
+                }
+            } else {
+                alert(data.message || 'Failed to remove friend');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while removing the friend');
+        });
+    };
+
+    // Load friend requests on page load
+    if (document.getElementById('friend-requests-list')) {
+        loadFriendRequests();
+    }
+
+    // Add smooth scrolling for navigation
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    // Add intersection observer for animations
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    // Observe all cards for animation
+    document.querySelectorAll('.section-card, .friend-card').forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(card);
+    });
 });
     
     friendSearchInput.addEventListener('input', function() {

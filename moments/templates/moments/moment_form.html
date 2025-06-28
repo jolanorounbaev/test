@@ -1,8 +1,8 @@
-
 {% load static %}
 
-
-
+<script>
+  window.MOMENT_WORDLIST = {{ wordlist_json|safe }};
+</script>
 <script src="//unpkg.com/alpinejs" defer></script>
 
 <!-- moment_form.html -->
@@ -36,20 +36,39 @@
               <template x-if="previewType === 'youtube' && youtubeEmbedUrl">
                   <iframe :src="youtubeEmbedUrl" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width: 560px; height: 315px;"></iframe>
               </template>
+              <template x-if="previewType === 'gif' && gifUrl">
+                  <img :src="gifUrl" alt="GIF preview" class="gif-preview-img">
+              </template>
               <button type="button" @click="clearPreview()" class="clear-preview-btn">&times; Clear Preview</button>
           </div>
-      </template>      <!-- Media Actions Bar (New) -->
+      </template>
+      <!-- Media Actions Bar (New) -->
       <div class="media-actions-bar">
         <button type="button" @click="$refs.fileInput.click()" class="icon-btn media-upload-btn" title="Upload Image/Video">
           <i class="fas fa-image"></i>
         </button>
+        <button type="button" onclick="openGifModal('moment-form')" class="icon-btn gif-btn" title="Add GIF">
+          GIF
+        </button>
         <input type="file" name="media_file" @change="handleFile($event)" accept="image/*,video/*" x-ref="fileInput" style="display: none;">
         <input type="hidden" name="youtube_link" :value="youtubeLink"> {# Added hidden input for submission #}
+        <input type="hidden" name="gif_url" :value="gifUrl" id="gif-url-moment-form">
+      </div>
+      
+      <!-- GIF Preview Section -->
+      <div id="gif-preview-moment-form" class="hidden mt-3 p-3 bg-gray-50 rounded-lg border relative">
+        <img id="gif-preview-img-moment-form" src="" alt="Selected GIF" class="max-w-full h-auto rounded border">
+        <button type="button" onclick="removeSelectedGif('moment-form')" class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition-colors">
+          ×
+        </button>
       </div>
     </div>
     <div class="moment_form-interests">
       <label for="interest-input">Interests (max 3)</label>
-      <input type="text" id="interest-input" placeholder="Start typing an interest..." autocomplete="off">
+      <div class="interest-autocomplete-wrapper" style="position:relative;width:100%;">
+        <input type="text" id="interest-input" placeholder="Start typing an interest..." autocomplete="off">
+        <div id="autocomplete-suggestions" class="autocomplete-suggestions enhanced-autocomplete" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:10;width:100%;"></div>
+      </div>
       <div id="selected-interests" class="selected-interests mt-2 flex flex-wrap gap-2">
           <!-- Selected interests will be populated here by moment_feed.js -->
       </div>
@@ -69,18 +88,12 @@
       previewType: null, 
       previewUrl: null,
       youtubeLink: '',
+      gifUrl: '',
       imageFile: null, 
       videoFile: null,
-      // wordlist: {{ wordlist_json|safe }}, // If this was solely for Alpine-based interest suggestions, it might be removable too. Keeping for now if other parts of Alpine use it.
-
-      // START: Interest-related Alpine.js properties and methods have been removed.
-      // These are now handled by static/moments/js/moment_feed.js
-      // END: Interest-related Alpine.js properties and methods removed.
 
       init() {
         // console.log('Moment form Alpine component initialized.');
-        // If wordlist was fetched here for Alpine suggestions, that part can be removed.
-        // Example: this.interests = {{ wordlist_json|safe }}; // This line would be removed
 
         // Enable drag-and-drop of YouTube links, images, and videos into the description textarea
         const desc = document.getElementById('id_content');
@@ -129,6 +142,7 @@
         const file = event.target.files[0];
         if (file) {
           this.youtubeLink = ''; // Clear YouTube link
+          this.gifUrl = '';
           if (file.type.startsWith('image/')) {
             this.previewType = 'image';
             this.previewUrl = URL.createObjectURL(file);
@@ -137,6 +151,23 @@
             this.previewUrl = URL.createObjectURL(file);
           } else {
             this.clearPreview(); // Not a supported file type
+          }
+        }
+      },
+
+      handleGifUrl() {
+        // If gifUrl is a valid gif URL, show preview
+        if (this.gifUrl && this.gifUrl.match(/\.gif($|\?)/i)) {
+          this.previewType = 'gif';
+        } else if (this.previewType === 'gif') {
+          this.previewType = null;
+        }
+        // Clear other media
+        if (this.previewType === 'gif') {
+          this.youtubeLink = '';
+          this.previewUrl = '';
+          if (this.$refs && this.$refs.fileInput) {
+            this.$refs.fileInput.value = null;
           }
         }
       },
@@ -183,6 +214,7 @@
       clearPreview() {
         this.previewUrl = '';
         this.youtubeLink = '';
+        this.gifUrl = '';
         this.previewType = '';
         if (this.$refs.fileInput) {
           this.$refs.fileInput.value = null; 
@@ -368,9 +400,424 @@
   margin-bottom: 0.5rem; /* Space above media actions bar */
   max-width: 100%; 
 }
+
+/* Enhanced autocomplete suggestions styles */
+.autocomplete-suggestions.enhanced-autocomplete {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    z-index: 10;
+    background: #fff;
+    border: 1px solid var(--bg-accent, #e0e0e0);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 1.5px 4px rgba(0,0,0,0.04);
+    border-radius: 10px;
+    margin-top: 4px;
+    padding: 0.25rem 0;
+    min-width: 180px;
+    max-width: 350px;
+    max-height: 220px;
+    overflow-y: auto;
+    font-size: 1rem;
+    color: var(--text-main, #222);
+    transition: box-shadow 0.2s;
+}
+.autocomplete-suggestions.enhanced-autocomplete ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.autocomplete-suggestions.enhanced-autocomplete li {
+    padding: 0.6rem 1.1rem;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+    color: var(--text-main, #222);
+}
+.autocomplete-suggestions.enhanced-autocomplete li:hover,
+.autocomplete-suggestions.enhanced-autocomplete li.highlighted {
+    background: var(--bg-hover, #f0f4fa);
+    color: var(--primary, #007bff);
+}
+.autocomplete-suggestions.enhanced-autocomplete li:not(:last-child) {
+    border-bottom: 1px solid #f3f3f3;
+}
+
+/* Make sure the parent is relatively positioned for absolute suggestions */
+.moment_form-interests {
+    position: relative;
+}
+</style>
+<style>
+/* Twitter-like GIF button: blue pill with centered white text, matching image button */
+.icon-btn.gif-btn {
+  background: #1da1f2;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  width: 64px;
+  height: 40px;
+  font-size: 1.15em;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(29,161,242,0.10);
+  margin: 0 8px 0 0;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  letter-spacing: 1px;
+  padding: 0;
+}
+.icon-btn.gif-btn:hover,
+.icon-btn.gif-btn:focus {
+  background: #1a8cd8;
+  color: #fff;
+}
 </style>
 </form>
+
+<!-- GIF Search Modal -->
+<div id="gif-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50" style="overflow-y: auto; overflow-x: hidden;">
+  <div class="min-h-screen flex items-start justify-center p-4 pt-8">
+    <div class="bg-white rounded-2xl w-full max-w-2xl flex flex-col shadow-2xl mx-4 my-auto" style="max-height: 85vh;">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0 bg-white rounded-t-2xl">
+        <div class="flex items-center gap-3">
+          <svg class="w-6 h-6 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 3H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+          </svg>
+          <h3 class="text-lg font-bold text-gray-900">Choose a GIF</h3>
+        </div>
+        <button onclick="closeGifModal()" class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Search Bar -->
+      <div class="p-4 border-b border-gray-200 flex-shrink-0 bg-white">
+        <div class="relative">
+          <input 
+            type="text" 
+            id="gif-search-input" 
+            placeholder="Search for GIFs..."
+            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            autocomplete="off"
+          >
+          <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+      </div>
+      
+      <!-- GIF Results -->
+      <div class="flex-1 p-4 bg-gray-50 overflow-y-auto" style="height: 400px; -webkit-overflow-scrolling: touch;">
+        <div id="gif-results" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div class="col-span-full text-center py-8">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+            <p class="text-gray-500 mt-2">Loading GIFs...</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div class="p-3 border-t border-gray-200 text-center flex-shrink-0 bg-white rounded-b-2xl">
+        <p class="text-xs text-gray-500">Powered by Tenor</p>
+      </div>
+    </div>
+  </div>
 </div>
 
+<script>
+// GIF Modal Variables
+let currentMomentId = null;
+let currentSearchTerm = '';
+let isLoadingGifs = false;
+let currentPage = 0;
+let hasMoreGifs = true;
 
-<script src="{% static 'moments/js/moment_feed.js' %}"></script>
+function openGifModal(momentId) {
+  currentMomentId = momentId;
+  currentSearchTerm = '';
+  currentPage = 0;
+  hasMoreGifs = true;
+  isLoadingGifs = false;
+  
+  const modal = document.getElementById('gif-modal');
+  const searchInput = document.getElementById('gif-search-input');
+  const resultsContainer = document.getElementById('gif-results');
+  
+  // Clear previous search
+  searchInput.value = '';
+  resultsContainer.innerHTML = '';
+  
+  // Show modal first
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  
+  // Prevent body scrolling and ensure modal starts at top
+  document.body.scrollTop = 0;
+  document.documentElement.scrollTop = 0;
+  modal.scrollTop = 0;
+  
+  // Load trending GIFs
+  loadTrendingGifs();
+  
+  // Focus search input after modal is visible
+  setTimeout(() => {
+    searchInput.focus();
+  }, 100);
+}
+
+function closeGifModal() {
+  const modal = document.getElementById('gif-modal');
+  modal.classList.add('hidden');
+  document.body.style.overflow = 'auto';
+  currentMomentId = null;
+}
+
+function searchGifs() {
+  const searchTerm = document.getElementById('gif-search-input').value.trim();
+  const resultsContainer = document.getElementById('gif-results');
+  
+  // Reset pagination for new search
+  currentPage = 0;
+  hasMoreGifs = true;
+  currentSearchTerm = searchTerm;
+  
+  if (searchTerm === '') {
+    loadTrendingGifs();
+    return;
+  }
+  
+  // Clear previous results for new search
+  resultsContainer.innerHTML = '';
+  
+  // Show loading
+  resultsContainer.innerHTML = '<div class="col-span-full text-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div><p class="text-gray-500 mt-2">Searching GIFs...</p></div>';
+  
+  loadMoreGifs(searchTerm);
+}
+
+function loadMoreGifs(searchTerm = '') {
+  if (isLoadingGifs || !hasMoreGifs) return;
+  
+  isLoadingGifs = true;
+  const resultsContainer = document.getElementById('gif-results');
+  
+  // Add loading indicator if this is not the first page
+  if (currentPage > 0) {
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'loading-more';
+    loadingDiv.className = 'col-span-full text-center py-4';
+    loadingDiv.innerHTML = '<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div><p class="text-gray-400 mt-2 text-sm">Loading more GIFs...</p>';
+    resultsContainer.appendChild(loadingDiv);
+  }
+  
+  // Using Tenor API with your key
+  const apiKey = 'AIzaSyCxsM2SWKWaKtpfPf5_TcjJebF9dcAk9Gg';
+  const position = currentPage * 20; // 20 GIFs per page
+  let url;
+  
+  if (searchTerm) {
+    url = `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(searchTerm)}&key=${apiKey}&limit=20&pos=${position}&media_filter=gif`;
+  } else {
+    // Use popular search terms for "trending" since /trending endpoint has issues
+    const trendingTerms = ['funny', 'happy', 'reaction', 'cute', 'excited', 'wow', 'love', 'dance', 'party', 'celebrate'];
+    const randomTerm = trendingTerms[Math.floor(Math.random() * trendingTerms.length)];
+    url = `https://tenor.googleapis.com/v2/search?q=${randomTerm}&key=${apiKey}&limit=20&pos=${position}&media_filter=gif`;
+    console.log('Loading trending GIFs with term:', randomTerm);
+  }
+  
+  fetch(url)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Tenor API response:', data); // Debug log
+      
+      // Remove loading indicator
+      const loadingMore = document.getElementById('loading-more');
+      if (loadingMore) {
+        loadingMore.remove();
+      }
+      
+      if (data.results && data.results.length > 0) {
+        appendTenorGifs(data.results);
+        currentPage++;
+        
+        // Check if we have more GIFs to load
+        if (data.results.length < 20) {
+          hasMoreGifs = false;
+        }
+      } else {
+        hasMoreGifs = false;
+        if (currentPage === 0) {
+          // No results for first page
+          if (searchTerm) {
+            resultsContainer.innerHTML = '<div class="col-span-full text-center py-8"><p class="text-gray-500">No GIFs found. Try a different search term.</p></div>';
+          } else {
+            resultsContainer.innerHTML = '<div class="col-span-full text-center py-8"><p class="text-gray-500">No trending GIFs available. Please try searching.</p></div>';
+          }
+        }
+      }
+      
+      isLoadingGifs = false;
+    })
+    .catch(error => {
+      console.error('Error fetching GIFs:', error);
+      console.error('API URL was:', url); // Debug log
+      
+      // Remove loading indicator
+      const loadingMore = document.getElementById('loading-more');
+      if (loadingMore) {
+        loadingMore.remove();
+      }
+      
+      if (currentPage === 0) {
+        // Show error message instead of demo GIFs initially
+        resultsContainer.innerHTML = '<div class="col-span-full text-center py-8"><p class="text-gray-500">Failed to load GIFs. Please check your connection.</p><button onclick="loadTrendingGifs()" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded">Retry</button></div>';
+      }
+      
+      isLoadingGifs = false;
+      hasMoreGifs = false;
+    });
+}
+
+function loadTrendingGifs() {
+  currentSearchTerm = '';
+  currentPage = 0;
+  hasMoreGifs = true;
+  
+  const resultsContainer = document.getElementById('gif-results');
+  
+  // Show loading
+  resultsContainer.innerHTML = '<div class="col-span-full text-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div><p class="text-gray-500 mt-2">Loading trending GIFs...</p></div>';
+  
+  loadMoreGifs();
+}
+
+function appendTenorGifs(gifs) {
+  const resultsContainer = document.getElementById('gif-results');
+  
+  if (gifs.length === 0) return;
+  
+  // Remove any existing loading indicators
+  const existingLoading = resultsContainer.querySelector('.col-span-full');
+  if (existingLoading && existingLoading.textContent.includes('Loading')) {
+    existingLoading.remove();
+  }
+  
+  const gifsHtml = gifs.map(gif => `
+    <div class="gif-item cursor-pointer rounded-lg overflow-hidden hover:opacity-80 transition-all duration-200 hover:scale-105 border border-gray-200 hover:border-blue-300 bg-white" onclick="selectGif('${gif.media_formats.gif.url}', '${gif.content_description}')">
+      <div class="relative w-full h-32">
+        <img src="${gif.media_formats.gif.url}" alt="${gif.content_description}" class="w-full h-full object-cover">
+      </div>
+    </div>
+  `).join('');
+  
+  resultsContainer.insertAdjacentHTML('beforeend', gifsHtml);
+}
+
+function selectGif(gifUrl, title) {
+  if (!currentMomentId) return;
+  
+  // Update the hidden input with the GIF URL
+  document.getElementById(`gif-url-${currentMomentId}`).value = gifUrl;
+  
+  // Show preview
+  const preview = document.getElementById(`gif-preview-${currentMomentId}`);
+  const previewImg = document.getElementById(`gif-preview-img-${currentMomentId}`);
+  
+  previewImg.src = gifUrl;
+  previewImg.alt = title;
+  preview.classList.remove('hidden');
+  
+  // For moment form, also update Alpine.js state
+  if (currentMomentId === 'moment-form') {
+    // Find the Alpine component and update it
+    const form = document.querySelector('.moment_form');
+    if (form && form._x_dataStack) {
+      const alpineData = form._x_dataStack[0];
+      if (alpineData) {
+        alpineData.gifUrl = gifUrl;
+        alpineData.previewType = 'gif';
+      }
+    }
+  }
+  
+  // Close modal
+  closeGifModal();
+}
+
+function removeSelectedGif(momentId) {
+  document.getElementById(`gif-url-${momentId}`).value = '';
+  document.getElementById(`gif-preview-${momentId}`).classList.add('hidden');
+  
+  // For moment form, also update Alpine.js state
+  if (momentId === 'moment-form') {
+    const form = document.querySelector('.moment_form');
+    if (form && form._x_dataStack) {
+      const alpineData = form._x_dataStack[0];
+      if (alpineData) {
+        alpineData.gifUrl = '';
+        alpineData.previewType = null;
+      }
+    }
+  }
+}
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('gif-search-input');
+  const modal = document.getElementById('gif-modal');
+  const gifResultsContainer = document.querySelector('#gif-modal .overflow-y-auto');
+  
+  // Search input debounced event listener
+  if (searchInput) {
+    let searchTimeout;
+    searchInput.addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(searchGifs, 500); // Debounce search
+    });
+  }
+  
+  // Infinite scroll for GIF results
+  if (gifResultsContainer) {
+    gifResultsContainer.addEventListener('scroll', function() {
+      const { scrollTop, scrollHeight, clientHeight } = this;
+      
+      // Check if scrolled to bottom (with 100px threshold)
+      if (scrollTop + clientHeight >= scrollHeight - 100) {
+        if (!isLoadingGifs && hasMoreGifs) {
+          loadMoreGifs(currentSearchTerm);
+        }
+      }
+    });
+  }
+  
+  // Click outside to close modal
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      // Check if click is on the modal backdrop (not the modal content)
+      if (e.target === modal || e.target === modal.firstElementChild) {
+        closeGifModal();
+      }
+    });
+  }
+  
+  // Add escape key listener to close modal
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+      closeGifModal();
+    }
+  });
+});
+</script>
+
+</div>

@@ -1,3 +1,18 @@
+/* Moment Card Base Styles */
+.moment-card {
+    width: 700px !important;
+    max-width: none !important;
+    min-height: 400px;
+    height: auto !important;
+    overflow: visible !important;
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+}
 :root {
   --bg-base: #FFFFFF; /* White */
   --bg-card: #F8F9FA; /* Very light grey */
@@ -77,19 +92,30 @@ body {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
   padding: 1.5rem;
   margin: 0 auto 1.5rem auto;
-  width: 100%;
-  max-width: 1400px;
-  min-height: 200px;
-  max-height: 600px;
+  width: 700px;
+  max-width: 100%;
+  min-height: 500px;
+  height: auto;
   color: var(--text-main);
   transition: transform 0.2s ease;
   box-sizing: border-box;
-  overflow: auto; /* Allow scrolling if content exceeds max-height */
 }
 
 .moment-card:hover {
   transform: scale(1.01);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* Enhanced Moment Card Styles */
+.moment-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.moment-card:hover {
+    transform: translateY(-4px) scale(1.005);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 8px 16px rgba(0, 0, 0, 0.06);
 }
 
 /* Text Scaling */
@@ -130,6 +156,21 @@ body {
   object-fit: cover;
   margin-top: 1rem;
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+/* Media container styles for consistent sizing */
+.moment-card img,
+.moment-card video,
+.moment-card iframe {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border: none;
+    border-radius: 0;
+}
+
+.moment-card video {
+    background-color: black;
 }
 
 /* 🎯 Interests */
@@ -268,6 +309,33 @@ body {
     text-align: center;
     animation: flickerText 1.5s infinite;
     text-shadow: 0 0 4px var(--btn-bg), 0 0 6px var(--bg-hover); /* Adjusted shadow to new theme */
+}
+
+/* Fire corner animation styles */
+.moment-fire-corner {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 87, 34, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.corner-fire {
+    width: 12px;
+    height: 12px;
+}
+
+.corner-text {
+    font-size: 9px;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
 }
 
 /* ============================
@@ -727,7 +795,7 @@ body {
 }
 
 .moments-sidebar-right {
-  min-width: 320px;
+  min-width: 284.4px;
   max-width: 400px;
   flex: 0 0 200px;
 }
@@ -741,11 +809,10 @@ body {
   align-items: center;
 }
 
-.moment_form, .moment-card {
-  width: 100% !important;
-  max-width: 100% !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
+.moment_form {
+  width: 700px;
+  max-width: 100%;
+  margin: 0 auto 2rem auto;
 }
 
 .interest-search-banner {
@@ -778,16 +845,193 @@ body {
   display: block;
 }
 
-/* ============================
-   🌐 Moments Flex Layout (Even Distribution)
-============================ */
-.moments-flex-container {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  width: 100vw !important;
-  max-width: none !important;
-  margin: 0 !important;
-  padding: 0 2vw;
-  box-sizing: border-box;
+/* Media container styles for proper image display */
+.moment-card img:not(.profile-pic) {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: contain;
+    border: none;
+    border-radius: 0;
+    background-color: #f8f9fa;
+}
+
+/* Profile picture specific styles */
+.moment-card img.profile-pic {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    border-radius: 50% !important;
+    display: block !important;
+    max-height: none !important;
+    background-color: transparent !important;
+}
+
+.moment-card video {
+    width: 100%;
+    height: auto;
+    max-height: 400px;
+    object-fit: contain;
+    background-color: black;
+    border: none;
+    border-radius: 0;
+}
+
+.moment-card iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 0;
+}
+
+/* Fire corner animation styles */
+.moment-fire-corner {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 87, 34, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+.corner-fire {
+    width: 12px;
+    height: 12px;
+}
+
+.corner-text {
+    font-size: 9px;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+}
+
+/* Profile Picture Enhancements */
+.moment-card .ring-3 {
+    --tw-ring-width: 3px;
+    box-shadow: 0 0 0 var(--tw-ring-width) var(--tw-ring-color);
+}
+
+.moment-card .ring-blue-100 {
+    --tw-ring-color: #dbeafe;
+}
+
+/* Enhanced Button Styles */
+.moment-card button {
+    position: relative;
+    overflow: hidden;
+}
+
+.moment-card button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.moment-card button:hover::before {
+    left: 100%;
+}
+
+/* Fire Animation Enhancement */
+@keyframes fireGlow {
+    0%, 100% { filter: brightness(1) drop-shadow(0 0 5px #ff6b35); }
+    50% { filter: brightness(1.2) drop-shadow(0 0 15px #ff6b35); }
+}
+
+.moment-fire-corner img {
+    animation: fireGlow 2s ease-in-out infinite;
+}
+
+/* Reaction Button Enhancements */
+.fire-btn:hover, .heart-btn:hover {
+    transform: scale(1.05);
+}
+
+.fire-btn:active, .heart-btn:active {
+    transform: scale(0.95);
+}
+
+/* Comment Section Scroll */
+.max-h-80 {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.max-h-80::-webkit-scrollbar {
+    width: 6px;
+}
+
+.max-h-80::-webkit-scrollbar-track {
+    background: #f7fafc;
+    border-radius: 3px;
+}
+
+.max-h-80::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 3px;
+}
+
+.max-h-80::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+/* Gradient Text for Usernames */
+.gradient-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Enhanced Tags */
+.moment-card .inline-flex {
+    backdrop-filter: blur(5px);
+    transition: all 0.2s ease;
+}
+
+.moment-card .inline-flex:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.25);
+}
+
+/* Media Container Improvements */
+.moment-card .rounded-2xl img,
+.moment-card .rounded-2xl video,
+.moment-card .rounded-2xl iframe {
+    transition: transform 0.3s ease;
+}
+
+.moment-card .rounded-2xl:hover img,
+.moment-card .rounded-2xl:hover video {
+    transform: scale(1.02);
+}
+
+/* Focus States */
+.moment-card input:focus,
+.moment-card textarea:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    border-color: #3b82f6;
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+    .moment-card,
+    .moment-card *,
+    .moment-card *::before,
+    .moment-card *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }

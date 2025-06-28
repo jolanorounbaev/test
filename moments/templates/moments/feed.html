@@ -6,12 +6,32 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'moments/css/moment_styles.css' %}">
 
+
 <div>
-  <aside class="moments-sidebar-left">
-  </aside>
+  <aside class="moments-sidebar-left"></aside>
   <main class="moments-main-content">
     <!-- Moment Form -->
     {% include "moments/moment_form.html" %}
+    <!-- Interest Search Message -->
+    {% if request.GET.interest %}
+      <div id="interest-search-banner" class="bg-blue-100 border border-blue-300 text-blue-800 px-4 py-2 rounded mb-4 text-center relative flex items-center justify-center">
+        <span class="flex-1">Now searching interests of <strong>{{ request.GET.interest }}</strong></span>
+        <button id="close-interest-search" aria-label="Stop searching interests" class="absolute right-4 top-1/2 -translate-y-1/2 text-blue-800 hover:text-blue-500 text-xl font-bold bg-transparent border-none cursor-pointer">&times;</button>
+      </div>
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          var closeBtn = document.getElementById('close-interest-search');
+          if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+              // Remove the interest param from the URL and reload
+              var url = new URL(window.location.href);
+              url.searchParams.delete('interest');
+              window.location.href = url.toString();
+            });
+          }
+        });
+      </script>
+    {% endif %}
     <!-- Vertical Feed -->
     <div id="moment-feed" class="space-y-6">
       {% for moment in moments %}

@@ -129,11 +129,15 @@ def moment_feed(request):
         else:
             moment.fire_cooldown_seconds = 0
 
+    import json
+    from .wordlist import WORDLIST
+    wordlist_json = json.dumps(WORDLIST)
     return render(request, 'moments/feed.html', {
         'moments': moments_to_display,
         'on_fire_moments': on_fire_moments,  # Add this to the context
         'interest_query': interest_query,
         'fire_cooldowns': fire_cooldowns,
+        'wordlist_json': wordlist_json,  # Pass to template for autocomplete
     })
 
 
@@ -182,9 +186,25 @@ def join_moment(request, moment_id):
 def add_comment(request, moment_id):
     if request.method == "POST":
         moment = get_object_or_404(Moment, id=moment_id)
-        content = request.POST.get("content")
-        if content:
-            MomentComment.objects.create(moment=moment, user=request.user, content=content)
+        content = request.POST.get("content", "").strip()
+        gif_url = request.POST.get("gif_url", "").strip()
+        
+        # Combine content and GIF URL for now (until we can add the field)
+        if gif_url:
+            if content:
+                final_content = f"{content} {gif_url}"
+            else:
+                final_content = gif_url
+        else:
+            final_content = content
+            
+        # Allow comment with either text content or GIF
+        if final_content:
+            MomentComment.objects.create(
+                moment=moment, 
+                user=request.user, 
+                content=final_content
+            )
     return redirect('moments:moment_feed')
 
 

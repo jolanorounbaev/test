@@ -8,40 +8,17 @@ function getCSRFToken() {
   return '';
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  // === Interest Autocomplete ===
+document.addEventListener('DOMContentLoaded', () => {  // === Interest Autocomplete ===
   const input = document.getElementById('interest-input');
   const selectedContainer = document.getElementById('selected-interests');
   const hiddenInputsContainer = document.getElementById('interest-hidden-inputs');
-  const suggestionBox = document.createElement('div');
+  const suggestionBox = document.getElementById('autocomplete-suggestions'); // Use existing element
   const selectedInterests = []; // Source of truth for selected items
 
-  if (!input || !selectedContainer || !hiddenInputsContainer) {
+  if (!input || !selectedContainer || !hiddenInputsContainer || !suggestionBox) {
     console.error("Interest feature critical elements not found. Autocomplete disabled.");
     return;
   }
-
-  suggestionBox.className = 'bg-white border rounded shadow absolute z-10 max-h-40 overflow-y-auto text-sm';
-  suggestionBox.style.display = 'none';
-  if (input.parentNode) {
-    input.parentNode.insertBefore(suggestionBox, input.nextSibling); // Insert suggestionBox after the input field
-  } else {
-    console.error("Input field has no parent node. Cannot append suggestion box.");
-    return;
-  }
-
-  function updateSuggestionBoxPosition() {
-    if (!input) return;
-    const rect = input.getBoundingClientRect();
-    suggestionBox.style.left = `${rect.left + window.scrollX}px`;
-    suggestionBox.style.top = `${rect.bottom + window.scrollY}px`;
-    suggestionBox.style.width = `${rect.width}px`;
-  }
-
-  updateSuggestionBoxPosition();
-  window.addEventListener('resize', updateSuggestionBoxPosition);
-  window.addEventListener('scroll', updateSuggestionBoxPosition, true); // Update on scroll too
-
   // Fetch wordlist ONCE and set up everything that depends on it
   fetch("/moments/interest-wordlist/")
     .then(res => {
@@ -111,43 +88,67 @@ document.addEventListener('DOMContentLoaded', () => {
         
         console.log("Hidden input created for interest:", trimmedValue);
         return true;
-      }
-
-      // DEBUG: Log input events and suggestion box state
+      }      // DEBUG: Log input events and suggestion box state
       input.addEventListener('input', () => {
-        const term = input.value.toLowerCase();
+        const term = input.value.trim().toLowerCase();
         console.log('[DEBUG] Input event. Term:', term);
         suggestionBox.innerHTML = '';
-        if (term) {
-          // Use includes for substring matching instead of startsWith
-          const matches = wordlist.filter(w => w.toLowerCase().includes(term));
+        if (term && term.length >= 1) {
+          // Better filtering logic:
+          // 1. Exact matches first
+          // 2. Starts with matches
+          // 3. Word boundary matches (e.g., "bas" matches "Basketball" and "Baseball")
+          // 4. Contains matches as fallback
+          
+          const exactMatches = wordlist.filter(w => w.toLowerCase() === term);
+          const startsWithMatches = wordlist.filter(w => 
+            w.toLowerCase().startsWith(term) && !exactMatches.includes(w)
+          );
+          const wordBoundaryMatches = wordlist.filter(w => {
+            const words = w.toLowerCase().split(/[\s-_]+/);
+            return words.some(word => word.startsWith(term)) && 
+                   !exactMatches.includes(w) && 
+                   !startsWithMatches.includes(w);
+          });
+          const containsMatches = wordlist.filter(w => 
+            w.toLowerCase().includes(term) && 
+            !exactMatches.includes(w) && 
+            !startsWithMatches.includes(w) && 
+            !wordBoundaryMatches.includes(w)
+          );
+          
+          // Combine matches with priority order, limit to 8 results
+          const matches = [
+            ...exactMatches,
+            ...startsWithMatches,
+            ...wordBoundaryMatches,
+            ...containsMatches
+          ].slice(0, 8);
+          
           console.log('[DEBUG] Matches:', matches);
           if (matches.length > 0) {
-            matches.slice(0, 10).forEach(match => {
-              const item = document.createElement('div');
-              item.className = 'p-2 hover:bg-gray-100 cursor-pointer';
-              item.textContent = match;
-              // DEBUG: Add border and background for visibility
-              item.style.border = '1px solid #007bff';
-              item.style.background = '#e6f0ff';
-              item.style.fontSize = '1.1em';
-              item.addEventListener('click', () => {
+            const ul = document.createElement('ul');            matches.forEach(match => {
+              const li = document.createElement('li');
+              li.textContent = match;
+              li.addEventListener('click', () => {
                 console.log(`[DEBUG] Suggestion clicked: "${match}"`);
                 addInterest(match);
                 input.value = '';
                 suggestionBox.innerHTML = '';
                 suggestionBox.style.display = 'none';
               });
-              suggestionBox.appendChild(item);
+              li.addEventListener('mouseenter', () => {
+                // Remove highlighted class from all items
+                suggestionBox.querySelectorAll('li.highlighted').forEach(item => {
+                  item.classList.remove('highlighted');
+                });
+                // Add highlighted class to current item
+                li.classList.add('highlighted');
+              });
+              ul.appendChild(li);
             });
+            suggestionBox.appendChild(ul);
             suggestionBox.style.display = 'block';
-            suggestionBox.style.position = 'absolute';
-            suggestionBox.style.zIndex = 9999;
-            suggestionBox.style.background = '#fff';
-            suggestionBox.style.border = '2px solid #007bff';
-            suggestionBox.style.minWidth = input.offsetWidth + 'px';
-            suggestionBox.style.maxWidth = '350px';
-            updateSuggestionBoxPosition();
             console.log('[DEBUG] Suggestion box should be visible.');
           } else {
             suggestionBox.style.display = 'none';
@@ -155,25 +156,47 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         } else {
           suggestionBox.style.display = 'none';
-          console.log('[DEBUG] Empty term, suggestion box hidden.');
+          console.log('[DEBUG] Empty or too short term, suggestion box hidden.');
         }
-        // DEBUG: Log suggestion box DOM and style
-        console.log('[DEBUG] SuggestionBox DOM:', suggestionBox);
-        console.log('[DEBUG] SuggestionBox style.display:', suggestionBox.style.display);
-        console.log('[DEBUG] SuggestionBox offset/position:', suggestionBox.getBoundingClientRect());
-      });
-
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
+      });      input.addEventListener('keydown', (e) => {
+        const suggestions = suggestionBox.querySelectorAll('li');
+        let currentHighlighted = suggestionBox.querySelector('li.highlighted');
+        
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (suggestions.length > 0) {
+            if (currentHighlighted) {
+              currentHighlighted.classList.remove('highlighted');
+              const nextItem = currentHighlighted.nextElementSibling || suggestions[0];
+              nextItem.classList.add('highlighted');
+            } else {
+              suggestions[0].classList.add('highlighted');
+            }
+          }
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (suggestions.length > 0) {
+            if (currentHighlighted) {
+              currentHighlighted.classList.remove('highlighted');
+              const prevItem = currentHighlighted.previousElementSibling || suggestions[suggestions.length - 1];
+              prevItem.classList.add('highlighted');
+            } else {
+              suggestions[suggestions.length - 1].classList.add('highlighted');
+            }
+          }
+        } else if (e.key === 'Enter') {
           e.preventDefault();
           const currentValue = input.value.trim();
           let interestToAdd = null;
 
-          if (currentValue) {
+          // If there's a highlighted suggestion, use it
+          if (currentHighlighted) {
+            interestToAdd = currentHighlighted.textContent;
+          } else if (currentValue) {
             if (wordlist.includes(currentValue)) {
               interestToAdd = currentValue;
-            } else if (suggestionBox.children.length > 0 && suggestionBox.style.display !== 'none') {
-              const firstSuggestionItem = suggestionBox.children[0];
+            } else if (suggestionBox.style.display !== 'none') {
+              const firstSuggestionItem = suggestionBox.querySelector('li');
               if (firstSuggestionItem) {
                 const firstSuggestionText = firstSuggestionItem.textContent;
                 if (firstSuggestionText && wordlist.includes(firstSuggestionText)) {
@@ -192,11 +215,11 @@ document.addEventListener('DOMContentLoaded', () => {
             added = addInterest(currentValue);
           }
           
-          // Clear input and hide suggestions only if an attempt was made to add something
-          // or if the input should always be cleared on Enter.
-          // If 'added' is false due to validation, user might want to see their input.
-          // For now, clear consistently.
+          // Clear input and hide suggestions
           input.value = ''; 
+          suggestionBox.innerHTML = '';
+          suggestionBox.style.display = 'none';
+        } else if (e.key === 'Escape') {
           suggestionBox.innerHTML = '';
           suggestionBox.style.display = 'none';
         }
@@ -259,7 +282,13 @@ window.loadComments = function(momentId) {
         container.innerHTML = "";
         container.classList.remove("loaded-visible");
         container.classList.add("hidden");
-        btn.innerHTML = "👁️ View Comments";
+        btn.innerHTML = `
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+          </svg>
+          View Comments
+        `;
         return;
     }
 
@@ -270,7 +299,13 @@ window.loadComments = function(momentId) {
             container.innerHTML = html;
             container.classList.remove("hidden");
             container.classList.add("loaded-visible");
-            btn.innerHTML = '<i class="fas fa-eye-slash"></i> Hide Comments';
+            btn.innerHTML = `
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd" />
+                <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+              </svg>
+              Hide Comments
+            `;
         })
         .catch(err => {
             console.error("Failed to load comments:", err);
@@ -532,9 +567,8 @@ function fireHandler(fireBtn) {
   fetch(`/moments/react/fire/${momentId}/`, {
     method: 'POST',
     headers: { 'X-CSRFToken': getCSRFToken() },
-  })
-  .then(res => res.json())
-  .then data => {
+  })  .then(res => res.json())
+  .then((data) => {
     if (data.status === 'success') {
       fireBtn.innerText = `🔥 ${data.fire_count}`;
       showFireCooldown(fireBtn, data.cooldown_seconds);

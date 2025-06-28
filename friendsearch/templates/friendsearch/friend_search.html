@@ -34,10 +34,79 @@
           </div>
         {% endif %}
       </div>
-      <button type="button" class="btn btn-outline-custom" data-bs-toggle="modal" data-bs-target="#editInterestsModal">
-        <i class="bi bi-pencil-square"></i>
-        Edit My Interests
-      </button>
+      <!-- Edit My Interests Content (formerly modal) -->
+      <div class="edit-interests-content mt-4">
+        <form method="POST" id="editInterestsForm">
+          {% csrf_token %}
+          <input type="hidden" name="update-interest" value="1">
+          <p class="text-muted mb-4">
+            Choose up to 3 interests that best represent what you're passionate about. 
+            These will be used to match you with like-minded people.
+          </p>
+          <div class="row flex-column align-items-stretch" style="gap: 1.5rem;">
+            <div class="col-12">
+              <div class="form-group">
+                <label class="form-label">Interest 1 *</label>
+                <div class="autocomplete-container">
+                  <input type="text" 
+                         name="update-interest_1" 
+                         id="modal-interest-1"
+                         class="form-control-custom wide-interest-input"
+                         value="{{ update_form.interest_1.value|default:'' }}"
+                         placeholder="e.g. Photography"
+                         autocomplete="off"
+                         required>
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="form-group">
+                <label class="form-label">Interest 2</label>
+                <div class="autocomplete-container">
+                  <input type="text" 
+                         name="update-interest_2" 
+                         id="modal-interest-2"
+                         class="form-control-custom wide-interest-input"
+                         value="{{ update_form.interest_2.value|default:'' }}"
+                         placeholder="e.g. Hiking"
+                         autocomplete="off">
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="form-group">
+                <label class="form-label">Interest 3</label>
+                <div class="autocomplete-container">
+                  <input type="text" 
+                         name="update-interest_3" 
+                         id="modal-interest-3"
+                         class="form-control-custom wide-interest-input"
+                         value="{{ update_form.interest_3.value|default:'' }}"
+                         placeholder="e.g. Cooking"
+                         autocomplete="off">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 p-3 border rounded description-box">
+            <h6><i class="bi bi-lightbulb"></i> Description (Optional)</h6>
+            <textarea name="description" 
+                      class="form-control-custom" 
+                      rows="3" 
+                      placeholder="Tell others a bit about yourself and your interests... (max 150 characters)"
+                      maxlength="150">{{ request.user.description|default:'' }}</textarea>
+            <small class="text-muted">
+              <span id="desc-char-count">{{ request.user.description|length|default:0 }}</span>/150 characters
+            </small>
+          </div>
+          <div class="mt-3">
+            <button type="submit" class="btn btn-primary-custom">
+              <i class="bi bi-check-circle"></i>
+              Save Interests
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <!-- Search Preferences Card -->
@@ -54,10 +123,126 @@
         {% else %}
           <small class="text-muted">No preferences saved yet</small>
         {% endif %}
-      </div>      <button type="button" class="btn btn-outline-custom" data-bs-toggle="modal" data-bs-target="#searchPreferencesModal">
-        <i class="bi bi-gear-fill"></i>
-        Edit Preferences
-      </button>
+      </div>
+      <!-- Edit Preferences Content (formerly modal) -->
+      <div class="edit-preferences-content mt-4">
+        <form method="POST" id="searchPreferencesForm">
+          {% csrf_token %}
+          <input type="hidden" name="save_search_preferences" value="1">
+          <p class="text-muted mb-4">
+            Set your default search preferences. These will be automatically applied when you visit the search page.
+          </p>
+          <!-- Preferred Interests -->
+          <h6 class="mb-3"><i class="bi bi-heart"></i> Preferred Interests to Search For</h6>
+          <div class="row flex-column align-items-stretch" style="gap: 1.5rem;">
+            <div class="col-12">
+              <div class="form-group">
+                <label class="form-label">Interest 1</label>
+                <div class="autocomplete-container">
+                  <input type="text" 
+                         name="pref-interest_1" 
+                         id="pref-interest-1"
+                         class="form-control-custom wide-interest-input"
+                         value="{{ pref_update_form.interest_1.value|default:'' }}"
+                         placeholder="e.g. Photography"
+                         autocomplete="off">
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="form-group">
+                <label class="form-label">Interest 2</label>
+                <div class="autocomplete-container">
+                  <input type="text" 
+                         name="pref-interest_2" 
+                         id="pref-interest-2"
+                         class="form-control-custom wide-interest-input"
+                         value="{{ pref_update_form.interest_2.value|default:'' }}"
+                         placeholder="e.g. Hiking"
+                         autocomplete="off">
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="form-group">
+                <label class="form-label">Interest 3</label>
+                <div class="autocomplete-container">
+                  <input type="text" 
+                         name="pref-interest_3" 
+                         id="pref-interest-3"
+                         class="form-control-custom wide-interest-input"
+                         value="{{ pref_update_form.interest_3.value|default:'' }}"
+                         placeholder="e.g. Cooking"
+                         autocomplete="off">
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Other Preferences -->
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label"><i class="bi bi-translate"></i> Preferred Language</label>
+                <select name="search-main_language" class="form-control-custom">
+                  <option value="">Any Language</option>
+                  {% for code, name in search_form.main_language.field.choices %}
+                    <option value="{{ code }}" {% if search_form.main_language.value == code %}selected{% endif %}>
+                      {{ name }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label class="form-label"><i class="bi bi-geo-circle"></i> Search Distance</label>
+                <select name="search-radius_km" class="form-control-custom">
+                  {% for value, label in search_form.radius_km.field.choices %}
+                    <option value="{{ value }}" {% if search_form.radius_km.value == value|stringformat:"s" %}selected{% endif %}>
+                      {{ label }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="bi bi-calendar-heart"></i> Age Preference</label>
+            <div class="row">
+              {% for value, label in search_form.age_filtering_mode.field.choices %}
+                <div class="col-md-6">
+                  <div class="form-check">
+                    <input type="radio" 
+                           name="search-age_filtering_mode" 
+                           value="{{ value }}" 
+                           id="pref_age_{{ value }}"
+                           class="form-check-input"
+                           {% if search_form.age_filtering_mode.value == value %}checked{% endif %}>
+                    <label for="pref_age_{{ value }}" class="form-check-label">{{ label }}</label>
+                  </div>
+                </div>
+              {% endfor %}
+              <div class="col-md-6">
+                <div class="form-check">
+                  <input type="radio" 
+                         name="search-age_filtering_mode" 
+                         value="" 
+                         id="pref_age_any"
+                         class="form-check-input"
+                         {% if not search_form.age_filtering_mode.value %}checked{% endif %}>
+                  <label for="pref_age_any" class="form-check-label">Any age</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-3">
+            <button type="submit" class="btn btn-primary-custom">
+              <i class="bi bi-check-circle"></i>
+              Save Preferences
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
@@ -89,7 +274,6 @@
           <small class="text-muted">Sorted by match score</small>
         {% endif %}
       </div>
-
       {% if results|length > 0 %}
         <div class="results-grid">
           {% for result in results %}
@@ -97,7 +281,6 @@
               <div class="match-score">
                 {{ result.score }}% Match
               </div>
-              
               <div class="profile-section">
                 {% if result.user.profile_picture %}
                   <img src="{{ result.user.profile_picture.url }}" alt="Profile picture" class="profile-img">
@@ -106,7 +289,6 @@
                     <i class="bi bi-person-fill"></i>
                   </div>
                 {% endif %}
-                
                 <div class="user-info">
                   <h4>{{ result.user.first_name }} {{ result.user.last_name }}</h4>
                   <div class="user-meta">
@@ -131,14 +313,12 @@
                   </div>
                 </div>
               </div>
-
               {% if result.user.description %}
                 <div class="user-description">
                   <i class="bi bi-chat-quote"></i>
                   "{{ result.user.description }}"
                 </div>
               {% endif %}
-
               {% if result.user.interests %}
                 <div class="user-interests">
                   <h5><i class="bi bi-heart"></i> Interests</h5>
@@ -149,7 +329,6 @@
                   </ul>
                 </div>
               {% endif %}
-
               <div class="user-actions">
                 <button class="action-btn chat-btn" onclick="startChat({{ result.chat_room_id }})">
                   <i class="bi bi-chat-dots"></i>
@@ -168,236 +347,11 @@
           <i class="bi bi-search"></i>
           <h4>No friends found matching your criteria</h4>
           <p class="text-muted">Try adjusting your search filters or interests</p>
-          <button type="button" class="btn btn-outline-custom mt-3" onclick="resetSearch()">
-            <i class="bi bi-arrow-clockwise"></i>
-            Reset Search
-          </button>
         </div>
       {% endif %}    </div>
   {% endif %}
 </div>
 </div> <!-- End friend-search-container -->
-
-<!-- Edit Interests Modal -->
-<div class="modal fade" id="editInterestsModal" tabindex="-1" aria-labelledby="editInterestsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">      <div class="modal-header">
-        <h5 class="modal-title" id="editInterestsModalLabel">
-          <i class="bi bi-heart-fill"></i>
-          Edit My Interests
-        </h5>
-      </div>
-      <form method="POST" id="editInterestsForm">
-        <div class="modal-body">
-          {% csrf_token %}
-          <input type="hidden" name="update-interest" value="1">
-          
-          <p class="text-muted mb-4">
-            Choose up to 3 interests that best represent what you're passionate about. 
-            These will be used to match you with like-minded people.
-          </p>
-          
-          <div class="row">
-            <div class="col-md-4">
-              <div class="form-group">
-                <label class="form-label">Interest 1 *</label>
-                <div class="autocomplete-container">
-                  <input type="text" 
-                         name="update-interest_1" 
-                         id="modal-interest-1"
-                         class="form-control-custom"
-                         value="{{ update_form.interest_1.value|default:'' }}"
-                         placeholder="e.g. Photography"
-                         autocomplete="off"
-                         required>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group">
-                <label class="form-label">Interest 2</label>
-                <div class="autocomplete-container">
-                  <input type="text" 
-                         name="update-interest_2" 
-                         id="modal-interest-2"
-                         class="form-control-custom"
-                         value="{{ update_form.interest_2.value|default:'' }}"
-                         placeholder="e.g. Hiking"
-                         autocomplete="off">
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group">
-                <label class="form-label">Interest 3</label>
-                <div class="autocomplete-container">
-                  <input type="text" 
-                         name="update-interest_3" 
-                         id="modal-interest-3"
-                         class="form-control-custom"
-                         value="{{ update_form.interest_3.value|default:'' }}"
-                         placeholder="e.g. Cooking"
-                         autocomplete="off">
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="mt-4 p-3 border rounded description-box">
-            <h6><i class="bi bi-lightbulb"></i> Description (Optional)</h6>
-            <textarea name="description" 
-                      class="form-control-custom" 
-                      rows="3" 
-                      placeholder="Tell others a bit about yourself and your interests... (max 150 characters)"
-                      maxlength="150">{{ request.user.description|default:'' }}</textarea>
-            <small class="text-muted">
-              <span id="desc-char-count">{{ request.user.description|length|default:0 }}</span>/150 characters
-            </small>
-          </div>
-        </div>        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary-custom">
-            <i class="bi bi-check-circle"></i>
-            Save Interests
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<!-- Search Preferences Modal -->
-<div class="modal fade" id="searchPreferencesModal" tabindex="-1" aria-labelledby="searchPreferencesModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">      <div class="modal-header">
-        <h5 class="modal-title" id="searchPreferencesModalLabel">
-          <i class="bi bi-sliders"></i>
-          Search Preferences
-        </h5>
-      </div>
-      <form method="POST" id="searchPreferencesForm">
-        <div class="modal-body">
-          {% csrf_token %}
-          <input type="hidden" name="save_search_preferences" value="1">
-          
-          <p class="text-muted mb-4">
-            Set your default search preferences. These will be automatically applied when you visit the search page.
-          </p>
-
-          <!-- Preferred Interests -->
-          <h6 class="mb-3"><i class="bi bi-heart"></i> Preferred Interests to Search For</h6>
-          <div class="row mb-4">
-            <div class="col-md-4">
-              <div class="form-group">
-                <label class="form-label">Interest 1</label>
-                <div class="autocomplete-container">
-                  <input type="text" 
-                         name="pref-interest_1" 
-                         id="pref-interest-1"
-                         class="form-control-custom"
-                         value="{{ pref_update_form.interest_1.value|default:'' }}"
-                         placeholder="e.g. Photography"
-                         autocomplete="off">
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group">
-                <label class="form-label">Interest 2</label>
-                <div class="autocomplete-container">
-                  <input type="text" 
-                         name="pref-interest_2" 
-                         id="pref-interest-2"
-                         class="form-control-custom"
-                         value="{{ pref_update_form.interest_2.value|default:'' }}"
-                         placeholder="e.g. Hiking"
-                         autocomplete="off">
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="form-group">
-                <label class="form-label">Interest 3</label>
-                <div class="autocomplete-container">
-                  <input type="text" 
-                         name="pref-interest_3" 
-                         id="pref-interest-3"
-                         class="form-control-custom"
-                         value="{{ pref_update_form.interest_3.value|default:'' }}"
-                         placeholder="e.g. Cooking"
-                         autocomplete="off">
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Other Preferences -->
-          <div class="row">
-            <div class="col-md-6">
-              <div class="form-group">
-                <label class="form-label"><i class="bi bi-translate"></i> Preferred Language</label>
-                <select name="search-main_language" class="form-control-custom">
-                  <option value="">Any Language</option>
-                  {% for code, name in search_form.main_language.field.choices %}
-                    <option value="{{ code }}" {% if search_form.main_language.value == code %}selected{% endif %}>
-                      {{ name }}
-                    </option>
-                  {% endfor %}
-                </select>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="form-group">
-                <label class="form-label"><i class="bi bi-geo-circle"></i> Search Distance</label>
-                <select name="search-radius_km" class="form-control-custom">
-                  {% for value, label in search_form.radius_km.field.choices %}
-                    <option value="{{ value }}" {% if search_form.radius_km.value == value|stringformat:"s" %}selected{% endif %}>
-                      {{ label }}
-                    </option>
-                  {% endfor %}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label"><i class="bi bi-calendar-heart"></i> Age Preference</label>
-            <div class="row">
-              {% for value, label in search_form.age_filtering_mode.field.choices %}
-                <div class="col-md-6">
-                  <div class="form-check">
-                    <input type="radio" 
-                           name="search-age_filtering_mode" 
-                           value="{{ value }}" 
-                           id="pref_age_{{ value }}"
-                           class="form-check-input"
-                           {% if search_form.age_filtering_mode.value == value %}checked{% endif %}>
-                    <label for="pref_age_{{ value }}" class="form-check-label">{{ label }}</label>
-                  </div>
-                </div>
-              {% endfor %}
-              <div class="col-md-6">
-                <div class="form-check">
-                  <input type="radio" 
-                         name="search-age_filtering_mode" 
-                         value="" 
-                         id="pref_age_any"
-                         class="form-check-input"
-                         {% if not search_form.age_filtering_mode.value %}checked{% endif %}>
-                  <label for="pref_age_any" class="form-check-label">Any age</label>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary-custom">
-            <i class="bi bi-check-circle"></i>
-            Save Preferences
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
 
 <!-- Handle Django Messages - Data passed via data attribute -->
 {% if messages %}
@@ -412,5 +366,15 @@
 {% block scripts %}
 <!-- Friend Search specific JavaScript -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="{% static 'friendsearch/js/friend_search_new.js' %}"></script>
+<script src="{% static 'friendsearch/js/friend_search.js' %}"></script>
 {% endblock %}
+
+<style>
+  .wide-interest-input {
+    min-width: 350px;
+    width: 100%;
+    max-width: 600px;
+    font-size: 1.15rem;
+    padding: 0.75rem 1rem;
+  }
+</style>

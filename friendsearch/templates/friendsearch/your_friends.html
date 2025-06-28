@@ -12,13 +12,24 @@
             <p>Connect, discover, and manage your friendships</p>
         </div>
 
-        <!-- Main Actions Grid -->
-        <div class="section-grid">
-            <!-- Add Friend by ID -->
+        <!-- Tabs Navigation -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="openTab(event, 'add-friend')">Add Friend</button>
+            <button class="tab-btn" onclick="openTab(event, 'search-friends')">Search Friends</button>
+            <button class="tab-btn" onclick="openTab(event, 'find-people')">Find New People</button>
+            <button class="tab-btn" onclick="openTab(event, 'friend-requests')">Friend Requests{% if friend_requests_count > 0 %} ({{ friend_requests_count }}){% endif %}</button>
+            <button class="tab-btn" onclick="openTab(event, 'friends-of-friends')">Friends of Friends</button>
+        </div>
+
+        <!-- Tab Contents -->
+        <div id="add-friend" class="tab-content" style="display: block;">
             <div class="section-card">
-                <div class="section-header">
-                    <div class="section-icon">🆔</div>
-                    <h2 class="section-title">Add Friend by ID</h2>
+                <div class="section-header" style="justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="section-icon">🆔</div>
+                        <h2 class="section-title">Add Friend by ID</h2>
+                    </div>
+                    <span class="id-label" style="font-size: 1.1rem; color: var(--secondary-color); font-weight: 600; letter-spacing: 1px;">Your ID: {{ request.user.id }}</span>
                 </div>
                 <div class="input-group">
                     <input type="text" id="friend-id-input" class="form-input" placeholder="Enter User ID (e.g., 123)" pattern="[0-9]+">
@@ -26,8 +37,9 @@
                 <button id="add-friend-btn" class="btn btn-primary">Send Request</button>
                 <div id="add-friend-result" class="result-message"></div>
             </div>
+        </div>
 
-            <!-- Search Your Friends -->
+        <div id="search-friends" class="tab-content" style="display: none;">
             <div class="section-card">
                 <div class="section-header">
                     <div class="section-icon">🔍</div>
@@ -38,8 +50,9 @@
                 </div>
                 <div id="friends-search-results" class="friends-grid"></div>
             </div>
+        </div>
 
-            <!-- Search People -->
+        <div id="find-people" class="tab-content" style="display: none;">
             <div class="section-card">
                 <div class="section-header">
                     <div class="section-icon">👥</div>
@@ -54,52 +67,74 @@
             </div>
         </div>
 
-        <!-- Friend Requests Section -->
-        {% if friend_requests_count > 0 %}
-        <div class="notifications-section">
-            <div class="section-header">
-                <div class="section-icon">📬</div>
-                <h2 class="section-title">Friend Requests ({{ friend_requests_count }})</h2>
-            </div>
-            <div id="friend-requests-list">
-                {% for request in friend_requests %}
-                <div class="notification-item">
-                    <div class="notification-content">
-                        <div class="notification-avatar">
-                            {% if request.from_user.profile_picture %}
-                                <img src="{{ request.from_user.profile_picture.url }}" alt="{{ request.from_user.full_name }}">
-                            {% else %}
-                                <div class="default-avatar">{{ request.from_user.first_name|first|upper }}{{ request.from_user.last_name|first|upper }}</div>
-                            {% endif %}
-                        </div>
-                        <div class="notification-text">
-                            <strong>{{ request.from_user.full_name }}</strong> sent you a friend request
-                            <small style="display: block; color: #6c757d; margin-top: 4px;">{{ request.timestamp|timesince }} ago</small>
-                        </div>
-                    </div>
-                    <div class="notification-actions">
-                        <button class="btn btn-primary" onclick="respondToFriendRequest({{ request.id }}, 'accept')">
-                            Accept
-                        </button>
-                        <button class="btn btn-secondary" onclick="respondToFriendRequest({{ request.id }}, 'decline')">
-                            Decline
-                        </button>
-                    </div>
+        <div id="friend-requests" class="tab-content" style="display: none;">
+            {% if friend_requests_count > 0 %}
+            <div class="notifications-section">
+                <div class="section-header">
+                    <div class="section-icon">📬</div>
+                    <h2 class="section-title">Friend Requests ({{ friend_requests_count }})</h2>
                 </div>
-                {% endfor %}
+                <div id="friend-requests-list">
+                    {% for request in friend_requests %}
+                    <div class="notification-item">
+                        <div class="notification-content">
+                            <div class="notification-avatar">
+                                {% if request.from_user.profile_picture %}
+                                    <img src="{{ request.from_user.profile_picture.url }}" alt="{{ request.from_user.full_name }}">
+                                {% else %}
+                                    <div class="default-avatar">{{ request.from_user.first_name|first|upper }}{{ request.from_user.last_name|first|upper }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="notification-text">
+                                <strong>{{ request.from_user.full_name }}</strong> sent you a friend request
+                                <small style="display: block; color: #6c757d; margin-top: 4px;">{{ request.timestamp|timesince }} ago</small>
+                            </div>
+                        </div>
+                        <div class="notification-actions">
+                            <button class="btn btn-primary" onclick="respondToFriendRequest({{ request.id }}, 'accept')">
+                                Accept
+                            </button>
+                            <button class="btn btn-secondary" onclick="respondToFriendRequest({{ request.id }}, 'decline')">
+                                Decline
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
-        </div>        {% endif %}
+            {% else %}
+            <div class="section-card">
+                <p>No friend requests at this time.</p>
+            </div>
+            {% endif %}
+        </div>
 
-        <!-- View Friends of Friends (Future Feature) -->
-        <div class="section-card" style="opacity: 0.6;">
-            <div class="section-header">
-                <div class="section-icon">🌐</div>
-                <h2 class="section-title">Friends of Friends</h2>
+        <div id="friends-of-friends" class="tab-content" style="display: none;">
+            <div class="section-card" style="opacity: 0.6;">
+                <div class="section-header">
+                    <div class="section-icon">🌐</div>
+                    <h2 class="section-title">Friends of Friends</h2>
+                </div>
+                <p style="color: #6c757d; font-style: italic; margin-bottom: 0;">Coming soon - Discover connections through your existing friends</p>
             </div>
-            <p style="color: #6c757d; font-style: italic; margin-bottom: 0;">Coming soon - Discover connections through your existing friends</p>
         </div>
     </div>
 </div>
 
+<script>
+function openTab(evt, tabName) {
+    var i, tabcontent, tabbtns;
+    tabcontent = document.getElementsByClassName("tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tabbtns = document.getElementsByClassName("tab-btn");
+    for (i = 0; i < tabbtns.length; i++) {
+        tabbtns[i].className = tabbtns[i].className.replace(" active", "");
+    }
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+</script>
 <script src="{% static 'friendsearch/js/your_friends.js' %}"></script>
 {% endblock %}

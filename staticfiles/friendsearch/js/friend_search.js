@@ -443,9 +443,7 @@ function updateInterestsDisplay(interests) {
 // Update search preferences display in the UI
 function updateSearchPreferencesDisplay() {
   console.log('updateSearchPreferencesDisplay called');
-  
   const $form = $('#searchPreferencesForm');
-  
   // Get the form values
   const interests = [];
   if ($form.find('input[name="pref-interest_1"]').val().trim()) {
@@ -457,12 +455,10 @@ function updateSearchPreferencesDisplay() {
   if ($form.find('input[name="pref-interest_3"]').val().trim()) {
     interests.push($form.find('input[name="pref-interest_3"]').val().trim());
   }
-  
   const language = $form.find('select[name="search-main_language"]').val();
   const languageText = $form.find('select[name="search-main_language"] option:selected').text();
   const radius = $form.find('select[name="search-radius_km"]').val();
   const radiusText = $form.find('select[name="search-radius_km"] option:selected').text();
-  
   console.log('Form values extracted:', {
     interests: interests,
     language: language,
@@ -470,28 +466,32 @@ function updateSearchPreferencesDisplay() {
     radius: radius,
     radiusText: radiusText
   });
-  
-  // Update the search preferences card using a more reliable selector
-  const $preferencesDiv = $('.action-card').filter(function() {
+  // Update only the FIRST .mb-3 inside the correct .action-card
+  const $preferencesCards = $('.action-card').filter(function() {
     return $(this).find('h3').text().includes('Search Preferences');
-  }).find('.mb-3');
-  
+  });
+  // Remove ALL but the first Search Preferences card from the DOM
+  $preferencesCards.slice(1).remove();
+  const $preferencesCard = $preferencesCards.first();
+  // Remove ALL .mb-3 inside the card except the first, to prevent stacked preferences
+  $preferencesCard.find('.mb-3').slice(1).remove();
+  const $preferencesDiv = $preferencesCard.find('.mb-3').first();
   console.log('Found preferences div:', $preferencesDiv.length);
-  
   if (interests.length > 0 || language || radius) {
+    // Remove any duplicate preferences display in other cards
+    $('.action-card').filter(function() {
+      return $(this).find('h3').text().includes('Search Preferences');
+    }).not($preferencesCard).find('.mb-3').empty();
     // Show preferences and potentially add "Find Friends" button if not exists
     const interestsText = interests.length > 0 ? interests.join(', ') : 'None';
     const langText = language ? languageText : 'Any';
     const rangeText = radius ? radiusText : '10km';
-    
     const truncatedInterests = interestsText.length > 40 ? interestsText.substring(0, 37) + '...' : interestsText;
-    
     console.log('Updating with:', {
       truncatedInterests: truncatedInterests,
       langText: langText,
       rangeText: rangeText
     });
-    
     $preferencesDiv.html(`
       <small class="text-muted">
         <strong>Interests:</strong> ${truncatedInterests}<br>
@@ -499,9 +499,7 @@ function updateSearchPreferencesDisplay() {
         <strong>Range:</strong> ${rangeText}
       </small>
     `);
-    
     // Add "Find Friends" button if preferences are saved and button doesn't exist
-    // Use a more reliable check
     if ($('button').filter(function() { return $(this).text().includes('Find Friends'); }).length === 0) {
       console.log('Adding Find Friends button');
       $('.action-cards').after(`
@@ -520,7 +518,6 @@ function updateSearchPreferencesDisplay() {
     }
   } else {
     $preferencesDiv.html('<small class="text-muted">No preferences saved yet</small>');
-    
     // Remove "Find Friends" button if no preferences
     $('button').filter(function() { return $(this).text().includes('Find Friends'); }).closest('.text-center').remove();
   }
@@ -579,10 +576,14 @@ function getLocation() {
   );
 }
 
-// Start chat function
+// Function to start chat by redirecting to the chat room
 function startChat(chatRoomId) {
-  // Implement chat functionality
-  window.location.href = `/chat/room/${chatRoomId}/`;
+  if (!chatRoomId) {
+    alert('Chat room not found.');
+    return;
+  }
+  // Redirect to the chat room URL
+  window.location.href = `/chat/${chatRoomId}/`;
 }
 
 // Reset search function
@@ -1056,56 +1057,77 @@ $('head').append(`
 // Function to search for friends using saved preferences
 function searchWithPreferences() {
   console.log('searchWithPreferences called');
-  
-  // Get the preferences from the form (since these are the current saved values)
   const $form = $('#searchPreferencesForm');
-  
-  // Build search parameters using the saved preferences
   const params = new URLSearchParams();
-  
-  // Add interests with search- prefix (matching the backend expectation)
   const interest1 = $form.find('input[name="pref-interest_1"]').val().trim();
   const interest2 = $form.find('input[name="pref-interest_2"]').val().trim();
   const interest3 = $form.find('input[name="pref-interest_3"]').val().trim();
-  
-  console.log('Raw form values:', {
-    interest1: interest1,
-    interest2: interest2, 
-    interest3: interest3
-  });
-  
   if (interest1) params.append('search-interest_1', interest1);
   if (interest2) params.append('search-interest_2', interest2);
   if (interest3) params.append('search-interest_3', interest3);
-  
-  // Add other search preferences
   const language = $form.find('select[name="search-main_language"]').val();
   const radius = $form.find('select[name="search-radius_km"]').val();
   const ageMode = $form.find('input[name="search-age_filtering_mode"]:checked').val();
-  
-  console.log('Other preferences:', {
-    language: language,
-    radius: radius,
-    ageMode: ageMode
-  });
-  
   if (language) params.append('search-main_language', language);
   if (radius) params.append('search-radius_km', radius);
   if (ageMode) params.append('search-age_filtering_mode', ageMode);
-  
-  console.log('Final search parameters:', params.toString());
-  
   // Show loading state
   const $findButton = $('button:contains("Find Friends")');
-  const originalText = $findButton.html();
   $findButton.html('<span class="loading"></span> Searching...').prop('disabled', true);
-  
-  // Make GET request to perform search
-  const searchUrl = window.location.pathname + '?' + params.toString();
-  console.log('Search URL:', searchUrl);
-  
-  // Add a small delay to see the debug output
-  setTimeout(() => {
-    window.location.href = searchUrl;
-  }, 1000);
+  $('.results-section').html('<div class="text-center p-5"><span class="loading"></span> Loading results...</div>');
+  // AJAX GET request instead of redirect
+  $.ajax({
+    url: window.location.pathname,
+    method: 'GET',
+    data: params.toString(),
+    success: function(response) {
+      // Try to extract the results section from the returned HTML
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = response;
+      // Debug: Log the entire HTML response for inspection
+      console.debug('AJAX response (truncated):', response.slice(0, 1000));
+      // Always check if .results-section exists in the response
+      const $newSection = $(tempDiv).find('.results-section');
+      if ($newSection.length) {
+        const scrollY = window.scrollY;
+        $('.results-section').replaceWith($newSection);
+        window.scrollTo({ top: scrollY });
+        // Slide-in animation removed: user cards will just appear instantly
+        // Debug: Log the results content
+        const newResults = $newSection.html();
+        if (newResults && (newResults.includes('No friends found') || newResults.includes('No results'))) {
+          console.warn('DEBUG: No results show up (results-section contains no results message).');
+        } else {
+          // Try to log the user names and all user data if possible
+          const userCards = $newSection.find('.user-card');
+          if (userCards.length > 0) {
+            userCards.each(function(idx, card) {
+              const $card = $(card);
+              const name = $card.find('.user-info h4').text().trim();
+              const age = $card.find('.user-meta .meta-item:contains("years old")').text().trim();
+              const language = $card.find('.user-meta .meta-item:contains("translate")').text().trim();
+              const location = $card.find('.user-meta .meta-item:contains("Nearby")').text().trim();
+              const interests = $card.find('.user-interests li').map(function(){return $(this).text().trim();}).get();
+              const description = $card.find('.user-description').text().trim();
+              const score = $card.find('.match-score').text().trim();
+              console.log(`User #${idx+1}:`, {
+                name, age, language, location, interests, description, score
+              });
+            });
+          } else {
+            console.log('DEBUG: Results-section updated, but no user cards found.');
+          }
+        }
+      } else {
+        // fallback: replace whole container if results-section not found
+        $('.results-section').html('<div class="text-danger">No results section found in response.</div>');
+        console.error('DEBUG: No results-section found in AJAX response.');
+      }
+      $findButton.html('<i class="bi bi-search"></i> Find Friends').prop('disabled', false);
+    },
+    error: function(xhr) {
+      $('.results-section').html('<div class="text-danger">An error occurred while searching. Please try again.</div>');
+      $findButton.html('<i class="bi bi-search"></i> Find Friends').prop('disabled', false);
+    }
+  });
 }

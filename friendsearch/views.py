@@ -244,8 +244,26 @@ def friend_search_view(request):
         # Consider adding redirects for non-AJAX success for these too for PRG pattern.
         # e.g. after successful 'update-interest' or 'description' or 'save_search_preferences' if not is_ajax: return redirect('friend_search')
         
-    # --- GET Request Handling (Actual Search or Page Load) ---    elif request.method == 'GET':
+    # --- GET Request Handling (Actual Search or Page Load) ---    
+    elif request.method == 'GET':
         print(f"🔍 [DEBUG] GET request processing started")
+        # Print searcher info
+        print("=== SEARCHER INFO ===")
+        print(f"ID: {user.id}")
+        print(f"Interests: {getattr(user, 'interests', [])}")
+        print(f"Main language: {getattr(user, 'main_language', None)}")
+        print(f"Location: {getattr(user, 'location', None)}")
+        print(f"Age: {user.get_age() if hasattr(user, 'get_age') else None}")
+        # Print all other users' info
+        all_users = CustomUser.objects.exclude(id=user.id)
+        print("=== ALL OTHER USERS ===")
+        for u in all_users:
+            print(f"ID: {u.id}")
+            print(f"Interests: {getattr(u, 'interests', [])}")
+            print(f"Main language: {getattr(u, 'main_language', None)}")
+            print(f"Location: {getattr(u, 'location', None)}")
+            print(f"Age: {u.get_age() if hasattr(u, 'get_age') else None}")
+            print("------")
         if request.GET: # If there are GET parameters, it's an attempt to search
             print(f"🔍 [DEBUG] GET request with parameters: {dict(request.GET)}")
             
@@ -402,7 +420,10 @@ def friend_search_view(request):
         # else: No GET parameters, it's a fresh page load.
         # search_form is already initialized with preferences.
         # update_form and pref_update_form are also initialized.
-        
+        # Ensure results is always set for GET requests
+        if results is None:
+            results = []
+
     # --- Final Context and Render ---
     context = {
         'update_form': update_form, # For "Edit My Details" (user's own interests)

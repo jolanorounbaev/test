@@ -1,185 +1,782 @@
 {% load static %}
 {% load youtube_filters %}
 
-<div class="moment-card relative p-4 border rounded-lg shadow-sm mb-6" x-data="{ showRoom: false }">
+<div class="moment-card relative bg-white rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 mb-6 overflow-hidden border border-gray-100">
   {% if moment.is_hot %}
-  <div class="moment-fire-corner">
-    <img src="{% static 'moments/img/fire.gif' %}" alt="🔥" class="corner-fire" />
-    <span class="corner-text">On Fire</span>
+  <div class="moment-fire-corner absolute top-4 right-4 z-10">
+    <div class="flex flex-col items-center">
+      <img src="{% static 'moments/img/fire.gif' %}" alt="🔥" class="w-12 h-12 mb-1" />
+      <span class="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded-full">On Fire</span>
+    </div>
   </div>
   {% endif %}
-  
-  
 
-
-
-  <!-- Delete Button (only owner) -->
-  {% if request.user == moment.user %}
-    <form action="{% url 'moments:delete_moment' moment.id %}" method="POST" class="text-right">
-      {% csrf_token %}
-      <button type="submit" class="text-red-500 text-xs hover:underline">Delete Moment</button>
-    </form>
-  {% endif %}
-
-  <!-- Top section: profile + name + time left + interests -->
-  <div class="flex justify-between items-start mb-2">
-    <div class="flex items-center gap-2">
-      <img src="{{ moment.user.profile_picture.url }}"
-           alt="Profile"
-           style="width: 32px; height: 32px; object-fit: cover; border-radius: 9999px;">
-    
-      <div class="flex flex-col leading-tight">
-        <span class="text-sm font-semibold">{{ moment.user.full_name }}</span>
-        <span class="text-xs text-gray-500">🕒 {{ moment.remaining_time }} left</span>
+  <!-- Header: Profile + Name + Time + Menu -->
+  <div class="p-6 pb-4">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <div class="relative">
+          <div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+            <img 
+              src="{{ moment.user.profile_picture.url }}" 
+              alt="{{ moment.user.full_name }}" 
+              class="profile-pic"
+            >
+          </div>
+          <div class="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+        </div>
+        <div class="flex-1">
+          <div class="font-bold text-base text-gray-900 hover:text-blue-600 transition-colors cursor-pointer">
+            {{ moment.user.full_name }}
+          </div>
+          <div class="flex items-center gap-2 text-sm text-gray-500">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+            </svg>
+            <span>{{ moment.remaining_time }} left</span>
+          </div>
+        </div>
+      </div>
+      <div class="relative">
+        <button type="button" class="kebab-menu-btn text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-all duration-200" onclick="toggleKebabMenu(this)">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+          </svg>
+        </button>
+        <div class="kebab-dropdown-menu absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-xl z-20 hidden overflow-hidden">
+          <a href="#" onclick="flagMoment('{{ moment.id }}'); return false;" class="flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M3 6a3 3 0 013-3h10a1 1 0 01.8 1.6L14.25 8l2.55 3.4A1 1 0 0116 13H6a1 1 0 00-1 1v3a1 1 0 11-2 0V6z" clip-rule="evenodd" />
+            </svg>
+            Flag Post
+          </a>
+          {% if request.user == moment.user %}
+          <form action="{% url 'moments:delete_moment' moment.id %}" method="POST" class="block">
+            {% csrf_token %}
+            <button type="submit" class="flex items-center gap-2 w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" clip-rule="evenodd" />
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+              </svg>
+              Delete
+            </button>
+          </form>
+          {% endif %}
+        </div>
       </div>
     </div>
+  </div>
 
-
-    <a href="#" onclick="flagMoment('{{ moment.id }}')">🚩 Flag</a>
-    
-  <!-- Title -->
+  <!-- Title (if exists) -->
   {% if moment.title %}
-  <div class="flex items-center gap-2 mt-2">
-    <h2 class="text-lg font-semibold">{{ moment.title }}</h2>
+  <div class="px-6 pb-3">
+    <h2 class="text-xl font-bold text-gray-900 text-center leading-tight">{{ moment.title }}</h2>
   </div>
   {% endif %}
 
-
-
-<!-- Media Display -->
-<div class="mt-3">
-  {% if moment.image %}
-  <div class="w-full flex justify-center">
-    <div class="aspect-[4/5] max-w-sm w-full rounded-lg overflow-hidden shadow-md">
-      <img src="{{ moment.image.url }}"
-           alt="Moment Image"
-           class="w-full h-full object-cover transition duration-300 ease-in-out hover:scale-[1.02]">
+  <!-- Tags (if exist) -->
+  {% if moment.interests %}
+  <div class="px-6 pb-4">
+    <div class="flex flex-wrap justify-center gap-2">
+      {% for interest in moment.interests %}
+        <span class="inline-flex items-center bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 text-sm px-3 py-1.5 rounded-full font-medium border border-blue-200 hover:from-blue-100 hover:to-indigo-100 transition-all duration-200">
+          <span class="w-2 h-2 bg-blue-400 rounded-full mr-2"></span>
+          {{ interest }}
+        </span>
+      {% endfor %}
     </div>
   </div>
-  
-  
-  {% elif moment.video %}
-    <video controls
-           class="rounded-lg w-full max-h-[600px] object-contain shadow-md bg-black">
-      <source src="{{ moment.video.url }}" type="video/mp4">
-      Your browser does not support the video tag.
-    </video>
-  
-  {% elif moment.youtube_link %}
-    <div class="w-full rounded-lg overflow-hidden shadow-md mt-2" style="aspect-ratio: 16/9;">
-      <iframe
-        class="w-full h-full"
-        src="https://www.youtube.com/embed/{{ moment.youtube_link|youtube_id }}"
-        allowfullscreen
-        loading="lazy"
-        title="YouTube video"
-        frameborder="0">
-      </iframe>
-    </div>
-  
-  {% else %}
-    <p class="text-sm text-gray-400 italic">No media provided for this moment.</p>
   {% endif %}
-</div>
 
+  <!-- Content/Description -->
+  <div class="px-6 pb-4">
+    <div class="bg-gray-50 rounded-2xl p-4">
+      <p class="text-gray-800 text-base leading-relaxed">{{ moment.content }}</p>
+    </div>
+  </div>
 
+  <!-- Media (if exists) -->
+  {% if moment.image or moment.video or moment.youtube_link %}
+  <div class="mx-6 mb-4 rounded-2xl overflow-hidden bg-gray-100 shadow-inner">
+    {% if moment.image %}
+      <img src="{{ moment.image.url }}" alt="Moment Image" class="w-full h-auto max-h-96 object-cover">
+    {% elif moment.video %}
+      <video controls class="w-full h-auto max-h-96 bg-black">
+        <source src="{{ moment.video.url }}" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    {% elif moment.youtube_link %}
+      <div class="w-full" style="height: 300px;">
+        <iframe class="w-full h-full" src="https://www.youtube.com/embed/{{ moment.youtube_link|youtube_id }}" allowfullscreen loading="lazy" title="YouTube video" frameborder="0"></iframe>
+      </div>
+    {% endif %}
+  </div>
+  {% endif %}
 
-  <!-- Content -->
-  <p class="mt-3 text-sm">{{ moment.content }}</p>
+  <!-- Reactions Bar -->
+  <div class="px-6 py-4 border-t border-gray-100">
+    <div class="flex items-center justify-between">
+      <div class="fire-container flex items-center">
+        <button class="fire-btn group flex items-center gap-2 text-sm hover:bg-orange-50 px-3 py-2 rounded-full transition-all duration-200" data-moment-id="{{ moment.id }}">
+          <span class="text-lg group-hover:scale-110 transition-transform duration-200">🔥</span>
+          <span class="font-medium text-gray-700 group-hover:text-orange-600">{{ moment.fire_count }}</span>
+        </button>
+        <span class="fire-tooltip"></span>
+      </div>
+      <button class="heart-btn group flex items-center gap-2 text-sm hover:bg-red-50 px-3 py-2 rounded-full transition-all duration-200" data-moment-id="{{ moment.id }}">
+        <span class="text-lg group-hover:scale-110 transition-transform duration-200">❤️</span>
+        <span class="font-medium text-gray-700 group-hover:text-red-600">{{ moment.heart_count }}</span>
+      </button>
+    </div>
+  </div>
 
-  <!-- Reactions -->
-  <span class="fire-container">
-    <span class="fire-btn" data-moment-id="{{ moment.id }}">🔥 {{ moment.fire_count }}</span>
-    <span class="fire-tooltip"></span>
-  </span>
-  
-  <span class="heart-btn" data-moment-id="{{ moment.id }}">
-    ❤️ {{ moment.heart_count }}
-  </span>
-  
-  
-
-  <!-- Bottom Section: Join + View Comments -->
-  <div class="mt-4 flex justify-between items-center text-sm text-gray-600">
-    <!-- Join/Leave -->
-    <div>
-      <span>{{ moment.participants.count }} / {{ moment.max_participants }} users inside</span>
+  <!-- Action Bar: Join/Leave + Comments -->
+  <div class="px-6 py-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-blue-50">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 text-sm text-gray-600">
+          <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
+          </svg>
+          <span class="font-medium">{{ moment.participants.count }}/{{ moment.max_participants }} users inside</span>
+        </div>
+        {% if request.user not in moment.participants.all %}
+          <form method="POST" action="{% url 'moments:join_moment' moment.id %}" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105">
+              Join Moment
+            </button>
+          </form>
+        {% else %}
+          <form method="POST" action="{% url 'moments:leave_moment' moment.id %}" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg">
+              Leave
+            </button>
+          </form>
+        {% endif %}
+      </div>
       {% if request.user not in moment.participants.all %}
-        <form method="POST" action="{% url 'moments:join_moment' moment.id %}" class="inline">
-          {% csrf_token %}
-          <button type="submit" class="text-blue-600 hover:underline ml-2">Join Moment</button>
-        </form>
-      {% else %}
-        <form method="POST" action="{% url 'moments:leave_moment' moment.id %}" class="inline">
-          {% csrf_token %}
-          <button type="submit" class="text-red-600 hover:underline ml-2">Leave</button>
-        </form>
+      <button id="comments-btn-{{ moment.id }}" onclick="loadComments('{{ moment.id }}')" class="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border border-gray-200 shadow-sm hover:shadow-md">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+          <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+        </svg>
+        View Comments
+      </button>
       {% endif %}
     </div>
-
-<!-- View Comments button -->
-{% if request.user not in moment.participants.all %}
-  <button id="comments-btn-{{ moment.id }}"
-          onclick="loadComments('{{ moment.id }}')"
-          class="text-sm text-gray-600 hover:underline flex items-center gap-1 mt-2">
-    👁️ View Comments
-  </button>
-  <div id="comments-{{ moment.id }}" class="mt-4 hidden"></div>
-{% endif %}
-
-
-
   </div>
 
-  <!-- Inline Comments -->
-  <div id="comments-{{ moment.id }}" class="mt-4 hidden"></div>
+  <!-- Inline Comments (for non-participants) -->
+  <div id="comments-{{ moment.id }}" class="hidden"></div>
 
-  <!-- Live Comment Room -->
+  <!-- Live Comments Section (for participants) -->
   {% if request.user in moment.participants.all %}
-    <div x-show="showRoom" class="mt-6 border-t pt-4 space-y-6">
-      <h3 class="text-sm font-semibold text-gray-700">Comments</h3>
-
-      {% for comment in moment.comments.all %}
-        <div class="mb-4 border-l-2 pl-3 border-gray-300">
-          <p>
-            <strong>{{ comment.user.first_name }}</strong>: {{ comment.content }}
-            {% if comment.user == request.user or moment.user == request.user %}
-              <form action="{% url 'moments:delete_comment' comment.id %}" method="POST" class="inline ml-2">
-                {% csrf_token %}
-                <button type="submit" class="text-xs text-red-500 hover:underline">Delete</button>
-              </form>
-            {% endif %}
-          </p>
-          <small class="text-xs text-gray-500">{{ comment.created_at|timesince }} ago</small>
-
-          {% for reply in comment.replies.all %}
-            <div class="ml-4 mt-1 text-sm text-gray-700">
-              ↪ <strong>{{ reply.user.first_name }}</strong>: {{ reply.content }}
-              {% if reply.user == request.user or moment.user == request.user %}
-                <form action="{% url 'moments:delete_reply' reply.id %}" method="POST" class="inline ml-2">
-                  {% csrf_token %}
-                  <button type="submit" class="text-xs text-red-500 hover:underline">Delete</button>
-                </form>
-              {% endif %}
+  <div class="border-t border-gray-100 bg-gradient-to-b from-gray-50 to-white">
+    <div class="px-6 py-5">
+      <div class="flex items-center gap-2 mb-4">
+        <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd" />
+        </svg>
+        <h3 class="text-lg font-bold text-gray-800">Comments</h3>
+        <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full font-medium">{{ moment.comments.count }}</span>
+      </div>
+      
+      <!-- Existing Comments -->
+      <div class="space-y-4 mb-6 max-h-80 overflow-y-auto">
+        {% for comment in moment.comments.all %}
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div class="flex items-start justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                <img 
+                  src="{{ comment.user.profile_picture.url }}" 
+                  alt="{{ comment.user.first_name }}" 
+                  class="profile-pic"
+                >
+              </div>
+              <div>
+                <div class="font-semibold text-sm text-gray-900">{{ comment.user.first_name }}</div>
+                <div class="text-xs text-gray-500">{{ comment.created_at|timesince }} ago</div>
+              </div>
             </div>
-          {% endfor %}
-
-          <form action="{% url 'moments:add_reply' comment.id %}" method="POST" class="mt-2">
+            {% if comment.user == request.user or moment.user == request.user %}
+            <form action="{% url 'moments:delete_comment' comment.id %}" method="POST" class="inline">
+              {% csrf_token %}
+              <button type="submit" class="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition-colors">
+                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </form>
+            {% endif %}
+          </div>
+          <!-- Comment Content -->
+          {% if comment.get_content_without_gif %}
+          <div class="text-sm text-gray-700 leading-relaxed mb-3">{{ comment.get_content_without_gif }}</div>
+          {% endif %}
+          
+          <!-- Comment GIF -->
+          {% if comment.get_gif_url %}
+          <div class="mb-3">
+            <img src="{{ comment.get_gif_url }}" alt="GIF" class="rounded-lg max-w-full h-auto max-h-48 object-cover">
+          </div>
+          {% endif %}
+          
+          <!-- Replies -->
+          <div class="space-y-2">
+            {% for reply in comment.replies.all %}
+            <div class="ml-4 bg-gray-50 rounded-xl p-3 border-l-3 border-blue-200">
+              <div class="flex items-start justify-between mb-1">
+                <div class="flex items-center gap-2">
+                  <div class="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                    <img 
+                      src="{{ reply.user.profile_picture.url }}" 
+                      alt="{{ reply.user.first_name }}" 
+                      class="profile-pic"
+                    >
+                  </div>
+                  <div class="font-medium text-xs text-gray-800">{{ reply.user.first_name }}</div>
+                </div>
+                {% if reply.user == request.user or moment.user == request.user %}
+                <form action="{% url 'moments:delete_reply' reply.id %}" method="POST" class="inline">
+                  {% csrf_token %}
+                  <button type="submit" class="text-xs text-red-500 hover:text-red-700 hover:bg-red-50 px-1 py-1 rounded transition-colors">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+              <div class="text-xs text-gray-600">{{ reply.content }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          
+          <!-- Reply Form -->
+          <form action="{% url 'moments:add_reply' comment.id %}" method="POST" class="mt-3">
             {% csrf_token %}
-            <input type="text" name="content" placeholder="Reply..." class="w-full border rounded px-2 py-1 text-sm mt-1" required>
-            <button type="submit" class="text-xs text-blue-600 hover:underline mt-1">Reply</button>
+            <div class="flex gap-2">
+              <input type="text" name="content" placeholder="Reply..." class="flex-1 text-xs border border-gray-300 rounded-full px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+              <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-full text-xs font-medium transition-colors">
+                Reply
+              </button>
+            </div>
           </form>
         </div>
-      {% empty %}
-        <p class="text-sm text-gray-500">No comments yet.</p>
-      {% endfor %}
-
-      <form action="{% url 'moments:add_comment' moment.id %}" method="POST" class="mt-4">
+        {% empty %}
+        <div class="text-center py-8">
+          <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+          <p class="text-sm text-gray-500 font-medium">No comments yet</p>
+          <p class="text-xs text-gray-400">Be the first to start the conversation!</p>
+        </div>
+        {% endfor %}
+      </div>
+      
+      <!-- New Comment Form -->
+      <form action="{% url 'moments:add_comment' moment.id %}" method="POST" class="relative" id="comment-form-{{ moment.id }}">
         {% csrf_token %}
-        <input type="text" name="content" placeholder="Write a comment..." class="w-full border px-2 py-2 rounded text-sm" required>
-        <button type="submit" class="mt-2 text-blue-600 text-sm hover:underline">Post Comment</button>
+        <div class="flex gap-3 items-end">
+          <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+            <img 
+              src="{{ request.user.profile_picture.url }}" 
+              alt="{{ request.user.first_name }}" 
+              class="profile-pic"
+            >
+          </div>
+          <div class="flex-1">
+            <div class="relative">
+              <input type="text" name="content" id="comment-input-{{ moment.id }}" placeholder="Write a comment..." class="w-full border border-gray-300 rounded-2xl px-4 py-3 pr-12 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" required>
+              <input type="hidden" name="gif_url" id="gif-url-{{ moment.id }}" value="">
+              
+              <!-- GIF Button -->
+              <button type="button" onclick="openGifModal('{{ moment.id }}')" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors p-1 rounded-full hover:bg-blue-50">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 3H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                </svg>
+              </button>
+            </div>
+            
+            <!-- Selected GIF Preview -->
+            <div id="gif-preview-{{ moment.id }}" class="hidden mt-2 relative">
+              <img id="gif-preview-img-{{ moment.id }}" src="" alt="Selected GIF" class="rounded-lg max-h-32 object-cover">
+              <button type="button" onclick="removeSelectedGif('{{ moment.id }}')" class="absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-70">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-2xl text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105">
+            Post
+          </button>
+        </div>
       </form>
     </div>
+  </div>
   {% endif %}
 </div>
+
+<script>
+function toggleKebabMenu(btn) {
+  // Close any other open kebab menus
+  document.querySelectorAll('.kebab-dropdown-menu').forEach(menu => {
+    if (menu !== btn.nextElementSibling) {
+      menu.classList.add('hidden');
+      menu.style.opacity = '0';
+      menu.style.transform = 'translateY(-10px)';
+    }
+  });
+  
+  // Toggle this menu with animation
+  const menu = btn.nextElementSibling;
+  const isHidden = menu.classList.contains('hidden');
+  
+  if (isHidden) {
+    menu.classList.remove('hidden');
+    menu.style.opacity = '0';
+    menu.style.transform = 'translateY(-10px)';
+    
+    // Trigger reflow and animate
+    menu.offsetHeight;
+    menu.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+    menu.style.opacity = '1';
+    menu.style.transform = 'translateY(0)';
+  } else {
+    menu.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+    menu.style.opacity = '0';
+    menu.style.transform = 'translateY(-10px)';
+    
+    setTimeout(() => {
+      menu.classList.add('hidden');
+    }, 200);
+  }
+  
+  // Close on click outside
+  function handleClickOutside(event) {
+    if (!menu.contains(event.target) && event.target !== btn) {
+      menu.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+      menu.style.opacity = '0';
+      menu.style.transform = 'translateY(-10px)';
+      
+      setTimeout(() => {
+        menu.classList.add('hidden');
+      }, 200);
+      
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }
+  
+  if (!menu.classList.contains('hidden')) {
+    setTimeout(() => document.addEventListener('mousedown', handleClickOutside), 0);
+  }
+}
+
+// GIF Modal Functions
+let currentMomentId = null;
+let currentSearchTerm = '';
+let isLoadingGifs = false;
+let currentPage = 0;
+let hasMoreGifs = true;
+
+function openGifModal(momentId) {
+  currentMomentId = momentId;
+  currentSearchTerm = '';
+  currentPage = 0;
+  hasMoreGifs = true;
+  isLoadingGifs = false;
+  
+  const modal = document.getElementById('gif-modal');
+  const searchInput = document.getElementById('gif-search-input');
+  const resultsContainer = document.getElementById('gif-results');
+  
+  // Clear previous search
+  searchInput.value = '';
+  resultsContainer.innerHTML = '';
+  
+  // Show modal first
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  
+  // Prevent body scrolling and ensure modal starts at top
+  document.body.scrollTop = 0;
+  document.documentElement.scrollTop = 0;
+  modal.scrollTop = 0;
+  
+  // Load trending GIFs
+  loadTrendingGifs();
+  
+  // Focus search input after modal is visible
+  setTimeout(() => {
+    searchInput.focus();
+  }, 100);
+}
+
+function closeGifModal() {
+  const modal = document.getElementById('gif-modal');
+  modal.classList.add('hidden');
+  document.body.style.overflow = 'auto';
+  currentMomentId = null;
+}
+
+function searchGifs() {
+  const searchTerm = document.getElementById('gif-search-input').value.trim();
+  const resultsContainer = document.getElementById('gif-results');
+  
+  // Reset pagination for new search
+  currentPage = 0;
+  hasMoreGifs = true;
+  currentSearchTerm = searchTerm;
+  
+  if (searchTerm === '') {
+    loadTrendingGifs();
+    return;
+  }
+  
+  // Clear previous results for new search
+  resultsContainer.innerHTML = '';
+  
+  // Show loading
+  resultsContainer.innerHTML = '<div class="col-span-full text-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div><p class="text-gray-500 mt-2">Searching GIFs...</p></div>';
+  
+  loadMoreGifs(searchTerm);
+}
+
+function loadMoreGifs(searchTerm = '') {
+  if (isLoadingGifs || !hasMoreGifs) return;
+  
+  isLoadingGifs = true;
+  const resultsContainer = document.getElementById('gif-results');
+  
+  // Add loading indicator if this is not the first page
+  if (currentPage > 0) {
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'loading-more';
+    loadingDiv.className = 'col-span-full text-center py-4';
+    loadingDiv.innerHTML = '<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div><p class="text-gray-400 mt-2 text-sm">Loading more GIFs...</p>';
+    resultsContainer.appendChild(loadingDiv);
+  }
+  
+  // Using Tenor API with your key
+  const apiKey = 'AIzaSyCxsM2SWKWaKtpfPf5_TcjJebF9dcAk9Gg';
+  const position = currentPage * 20; // 20 GIFs per page
+  let url;
+  
+  if (searchTerm) {
+    url = `https://tenor.googleapis.com/v2/search?q=${encodeURIComponent(searchTerm)}&key=${apiKey}&limit=20&pos=${position}&media_filter=gif`;
+  } else {
+    // Use popular search terms for "trending" since /trending endpoint has issues
+    const trendingTerms = ['funny', 'happy', 'reaction', 'cute', 'excited', 'wow', 'love', 'dance', 'party', 'celebrate'];
+    const randomTerm = trendingTerms[Math.floor(Math.random() * trendingTerms.length)];
+    url = `https://tenor.googleapis.com/v2/search?q=${randomTerm}&key=${apiKey}&limit=20&pos=${position}&media_filter=gif`;
+    console.log('Loading trending GIFs with term:', randomTerm);
+  }
+  
+  fetch(url)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Tenor API response:', data); // Debug log
+      
+      // Remove loading indicator
+      const loadingMore = document.getElementById('loading-more');
+      if (loadingMore) {
+        loadingMore.remove();
+      }
+      
+      if (data.results && data.results.length > 0) {
+        appendTenorGifs(data.results);
+        currentPage++;
+        
+        // Check if we have more GIFs to load
+        if (data.results.length < 20) {
+          hasMoreGifs = false;
+        }
+      } else {
+        hasMoreGifs = false;
+        if (currentPage === 0) {
+          // No results for first page
+          if (searchTerm) {
+            resultsContainer.innerHTML = '<div class="col-span-full text-center py-8"><p class="text-gray-500">No GIFs found. Try a different search term.</p></div>';
+          } else {
+            resultsContainer.innerHTML = '<div class="col-span-full text-center py-8"><p class="text-gray-500">No trending GIFs available. Please try searching.</p></div>';
+          }
+        }
+      }
+      
+      isLoadingGifs = false;
+    })
+    .catch(error => {
+      console.error('Error fetching GIFs:', error);
+      console.error('API URL was:', url); // Debug log
+      
+      // Remove loading indicator
+      const loadingMore = document.getElementById('loading-more');
+      if (loadingMore) {
+        loadingMore.remove();
+      }
+      
+      if (currentPage === 0) {
+        // Show error message instead of demo GIFs initially
+        resultsContainer.innerHTML = '<div class="col-span-full text-center py-8"><p class="text-gray-500">Failed to load GIFs. Please check your connection.</p><button onclick="loadTrendingGifs()" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded">Retry</button></div>';
+      }
+      
+      isLoadingGifs = false;
+      hasMoreGifs = false;
+    });
+}
+
+function loadTrendingGifs() {
+  currentSearchTerm = '';
+  currentPage = 0;
+  hasMoreGifs = true;
+  
+  const resultsContainer = document.getElementById('gif-results');
+  
+  // Show loading
+  resultsContainer.innerHTML = '<div class="col-span-full text-center py-8"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div><p class="text-gray-500 mt-2">Loading trending GIFs...</p></div>';
+  
+  loadMoreGifs();
+}
+
+function displayGifs(gifs) {
+  const resultsContainer = document.getElementById('gif-results');
+  
+  if (gifs.length === 0) {
+    resultsContainer.innerHTML = '<div class="col-span-full text-center py-8"><p class="text-gray-500">No GIFs found. Try a different search term.</p></div>';
+    return;
+  }
+  
+  resultsContainer.innerHTML = gifs.map(gif => `
+    <div class="gif-item cursor-pointer rounded-lg overflow-hidden hover:opacity-80 transition-opacity" onclick="selectGif('${gif.images.fixed_height.url}', '${gif.title}')">
+      <img src="${gif.images.fixed_height.url}" alt="${gif.title}" class="w-full h-auto object-cover">
+    </div>
+  `).join('');
+}
+
+function displayTenorGifs(gifs) {
+  const resultsContainer = document.getElementById('gif-results');
+  
+  if (gifs.length === 0) {
+    resultsContainer.innerHTML = '<div class="col-span-full text-center py-8"><p class="text-gray-500">No GIFs found. Try a different search term.</p></div>';
+    return;
+  }
+  
+  // Clear existing content
+  resultsContainer.innerHTML = '';
+  appendTenorGifs(gifs);
+}
+
+function appendTenorGifs(gifs) {
+  const resultsContainer = document.getElementById('gif-results');
+  
+  if (gifs.length === 0) return;
+  
+  // Remove any existing loading indicators
+  const existingLoading = resultsContainer.querySelector('.col-span-full');
+  if (existingLoading && existingLoading.textContent.includes('Loading')) {
+    existingLoading.remove();
+  }
+  
+  const gifsHtml = gifs.map(gif => `
+    <div class="gif-item cursor-pointer rounded-lg overflow-hidden hover:opacity-80 transition-all duration-200 hover:scale-105 border border-gray-200 hover:border-blue-300 bg-white" onclick="selectGif('${gif.media_formats.gif.url}', '${gif.content_description}')">
+      <div class="relative w-full h-32">
+        <img src="${gif.media_formats.gif.url}" alt="${gif.content_description}" class="w-full h-full object-cover">
+      </div>
+    </div>
+  `).join('');
+  
+  resultsContainer.insertAdjacentHTML('beforeend', gifsHtml);
+}
+
+function displayDemoGifs(searchTerm = '') {
+  const resultsContainer = document.getElementById('gif-results');
+  
+  // Extended demo GIFs collection
+  const allDemoGifs = [
+    { url: 'https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif', title: 'Happy Dance', tags: ['happy', 'dance', 'excited', 'joy'] },
+    { url: 'https://media.giphy.com/media/l0MYy7QpDDVGVfAAw/giphy.gif', title: 'Thumbs Up', tags: ['thumbs', 'up', 'approve', 'good', 'yes'] },
+    { url: 'https://media.giphy.com/media/26FLgGTPUDH6UGAbm/giphy.gif', title: 'Applause', tags: ['clap', 'applause', 'bravo', 'celebrate'] },
+    { url: 'https://media.giphy.com/media/l0HlHFRbmaZtBRhXG/giphy.gif', title: 'Clapping', tags: ['clap', 'clapping', 'good', 'job'] },
+    { url: 'https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif', title: 'Heart Eyes', tags: ['love', 'heart', 'eyes', 'cute'] },
+    { url: 'https://media.giphy.com/media/3o6fJ5LANL0x31R1Ic/giphy.gif', title: 'Shocked', tags: ['shock', 'surprised', 'wow', 'omg'] },
+    { url: 'https://media.giphy.com/media/l0MYv8HWLqKdaQq5O/giphy.gif', title: 'Laughing', tags: ['laugh', 'funny', 'lol', 'hilarious'] },
+    { url: 'https://media.giphy.com/media/3oEjI267O1bIbkY5FYW/giphy.gif', title: 'Thinking', tags: ['think', 'thinking', 'hmm', 'consider'] },
+    { url: 'https://media.giphy.com/media/l0MYu38ACMhRZBpFC/giphy.gif', title: 'Celebration', tags: ['celebrate', 'party', 'yay', 'success'] },
+    { url: 'https://media.giphy.com/media/l0ExayQDzrI2xOb8A/giphy.gif', title: 'Cool', tags: ['cool', 'awesome', 'sunglasses', 'swagger'] },
+    { url: 'https://media.giphy.com/media/3o6fJd3jPKFdX7j7nW/giphy.gif', title: 'Confused', tags: ['confused', 'what', 'puzzled', 'lost'] },
+    { url: 'https://media.giphy.com/media/l0MYGdODAVOoAEi8w/giphy.gif', title: 'Fire', tags: ['fire', 'hot', 'lit', 'amazing'] }
+  ];
+  
+  let filteredGifs = allDemoGifs;
+  
+  // Filter GIFs based on search term
+  if (searchTerm) {
+    filteredGifs = allDemoGifs.filter(gif => 
+      gif.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      gif.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }
+  
+  if (filteredGifs.length === 0) {
+    resultsContainer.innerHTML = `
+      <div class="col-span-full text-center py-8">
+        <p class="text-gray-500">No GIFs found for "${searchTerm}"</p>
+        <p class="text-sm text-gray-400 mt-2">Try searching for: happy, love, clap, fire, cool</p>
+      </div>
+    `;
+    return;
+  }
+  
+  resultsContainer.innerHTML = filteredGifs.map(gif => `
+    <div class="gif-item cursor-pointer rounded-lg overflow-hidden hover:opacity-80 transition-all duration-200 hover:scale-105 border border-gray-200 hover:border-blue-300 bg-white" onclick="selectGif('${gif.url}', '${gif.title}')">
+      <div class="relative w-full h-32">
+        <img src="${gif.url}" alt="${gif.title}" class="w-full h-full object-cover">
+      </div>
+    </div>
+  `).join('');
+  
+  // Mark as no more GIFs for demo (since it's a limited set)
+  hasMoreGifs = false;
+}
+
+function selectGif(gifUrl, title) {
+  if (!currentMomentId) return;
+  
+  // Update the hidden input with the GIF URL
+  document.getElementById(`gif-url-${currentMomentId}`).value = gifUrl;
+  
+  // Show preview
+  const preview = document.getElementById(`gif-preview-${currentMomentId}`);
+  const previewImg = document.getElementById(`gif-preview-img-${currentMomentId}`);
+  const commentInput = document.getElementById(`comment-input-${currentMomentId}`);
+  
+  previewImg.src = gifUrl;
+  previewImg.alt = title;
+  preview.classList.remove('hidden');
+  
+  // Update placeholder text
+  commentInput.placeholder = 'Add a comment with your GIF...';
+  commentInput.required = false; // Allow posting just GIF without text
+  
+  // Close modal
+  closeGifModal();
+}
+
+function removeSelectedGif(momentId) {
+  document.getElementById(`gif-url-${momentId}`).value = '';
+  document.getElementById(`gif-preview-${momentId}`).classList.add('hidden');
+  document.getElementById(`comment-input-${momentId}`).placeholder = 'Write a comment...';
+  document.getElementById(`comment-input-${momentId}`).required = true;
+}
+
+// Search input event listener and modal event listeners
+document.addEventListener('DOMContentLoaded', function() {
+  const searchInput = document.getElementById('gif-search-input');
+  const modal = document.getElementById('gif-modal');
+  const gifResultsContainer = document.querySelector('#gif-modal .overflow-y-auto');
+  
+  // Search input debounced event listener
+  if (searchInput) {
+    let searchTimeout;
+    searchInput.addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(searchGifs, 500); // Debounce search
+    });
+  }
+  
+  // Infinite scroll for GIF results
+  if (gifResultsContainer) {
+    gifResultsContainer.addEventListener('scroll', function() {
+      const { scrollTop, scrollHeight, clientHeight } = this;
+      
+      // Check if scrolled to bottom (with 100px threshold)
+      if (scrollTop + clientHeight >= scrollHeight - 100) {
+        if (!isLoadingGifs && hasMoreGifs) {
+          loadMoreGifs(currentSearchTerm);
+        }
+      }
+    });
+  }
+  
+  // Click outside to close modal
+  if (modal) {
+    modal.addEventListener('click', function(e) {
+      // Check if click is on the modal backdrop (not the modal content)
+      if (e.target === modal || e.target === modal.firstElementChild) {
+        closeGifModal();
+      }
+    });
+  }
+  
+  // Add escape key listener to close modal
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      if (modal && !modal.classList.contains('hidden')) {
+        closeGifModal();
+      }
+    }
+  });
+});
+</script>
+
+<!-- GIF Search Modal -->
+<div id="gif-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50" style="overflow-y: auto; overflow-x: hidden;">
+  <div class="min-h-screen flex items-start justify-center p-4 pt-8">
+    <div class="bg-white rounded-2xl w-full max-w-2xl flex flex-col shadow-2xl mx-4 my-auto" style="max-height: 85vh;">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0 bg-white rounded-t-2xl">
+        <div class="flex items-center gap-3">
+          <svg class="w-6 h-6 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 3H5C3.9 3 3 3.9 3 5v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+          </svg>
+          <h3 class="text-lg font-bold text-gray-900">Choose a GIF</h3>
+        </div>
+        <button onclick="closeGifModal()" class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors flex-shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Search Bar -->
+      <div class="p-4 border-b border-gray-200 flex-shrink-0 bg-white">
+        <div class="relative">
+          <input 
+            type="text" 
+            id="gif-search-input" 
+            placeholder="Search for GIFs..."
+            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+            autocomplete="off"
+          >
+          <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+      </div>
+      
+      <!-- GIF Results -->
+      <div class="flex-1 p-4 bg-gray-50 overflow-y-auto" style="height: 400px; -webkit-overflow-scrolling: touch;">
+        <div id="gif-results" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div class="col-span-full text-center py-8">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+            <p class="text-gray-500 mt-2">Loading GIFs...</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div class="p-3 border-t border-gray-200 text-center flex-shrink-0 bg-white rounded-b-2xl">
+        <p class="text-xs text-gray-500">Powered by Tenor</p>
+      </div>
+    </div>
+  </div>
 </div>

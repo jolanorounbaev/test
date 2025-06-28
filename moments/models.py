@@ -117,6 +117,19 @@ class MomentComment(models.Model):
 
     def __str__(self):
         return f"{self.user} on {self.moment}"
+    
+    def get_gif_url(self):
+        """Extract GIF URL from content if it contains one"""
+        import re
+        gif_pattern = r'https?://[^\s]+\.gif'
+        match = re.search(gif_pattern, self.content)
+        return match.group(0) if match else None
+    
+    def get_content_without_gif(self):
+        """Get content with GIF URLs removed"""
+        import re
+        gif_pattern = r'https?://[^\s]+\.gif'
+        return re.sub(gif_pattern, '', self.content).strip()
 
 class MomentReply(models.Model):
     comment = models.ForeignKey(MomentComment, on_delete=models.CASCADE, related_name='replies')
